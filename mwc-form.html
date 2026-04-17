@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Master's Window Cleaning — Job Form</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #9B0000;
+    --red-dark: #6B0000;
+    --gold: #F5C518;
+    --black: #1A1A1A;
+    --white: #FFFFFF;
+    --gray: #F5F5F5;
+    --gray-mid: #E0E0E0;
+    --text: #2A2A2A;
+    --radius: 12px;
+    --shadow: 0 4px 20px rgba(0,0,0,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--gray);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--red);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+
+  header img {
+    height: 48px;
+    width: auto;
+  }
+
+  header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    color: var(--white);
+    font-size: 22px;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+
+  header p {
+    color: var(--gold);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+
+  .container {
+    max-width: 540px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+  }
+
+  /* STEP SYSTEM */
+  .step {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .step.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* PROGRESS BAR */
+  .progress {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 24px;
+  }
+
+  .progress-dot {
+    flex: 1;
+    height: 4px;
+    background: var(--gray-mid);
+    border-radius: 4px;
+    transition: background 0.3s;
+  }
+
+  .progress-dot.done {
+    background: var(--red);
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .card-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: var(--red);
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title span {
+    background: var(--red);
+    color: var(--white);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+  }
+
+  /* JOB INFO BANNER */
+  .job-banner {
+    background: var(--red);
+    color: var(--white);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .job-banner.visible {
+    display: block;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .job-banner .job-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .job-banner .job-meta {
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .job-banner .job-type-tag {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--black);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-top: 6px;
+  }
+
+  /* FORM ELEMENTS */
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+  }
+
+  select, input[type="text"], input[type="date"], input[type="time"], textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid var(--gray-mid);
+    border-radius: 8px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--white);
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  select:focus, input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--red);
+  }
+
+  .select-wrapper {
+    position: relative;
+  }
+
+  .select-wrapper::after {
+    content: '▼';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: #999;
+    pointer-events: none;
+  }
+
+  .field-group {
+    margin-bottom: 16px;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* CHECKBOX TOGGLE */
+  .toggle-field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--gray-mid);
+  }
+
+  .toggle-field:last-child {
+    border-bottom: none;
+  }
+
+  .toggle-label {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .toggle-sub {
+    font-size: 12px;
+    color: #999;
+    font-weight: 400;
+  }
+
+  .toggle {
+    position: relative;
+    width: 48px;
+    height: 28px;
+    flex-shrink: 0;
+  }
+
+  .toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+  }
+
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--gray-mid);
+    border-radius: 28px;
+    transition: 0.3s;
+    cursor: pointer;
+  }
+
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 4px;
+    top: 4px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.3s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .toggle input:checked + .toggle-slider {
+    background: var(--red);
+  }
+
+  .toggle input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+  }
+
+  /* PHOTO UPLOAD */
+  .photo-upload {
+    border: 2px dashed var(--gray-mid);
+    border-radius: 8px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+
+  .photo-upload:active {
+    border-color: var(--red);
+    background: rgba(155,0,0,0.03);
+  }
+
+  .photo-upload input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .photo-upload-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+
+  .photo-upload p {
+    font-size: 14px;
+    color: #999;
+    font-weight: 600;
+  }
+
+  .photo-upload strong {
+    color: var(--red);
+  }
+
+  .photo-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .photo-preview img {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid var(--gray-mid);
+  }
+
+  /* BUTTONS */
+  .btn {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+
+  .btn:active {
+    transform: scale(0.98);
+  }
+
+  .btn-primary {
+    background: var(--red);
+    color: var(--white);
+    box-shadow: 0 4px 16px rgba(155,0,0,0.35);
+  }
+
+  .btn-primary:hover {
+    background: var(--red-dark);
+  }
+
+  .btn-secondary {
+    background: var(--gray-mid);
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+
+  .btn-gold {
+    background: var(--gold);
+    color: var(--black);
+    box-shadow: 0 4px 16px rgba(245,197,24,0.4);
+  }
+
+  /* JOB LIST */
+  .job-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .job-item {
+    background: var(--white);
+    border: 2px solid var(--gray-mid);
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .job-item:active {
+    transform: scale(0.99);
+  }
+
+  .job-item.selected {
+    border-color: var(--red);
+    background: rgba(155,0,0,0.03);
+  }
+
+  .job-item-icon {
+    width: 44px;
+    height: 44px;
+    background: var(--red);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .job-item-info {
+    flex: 1;
+  }
+
+  .job-item-customer {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .job-item-type {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--red);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .job-item-address {
+    font-size: 12px;
+    color: #999;
+    margin-top: 2px;
+  }
+
+  .job-item-check {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--gray-mid);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: 0.2s;
+  }
+
+  .job-item.selected .job-item-check {
+    background: var(--red);
+    border-color: var(--red);
+    color: white;
+    font-size: 12px;
+  }
+
+  /* LOADING */
+  .loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+    font-weight: 700;
+  }
+
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--gray-mid);
+    border-top-color: var(--red);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* SUCCESS */
+  .success-screen {
+    text-align: center;
+    padding: 40px 20px;
+    display: none;
+  }
+
+  .success-screen.visible {
+    display: block;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .success-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+  }
+
+  .success-screen h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    color: var(--red);
+    margin-bottom: 8px;
+  }
+
+  .success-screen p {
+    color: #999;
+    font-size: 15px;
+    margin-bottom: 24px;
+  }
+
+  /* INCIDENT NOTES (conditional) */
+  #incident-notes-field {
+    display: none;
+    margin-top: 12px;
+  }
+
+  #incident-notes-field.visible {
+    display: block;
+  }
+
+  textarea {
+    resize: none;
+    min-height: 80px;
+  }
+
+  .date-display {
+    font-size: 13px;
+    color: #999;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+
+  .no-jobs {
+    text-align: center;
+    padding: 32px;
+    color: #999;
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  .error-msg {
+    background: #fff3f3;
+    border: 1px solid #ffcccc;
+    color: #cc0000;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .error-msg.visible {
+    display: block;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Master's Window Cleaning</h1>
+    <p>Job Completion Form</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- PROGRESS -->
+  <div class="progress" id="progress">
+    <div class="progress-dot" id="dot-1"></div>
+    <div class="progress-dot" id="dot-2"></div>
+    <div class="progress-dot" id="dot-3"></div>
+    <div class="progress-dot" id="dot-4"></div>
+  </div>
+
+  <!-- ERROR -->
+  <div class="error-msg" id="error-msg"></div>
+
+  <!-- JOB BANNER -->
+  <div class="job-banner" id="job-banner">
+    <div class="job-name" id="banner-customer"></div>
+    <div class="job-meta">
+      <span id="banner-address"></span>
+      <span id="banner-job-number"></span>
+    </div>
+    <span class="job-type-tag" id="banner-job-type"></span>
+  </div>
+
+  <!-- STEP 1: WHO ARE YOU -->
+  <div class="step active" id="step-1">
+    <div class="card">
+      <div class="card-title"><span>1</span> Who are you?</div>
+
+      <div class="field-group">
+        <label>Your Name</label>
+        <div class="select-wrapper">
+          <select id="employee-select">
+            <option value="">Loading employees...</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Date</label>
+        <input type="date" id="job-date">
+        <div class="date-display" id="date-display"></div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="goToStep2()">See My Jobs Today →</button>
+  </div>
+
+  <!-- STEP 2: PICK YOUR JOB -->
+  <div class="step" id="step-2">
+    <div class="card">
+      <div class="card-title"><span>2</span> Pick Your Job</div>
+      <div class="job-list" id="job-list">
+        <div class="loading"><div class="spinner"></div>Loading jobs...</div>
+      </div>
+    </div>
+    <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
+    <button class="btn btn-primary" onclick="goToStep3()">Continue →</button>
+  </div>
+
+  <!-- STEP 3: TIMES & DETAILS -->
+  <div class="step" id="step-3">
+    <div class="card">
+      <div class="card-title"><span>3</span> Your Hours</div>
+
+      <div class="field-group">
+        <label>Commission Start</label>
+        <input type="time" id="comm-start">
+      </div>
+
+      <div class="field-group">
+        <label>Commission End</label>
+        <input type="time" id="comm-end">
+      </div>
+
+      <div class="field-group">
+        <label>Hourly Start <span style="font-weight:400;text-transform:none;letter-spacing:0">(if applicable)</span></label>
+        <input type="time" id="hrly-start">
+      </div>
+
+      <div class="field-group">
+        <label>Hourly End <span style="font-weight:400;text-transform:none;letter-spacing:0">(if applicable)</span></label>
+        <input type="time" id="hrly-end">
+      </div>
+
+      <div class="toggle-field">
+        <div>
+          <div class="toggle-label">Lunch Break</div>
+          <div class="toggle-sub">Did you take a lunch break?</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="lunch">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>3</span> Photos</div>
+
+      <div class="field-group">
+        <label>Job Photos</label>
+        <div class="photo-upload" id="job-photo-upload">
+          <input type="file" id="job-photos" accept="image/*" multiple capture="environment" onchange="previewPhotos(this, 'job-preview')">
+          <div class="photo-upload-icon">📸</div>
+          <p>Tap to take photos or <strong>browse</strong></p>
+        </div>
+        <div class="photo-preview" id="job-preview"></div>
+      </div>
+
+      <div class="field-group">
+        <label>Safety Gear Photo</label>
+        <div class="photo-upload">
+          <input type="file" id="safety-photo" accept="image/*" capture="environment" onchange="previewPhotos(this, 'safety-preview')">
+          <div class="photo-upload-icon">🦺</div>
+          <p>Photo of you in safety gear</p>
+        </div>
+        <div class="photo-preview" id="safety-preview"></div>
+      </div>
+    </div>
+
+    <button class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
+    <button class="btn btn-primary" onclick="goToStep4()">Safety Check →</button>
+  </div>
+
+  <!-- STEP 4: SAFETY & SUBMIT -->
+  <div class="step" id="step-4">
+    <div class="card">
+      <div class="card-title"><span>4</span> Safety Checklist</div>
+
+      <div class="toggle-field">
+        <div>
+          <div class="toggle-label">Ladder Secured</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="ladder-secured">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-field">
+        <div>
+          <div class="toggle-label">PPE Worn</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="ppe-worn">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-field">
+        <div>
+          <div class="toggle-label">Area Clear</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="area-clear">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-field">
+        <div>
+          <div class="toggle-label">Incident Occurred</div>
+          <div class="toggle-sub">Any accidents or issues?</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="incident" onchange="toggleIncidentNotes()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div id="incident-notes-field">
+        <label>Incident Notes</label>
+        <textarea id="incident-notes" placeholder="Describe what happened..."></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>4</span> Notes</div>
+      <textarea id="notes" placeholder="Any additional notes about this job..."></textarea>
+    </div>
+
+    <button class="btn btn-secondary" onclick="goToStep(3)">← Back</button>
+    <button class="btn btn-gold" onclick="submitForm()" id="submit-btn">✓ Submit Job</button>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success-screen" id="success-screen">
+    <div class="success-icon">✅</div>
+    <h2>Job Submitted!</h2>
+    <p>Great work today. Your job has been recorded.</p>
+    <button class="btn btn-primary" onclick="resetForm()">Submit Another Job</button>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// CONFIGURATION — PASTE YOUR VALUES HERE
+// ============================================================
+const AIRTABLE_BASE_ID = 'appVXuyAYj47nZwyz';
+const AIRTABLE_PAT = 'YOUR_PERSONAL_ACCESS_TOKEN_HERE'; // paste your token here
+const EMPLOYEES_TABLE = 'Employees';
+const JOBS_TABLE = 'Jobs';
+// ============================================================
+
+const headers = {
+  'Authorization': `Bearer ${AIRTABLE_PAT}`,
+  'Content-Type': 'application/json'
+};
+
+let selectedEmployee = null;
+let selectedJob = null;
+let currentStep = 1;
+let allJobs = [];
+
+// Set today's date
+const today = new Date();
+const todayStr = today.toISOString().split('T')[0];
+document.getElementById('job-date').value = todayStr;
+updateDateDisplay();
+
+function updateDateDisplay() {
+  const d = new Date(document.getElementById('job-date').value + 'T00:00:00');
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById('date-display').textContent = d.toLocaleDateString('en-US', options);
+}
+
+document.getElementById('job-date').addEventListener('change', updateDateDisplay);
+
+// Load employees on page load
+async function loadEmployees() {
+  try {
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${EMPLOYEES_TABLE}?sort[0][field]=Name&sort[0][direction]=asc`;
+    const res = await fetch(url, { headers });
+    const data = await res.json();
+    const select = document.getElementById('employee-select');
+    select.innerHTML = '<option value="">— Select your name —</option>';
+    data.records.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = r.fields.Name;
+      select.appendChild(opt);
+    });
+  } catch(e) {
+    showError('Could not load employees. Check your connection.');
+  }
+}
+
+async function goToStep2() {
+  const empId = document.getElementById('employee-select').value;
+  const empName = document.getElementById('employee-select').options[document.getElementById('employee-select').selectedIndex].text;
+  const date = document.getElementById('job-date').value;
+
+  if (!empId) { showError('Please select your name.'); return; }
+
+  selectedEmployee = { id: empId, name: empName };
+  hideError();
+  goToStep(2);
+  loadJobsForDate(date, empName);
+}
+
+async function loadJobsForDate(date, empName) {
+  const list = document.getElementById('job-list');
+  list.innerHTML = '<div class="loading"><div class="spinner"></div>Loading your jobs...</div>';
+
+  try {
+    // Filter jobs by date
+    const formula = encodeURIComponent(`IS_SAME({Job Date}, '${date}', 'day')`);
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}?filterByFormula=${formula}`;
+    const res = await fetch(url, { headers });
+    const data = await res.json();
+
+    // Filter jobs assigned to this employee
+    allJobs = data.records.filter(r => {
+      const employees = r.fields['Employee'] || [];
+      // Check if employee is linked
+      return true; // Show all jobs for today, tech picks theirs
+    });
+
+    if (allJobs.length === 0) {
+      list.innerHTML = '<div class="no-jobs">No jobs scheduled for today.</div>';
+      return;
+    }
+
+    list.innerHTML = '';
+    allJobs.forEach(job => {
+      const customer = job.fields['Customer Name'] || 'Unknown Customer';
+      const jobType = job.fields['Job Type'] || '';
+      const jobNum = job.fields['Job Number'] || '';
+      const address = '';
+
+      const item = document.createElement('div');
+      item.className = 'job-item';
+      item.dataset.id = job.id;
+      item.innerHTML = `
+        <div class="job-item-icon">🏠</div>
+        <div class="job-item-info">
+          <div class="job-item-customer">${customer}</div>
+          <div class="job-item-type">${jobType}</div>
+          <div class="job-item-address">${jobNum ? 'Job #' + jobNum : ''}</div>
+        </div>
+        <div class="job-item-check" id="check-${job.id}"></div>
+      `;
+      item.onclick = () => selectJob(job, item);
+      list.appendChild(item);
+    });
+
+  } catch(e) {
+    list.innerHTML = '<div class="no-jobs">Error loading jobs. Check connection.</div>';
+  }
+}
+
+function selectJob(job, el) {
+  document.querySelectorAll('.job-item').forEach(i => {
+    i.classList.remove('selected');
+    i.querySelector('.job-item-check').textContent = '';
+  });
+  el.classList.add('selected');
+  el.querySelector('.job-item-check').textContent = '✓';
+  selectedJob = job;
+
+  // Update banner
+  const banner = document.getElementById('job-banner');
+  document.getElementById('banner-customer').textContent = job.fields['Customer Name'] || '';
+  document.getElementById('banner-job-number').textContent = job.fields['Job Number'] ? 'Job #' + job.fields['Job Number'] : '';
+  document.getElementById('banner-job-type').textContent = job.fields['Job Type'] || '';
+  document.getElementById('banner-address').textContent = '';
+  banner.classList.add('visible');
+}
+
+function goToStep3() {
+  if (!selectedJob) { showError('Please select a job.'); return; }
+  hideError();
+  goToStep(3);
+}
+
+function goToStep4() {
+  if (!document.getElementById('comm-start').value) {
+    showError('Please enter your Commission Start time.');
+    return;
+  }
+  if (!document.getElementById('comm-end').value) {
+    showError('Please enter your Commission End time.');
+    return;
+  }
+  hideError();
+  goToStep(4);
+}
+
+function goToStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById(`step-${n}`).classList.add('active');
+  currentStep = n;
+  updateProgress(n);
+  window.scrollTo(0, 0);
+}
+
+function updateProgress(n) {
+  for (let i = 1; i <= 4; i++) {
+    const dot = document.getElementById(`dot-${i}`);
+    dot.classList.toggle('done', i <= n);
+  }
+}
+
+function toggleIncidentNotes() {
+  const field = document.getElementById('incident-notes-field');
+  field.classList.toggle('visible', document.getElementById('incident').checked);
+}
+
+function previewPhotos(input, previewId) {
+  const preview = document.getElementById(previewId);
+  preview.innerHTML = '';
+  Array.from(input.files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      preview.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function submitForm() {
+  const btn = document.getElementById('submit-btn');
+  btn.textContent = 'Submitting...';
+  btn.disabled = true;
+
+  // Build date+time for Airtable
+  const date = document.getElementById('job-date').value;
+  const commStart = document.getElementById('comm-start').value;
+  const commEnd = document.getElementById('comm-end').value;
+  const hrlyStart = document.getElementById('hrly-start').value;
+  const hrlyEnd = document.getElementById('hrly-end').value;
+
+  const fields = {
+    'Employee': [selectedEmployee.id],
+    'Comm Start': commStart ? `${date}T${commStart}:00.000Z` : null,
+    'Comm End': commEnd ? `${date}T${commEnd}:00.000Z` : null,
+    'Hrly Start': hrlyStart ? `${date}T${hrlyStart}:00.000Z` : null,
+    'Hrly End': hrlyEnd ? `${date}T${hrlyEnd}:00.000Z` : null,
+    'Lunch': document.getElementById('lunch').checked,
+    'Ladder Secured': document.getElementById('ladder-secured').checked,
+    'PPE Worn': document.getElementById('ppe-worn').checked,
+    'Area Clear': document.getElementById('area-clear').checked,
+    'Incident Occurred': document.getElementById('incident').checked,
+    'Notes': document.getElementById('notes').value || null,
+  };
+
+  if (document.getElementById('incident').checked) {
+    fields['Incident Notes'] = document.getElementById('incident-notes').value;
+  }
+
+  // Remove null fields
+  Object.keys(fields).forEach(k => fields[k] === null && delete fields[k]);
+
+  try {
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}/${selectedJob.id}`;
+    const res = await fetch(url, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ fields })
+    });
+
+    if (!res.ok) throw new Error('Submit failed');
+
+    // Show success
+    document.getElementById('progress').style.display = 'none';
+    document.getElementById('job-banner').classList.remove('visible');
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('success-screen').classList.add('visible');
+
+  } catch(e) {
+    showError('Submission failed. Please try again.');
+    btn.textContent = '✓ Submit Job';
+    btn.disabled = false;
+  }
+}
+
+function resetForm() {
+  selectedEmployee = null;
+  selectedJob = null;
+  document.getElementById('employee-select').value = '';
+  document.getElementById('job-date').value = todayStr;
+  document.getElementById('comm-start').value = '';
+  document.getElementById('comm-end').value = '';
+  document.getElementById('hrly-start').value = '';
+  document.getElementById('hrly-end').value = '';
+  document.getElementById('lunch').checked = false;
+  document.getElementById('incident').checked = false;
+  document.getElementById('notes').value = '';
+  document.getElementById('incident-notes').value = '';
+  document.getElementById('job-banner').classList.remove('visible');
+  document.getElementById('success-screen').classList.remove('visible');
+  document.getElementById('progress').style.display = 'flex';
+  document.getElementById('job-preview').innerHTML = '';
+  document.getElementById('safety-preview').innerHTML = '';
+  goToStep(1);
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.classList.add('visible');
+  window.scrollTo(0, 0);
+}
+
+function hideError() {
+  document.getElementById('error-msg').classList.remove('visible');
+}
+
+// Init
+loadEmployees();
+</script>
+</body>
+</html>
