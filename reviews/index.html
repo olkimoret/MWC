@@ -148,7 +148,8 @@ function renderReviews() {
 }
 
 async function saveReview(recordId) {
-  const empId = document.getElementById(`emp-${recordId}`).value;
+  const selectEl = document.getElementById('emp-' + recordId);
+  const empId = selectEl.options[selectEl.selectedIndex].value;
   const customerName = document.getElementById(`name-${recordId}`).value.trim();
   const btn = document.querySelector(`#review-${recordId} .review-save-btn`);
 
