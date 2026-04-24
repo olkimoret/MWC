@@ -52,6 +52,7 @@ const headers = {
 };
 
 let employees = [];
+let payPeriods = [];
 let pendingReviews = [];
 
 function esc(str) {
@@ -62,21 +63,14 @@ function esc(str) {
 
 async function init() {
   try {
-    // Load employees
-    const empRes = await fetch(
-      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${EMPLOYEES_TABLE}?sort[0][field]=Name&sort[0][direction]=asc`,
-      { headers }
-    );
-    const empData = await empRes.json();
-    employees = empData.records.map(r => ({ id: r.id, name: r.fields.Name }));
-
-    // Load unlinked reviews (Linked by Office = false/unchecked)
     const formula = encodeURIComponent(`NOT({Linked by Office})`);
-    const revRes = await fetch(
-      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${REVIEWS_TABLE}?filterByFormula=${formula}&sort[0][field]=Date&sort[0][direction]=desc`,
-      { headers }
-    );
-    const revData = await revRes.json();
+    const [empData, ppData, revData] = await Promise.all([
+      fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${EMPLOYEES_TABLE}?sort[0][field]=Name&sort[0][direction]=asc`, { headers }).then(r => r.json()),
+      fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Pay%20Periods?sort[0][field]=End%20Date&sort[0][direction]=desc`, { headers }).then(r => r.json()),
+      fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${REVIEWS_TABLE}?filterByFormula=${formula}&sort[0][field]=Date&sort[0][direction]=desc`, { headers }).then(r => r.json())
+    ]);
+    employees = empData.records.map(r => ({ id: r.id, name: r.fields.Name }));
+    payPeriods = ppData.records.map(r => ({ id: r.id, name: r.fields['Pay Period Name'] }));
     pendingReviews = revData.records;
 
     document.getElementById('loading-screen').style.display = 'none';
@@ -139,6 +133,14 @@ function renderReviews() {
             </select>
           </div>
         </div>
+        <div class="review-field">
+          <label>Pay Period (optional)</label>
+          <div class="select-wrapper">
+            <select id="pp-${review.id}" onchange="handlePayPeriodChange('${review.id}', this)">
+              ${buildPayPeriodOptions(false)}
+            </select>
+          </div>
+        </div>
       </div>
       <button class="review-save-btn" onclick="saveReview('${review.id}')">Save & Link</button>
       <div class="review-saved" id="saved-${review.id}" style="display:none">✓ Linked</div>
@@ -147,8 +149,26 @@ function renderReviews() {
   });
 }
 
+function buildPayPeriodOptions(showAll) {
+  const list = showAll ? payPeriods : payPeriods.slice(0, 5);
+  const moreOption = !showAll && payPeriods.length > 5
+    ? `<option value="__more__">Show more...</option>`
+    : '';
+  return `<option value="">— Select pay period —</option>
+    ${list.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}
+    ${moreOption}`;
+}
+
+function handlePayPeriodChange(reviewId, selectEl) {
+  if (selectEl.value === '__more__') {
+    selectEl.innerHTML = buildPayPeriodOptions(true);
+    selectEl.value = '';
+  }
+}
+
 async function saveReview(recordId) {
   const empId = document.getElementById(`emp-${recordId}`).value;
+  const ppId = document.getElementById(`pp-${recordId}`).value;
   const customerName = document.getElementById(`name-${recordId}`).value.trim();
   const btn = document.querySelector(`#review-${recordId} .review-save-btn`);
 
@@ -168,6 +188,10 @@ async function saveReview(recordId) {
 
   if (customerName) {
     fields['Customer Name'] = customerName;
+  }
+
+  if (ppId) {
+    fields['Pay Period'] = [String(ppId)];
   }
 
   try {
