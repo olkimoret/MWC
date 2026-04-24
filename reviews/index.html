@@ -148,8 +148,7 @@ function renderReviews() {
 }
 
 async function saveReview(recordId) {
-  const selectEl = document.getElementById('emp-' + recordId);
-  const empId = selectEl.options[selectEl.selectedIndex].value;
+  const empId = document.getElementById(`emp-${recordId}`).value;
   const customerName = document.getElementById(`name-${recordId}`).value.trim();
   const btn = document.querySelector(`#review-${recordId} .review-save-btn`);
 
@@ -163,7 +162,7 @@ async function saveReview(recordId) {
   hideError();
 
   const fields = {
-    'Employee': [{ id: String(empId) }],
+    'Employee': [String(empId)],
     'Linked by Office': true
   };
 
