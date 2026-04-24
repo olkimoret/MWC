@@ -3,21 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Master's Window Cleaning — Job Form</title>
+<title>Master's Window Cleaning — Manager Dashboard</title>
 <style>
   :root {
-    --brand:        #C0392B;
-    --brand-dark:   #96281B;
-    --brand-bg:     rgba(192,57,43,0.08);
-    --text:         #1C1C1E;
-    --text-2:       #6C6C70;
-    --text-3:       #8E8E93;
-    --sep:          rgba(60,60,67,0.18);
-    --sep-opaque:   #D1D1D6;
-    --bg:           #F2F2F7;
-    --surface:      #FFFFFF;
-    --radius:       12px;
-    --radius-sm:    10px;
+    --brand:      #C0392B;
+    --brand-bg:   rgba(192,57,43,0.08);
+    --text:       #1C1C1E;
+    --text-2:     #6C6C70;
+    --text-3:     #8E8E93;
+    --sep-opaque: #D1D1D6;
+    --bg:         #F2F2F7;
+    --surface:    #FFFFFF;
+    --radius:     14px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -30,552 +27,116 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* ── HEADER ── */
   header {
     background: #a10000;
-    padding: 12px 20px;
+    padding: 16px 20px;
     display: flex;
     align-items: center;
     gap: 12px;
     position: sticky;
     top: 0;
     z-index: 100;
-    border-bottom: none;
   }
 
-  .header-logo {
-    height: 44px;
-    width: auto;
-    object-fit: contain;
-    flex-shrink: 0;
-  }
+  .header-logo { height: 44px; width: auto; object-fit: contain; flex-shrink: 0; }
 
-  .header-text h1 {
-    font-size: 15px;
-    font-weight: 600;
-    color: #ffffff;
-    letter-spacing: -0.2px;
-  }
+  .header-text h1 { font-size: 15px; font-weight: 600; color: #fff; letter-spacing: -0.2px; }
+  .header-text p  { font-size: 12px; color: rgba(255,255,255,0.70); margin-top: 1px; }
 
-  .header-text p {
-    font-size: 12px;
-    font-weight: 400;
-    color: rgba(255,255,255,0.70);
-    margin-top: 1px;
-  }
-
-  /* ── CONTAINER ── */
   .container {
     max-width: 540px;
     margin: 0 auto;
-    padding: 20px 16px 60px;
+    padding: 28px 16px 60px;
   }
 
-  /* ── STEPS ── */
-  .step { display: none; animation: fadeIn 0.25s ease; }
-  .step.active { display: block; }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  /* ── PROGRESS ── */
-  .progress {
-    display: flex;
-    gap: 5px;
-    margin-bottom: 24px;
-  }
-
-  .progress-dot {
-    flex: 1;
-    height: 3px;
-    background: var(--sep-opaque);
-    border-radius: 2px;
-    transition: background 0.3s;
-  }
-
-  .progress-dot.done { background: var(--brand); }
-
-  /* ── SECTION LABEL ── */
-  .section-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-2);
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    margin: 20px 4px 8px;
-  }
-
-  /* ── CARDS ── */
-  .card {
-    background: var(--surface);
-    border-radius: var(--radius);
-    overflow: hidden;
-    margin-bottom: 10px;
-  }
-
-  .card-title { display: none; }
-
-  /* ── FORM ROWS ── */
-  .form-row {
-    display: flex;
-    align-items: center;
-    min-height: 44px;
-    padding: 11px 16px;
-    gap: 10px;
-    border-bottom: 0.5px solid var(--sep);
-  }
-
-  .form-row:last-child { border-bottom: none; }
-
-  .form-row .row-label {
-    font-size: 16px;
-    font-weight: 400;
-    color: var(--text);
-    flex-shrink: 0;
-  }
-
-  .form-row .row-label small {
-    font-size: 13px;
-    color: var(--text-3);
-    font-weight: 400;
-  }
-
-  /* ── STANDALONE FIELD ── */
-  .field-block {
-    padding: 12px 16px;
-    border-bottom: 0.5px solid var(--sep);
-  }
-
-  .field-block:last-child { border-bottom: none; }
-
-  .field-block label {
-    display: block;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-3);
-    margin-bottom: 5px;
-    text-transform: none;
-    letter-spacing: 0;
-  }
-
-  /* ── SELECT ── */
-  .select-wrapper { position: relative; }
-
-  .select-wrapper select {
-    width: 100%;
-    padding: 0;
-    padding-right: 24px;
-    border: none;
-    background: transparent;
-    font-family: inherit;
-    font-size: 16px;
-    font-weight: 400;
-    color: var(--text);
-    -webkit-appearance: none;
-    appearance: none;
-    outline: none;
-    cursor: pointer;
-  }
-
-  .select-wrapper::after {
-    content: '';
-    position: absolute;
-    right: 2px;
-    top: 50%;
-    width: 7px;
-    height: 7px;
-    border-right: 1.5px solid var(--text-3);
-    border-bottom: 1.5px solid var(--text-3);
-    transform: translateY(-65%) rotate(45deg);
-    pointer-events: none;
-  }
-
-  /* ── DATE / TIME ── */
-  input[type="time"],
-  input[type="date"] {
-    flex: 1;
-    text-align: right;
-    font-family: inherit;
-    font-size: 16px;
-    font-weight: 400;
-    color: var(--brand);
-    border: none;
-    background: transparent;
-    padding: 0;
-    outline: none;
-    cursor: pointer;
-    min-width: 0;
-  }
-
-  .date-sub {
-    font-size: 12px;
-    color: var(--text-3);
-    margin-top: 3px;
-  }
-
-  /* ── TEXT INPUT / TEXTAREA ── */
-  input[type="text"] {
-    width: 100%;
-    border: none;
-    background: transparent;
-    font-family: inherit;
-    font-size: 16px;
-    color: var(--text);
-    -webkit-appearance: none;
-    appearance: none;
-    outline: none;
-    padding: 0;
-  }
-
-  textarea {
-    width: 100%;
-    border: none;
-    background: transparent;
-    font-family: inherit;
-    font-size: 15px;
-    font-weight: 400;
-    color: var(--text);
-    outline: none;
-    resize: none;
-    min-height: 88px;
-    padding: 14px 16px;
-    line-height: 1.5;
-    display: block;
-  }
-
-  textarea::placeholder { color: var(--text-3); }
-
-  /* ── TOGGLE ── */
-  .toggle-field {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 16px;
-    min-height: 44px;
-    border-bottom: 0.5px solid var(--sep);
-  }
-
-  .toggle-field:last-child { border-bottom: none; }
-
-  .toggle-label {
-    font-size: 16px;
-    font-weight: 400;
-    color: var(--text);
-  }
-
-  .toggle-sub {
-    font-size: 13px;
-    color: var(--text-2);
-    margin-top: 1px;
-  }
-
-  .toggle {
-    position: relative;
-    width: 51px;
-    height: 31px;
-    flex-shrink: 0;
-  }
-
-  .toggle input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-    position: absolute;
-  }
-
-  .toggle-slider {
-    position: absolute;
-    inset: 0;
-    background: var(--sep-opaque);
-    border-radius: 31px;
-    transition: background 0.25s;
-    cursor: pointer;
-  }
-
-  .toggle-slider::before {
-    content: '';
-    position: absolute;
-    width: 27px;
-    height: 27px;
-    left: 2px;
-    top: 2px;
-    background: white;
-    border-radius: 50%;
-    transition: transform 0.25s;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.20), 0 0.5px 2px rgba(0,0,0,0.12);
-  }
-
-  .toggle input:checked + .toggle-slider { background: var(--brand); }
-  .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
-
-  /* ── CHECKLIST TOGGLE (long labels) ── */
-  .checklist-toggle { align-items: flex-start; padding-top: 12px; padding-bottom: 12px; }
-  .checklist-toggle .toggle { margin-top: 3px; }
-  .checklist-item-label { flex: 1; padding-right: 12px; font-size: 15px; line-height: 1.4; color: var(--text); }
-
-  /* ── PHOTO UPLOAD ── */
-  .photo-section { padding: 14px 16px; }
-  .photo-section + .photo-section { border-top: 0.5px solid var(--sep); }
-
-  .photo-upload {
-    border: 1.5px dashed var(--sep-opaque);
-    border-radius: var(--radius-sm);
-    padding: 20px 16px;
-    text-align: center;
-    cursor: pointer;
-    position: relative;
-    transition: border-color 0.2s, background 0.2s;
-  }
-
-  .photo-upload:active {
-    border-color: var(--brand);
-    background: var(--brand-bg);
-  }
-
-  .photo-upload input[type="file"] {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
-    border: none;
-    background: none;
-    padding: 0;
-  }
-
-  .photo-upload-icon { font-size: 26px; margin-bottom: 5px; line-height: 1; }
-  .photo-upload p { font-size: 14px; color: var(--text-2); }
-  .photo-upload strong { color: var(--brand); font-weight: 600; }
-
-  .photo-preview {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 10px;
-  }
-
-  .photo-preview img {
-    width: 72px;
-    height: 72px;
-    object-fit: cover;
-    border-radius: 8px;
-  }
-
-  /* ── JOB BANNER ── */
-  .job-banner {
-    background: var(--brand);
-    color: white;
-    border-radius: var(--radius);
-    padding: 16px 18px;
-    margin-bottom: 10px;
-    display: none;
-  }
-
-  .job-banner.visible {
-    display: block;
-    animation: fadeIn 0.25s ease;
-  }
-
-  .job-banner .job-name {
-    font-size: 18px;
+  .greeting {
+    font-size: 22px;
     font-weight: 700;
-    letter-spacing: -0.3px;
-    margin-bottom: 3px;
+    color: var(--text);
+    letter-spacing: -0.4px;
+    margin-bottom: 4px;
   }
 
-  .job-banner .job-meta {
-    font-size: 13px;
-    color: rgba(255,255,255,0.80);
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
+  .date-label {
+    font-size: 14px;
+    color: var(--text-3);
+    margin-bottom: 28px;
   }
 
-  .job-banner .job-type-tag {
-    display: inline-block;
-    background: rgba(255,255,255,0.20);
-    color: white;
+  .section-label {
     font-size: 11px;
     font-weight: 600;
+    color: var(--text-3);
     text-transform: uppercase;
-    letter-spacing: 0.8px;
-    padding: 3px 10px;
-    border-radius: 20px;
-    margin-top: 8px;
+    letter-spacing: 0.6px;
+    margin: 0 4px 10px;
   }
 
-  /* ── JOB LIST ── */
-  /* ── CLIENT LIST (Step 1) ── */
-  .client-list { display: flex; flex-direction: column; gap: 8px; }
-  .client-list-card { margin-bottom: 10px; }
+  .cards { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
 
-  .client-item {
+  .dash-card {
     background: var(--surface);
     border-radius: var(--radius);
-    padding: 14px 16px;
-    cursor: pointer;
+    padding: 18px 20px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    transition: background 0.15s;
+    gap: 16px;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.15s, transform 0.1s;
+    border: none;
+    width: 100%;
+    text-align: left;
   }
 
-  .client-item:active { background: var(--bg); }
-  .client-item.selected { background: var(--brand-bg); }
-  .client-item-info { flex: 1; min-width: 0; }
+  .dash-card:active { background: var(--brand-bg); transform: scale(0.99); }
 
-  .client-item-name {
+  .dash-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--brand-bg);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .dash-info { flex: 1; min-width: 0; }
+
+  .dash-title {
     font-size: 16px;
     font-weight: 600;
     color: var(--text);
     margin-bottom: 2px;
   }
 
-  .client-item-jobs { font-size: 13px; color: var(--text-3); }
+  .dash-sub {
+    font-size: 13px;
+    color: var(--text-3);
+  }
 
-  .client-item-check {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    border: 1.5px solid var(--sep-opaque);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .dash-sub.alert { color: var(--brand); font-weight: 500; }
+
+  .dash-arrow {
+    font-size: 18px;
+    color: var(--sep-opaque);
     flex-shrink: 0;
-    color: transparent;
-    font-size: 11px;
-    font-weight: 700;
-    transition: all 0.2s;
-  }
-
-  .client-item.selected .client-item-check {
-    background: var(--brand);
-    border-color: var(--brand);
-    color: white;
-  }
-
-  /* ── BUTTONS ── */
-  .btn {
-    display: block;
-    width: 100%;
-    padding: 14px 20px;
-    border: none;
-    border-radius: var(--radius);
-    font-family: inherit;
-    font-size: 16px;
-    font-weight: 600;
-    letter-spacing: -0.2px;
-    cursor: pointer;
-    transition: opacity 0.15s, transform 0.1s;
-    text-align: center;
-  }
-
-  .btn:active { opacity: 0.75; transform: scale(0.99); }
-  .btn-primary { background: var(--brand); color: white; }
-
-  .btn-secondary {
-    background: none;
-    color: var(--brand);
-    font-weight: 500;
-    padding: 12px 20px;
-  }
-
-  .btn-gold { background: var(--brand); color: white; }
-
-  .actions { margin-top: 16px; display: flex; flex-direction: column; gap: 2px; }
-
-  /* ── INCIDENT NOTES ── */
-  #incident-notes-field {
-    display: none;
-    border-top: 0.5px solid var(--sep);
-    padding: 4px 16px 12px;
-  }
-
-  #incident-notes-field.visible { display: block; }
-
-  #incident-notes-field label {
-    display: block;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-3);
-    margin: 10px 0 5px;
-  }
-
-  #incident-notes-field textarea { padding: 0; min-height: 72px; }
-
-  /* ── LOADING ── */
-  .loading {
-    text-align: center;
-    padding: 32px 20px;
-    color: var(--text-3);
-    font-size: 14px;
-    font-weight: 500;
   }
 
   .spinner {
-    width: 24px;
-    height: 24px;
-    border: 2px solid var(--sep-opaque);
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid var(--sep-opaque);
     border-top-color: var(--brand);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
-    margin: 0 auto 10px;
+    display: inline-block;
   }
 
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ── NO JOBS / ERROR ── */
-  .no-jobs {
-    text-align: center;
-    padding: 32px;
-    color: var(--text-3);
-    font-size: 15px;
-  }
-
-  .error-msg {
-    background: rgba(255,59,48,0.10);
-    color: #FF3B30;
-    padding: 11px 14px;
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-    font-weight: 500;
-    margin-bottom: 12px;
-    display: none;
-  }
-
-  .error-msg.visible { display: block; }
-
-  /* ── SUCCESS ── */
-  .success-screen {
-    text-align: center;
-    padding: 56px 24px 40px;
-    display: none;
-  }
-
-  .success-screen.visible {
-    display: block;
-    animation: fadeIn 0.4s ease;
-  }
-
-  .success-icon { font-size: 64px; margin-bottom: 20px; line-height: 1; }
-
-  .success-screen h2 {
-    font-size: 26px;
-    font-weight: 700;
-    color: var(--text);
-    letter-spacing: -0.5px;
-    margin-bottom: 8px;
-  }
-
-  .success-screen p {
-    color: var(--text-2);
-    font-size: 15px;
-    margin-bottom: 32px;
-    line-height: 1.5;
-  }
 </style>
 </head>
 <body>
@@ -584,902 +145,84 @@
   <img class="header-logo" src="https://www.masterswindowcleaning.com/wp-content/uploads/2023/05/Final-logo.png" alt="Master's Window Cleaning">
   <div class="header-text">
     <h1>Master's Window Cleaning</h1>
-    <p>Job Completion Form</p>
+    <p>Manager Dashboard</p>
   </div>
 </header>
 
 <div class="container">
 
-  <!-- PROGRESS — 4 dots -->
-  <div class="progress" id="progress">
-    <div class="progress-dot" id="dot-1"></div>
-    <div class="progress-dot" id="dot-2"></div>
-    <div class="progress-dot" id="dot-3"></div>
-    <div class="progress-dot" id="dot-4"></div>
+  <div class="greeting" id="greeting">Good morning</div>
+  <div class="date-label" id="date-label"></div>
+
+  <p class="section-label">Actions</p>
+  <div class="cards">
+
+    <a class="dash-card" href="/reviews/">
+      <div class="dash-icon">📋</div>
+      <div class="dash-info">
+        <div class="dash-title">Link Reviews</div>
+        <div class="dash-sub" id="review-count"><span class="spinner"></span> Loading...</div>
+      </div>
+      <div class="dash-arrow">›</div>
+    </a>
+
+    <a class="dash-card" href="/manager/">
+      <div class="dash-icon">🕐</div>
+      <div class="dash-info">
+        <div class="dash-title">Log Arrival Times</div>
+        <div class="dash-sub" id="today-label"></div>
+      </div>
+      <div class="dash-arrow">›</div>
+    </a>
+
+    <a class="dash-card" href="https://airtable.com/appVXuyAYj47nZwyz/pagpmDIMyFnPi8ftK" target="_blank">
+      <div class="dash-icon">📊</div>
+      <div class="dash-info">
+        <div class="dash-title">Employee Dashboard</div>
+        <div class="dash-sub">Performance & scores in Airtable</div>
+      </div>
+      <div class="dash-arrow">›</div>
+    </a>
+
   </div>
 
-  <!-- ERROR -->
-  <div class="error-msg" id="error-msg"></div>
-
-  <!-- STEP 1: WHO ARE YOU + PICK JOB -->
-  <div class="step active" id="step-1">
-
-    <div class="card">
-      <div class="field-block">
-        <label>Your Name</label>
-        <div class="select-wrapper">
-          <select id="employee-select" onchange="tryLoadJobs()">
-            <option value="">Select your name</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-row" style="flex-wrap: wrap; gap: 6px;">
-        <span class="row-label">Date</span>
-        <input type="date" id="job-date" onchange="tryLoadJobs()">
-        <div class="date-sub" id="date-display" style="width:100%;"></div>
-      </div>
-    </div>
-
-    <div id="client-list-section" style="display:none">
-      <p class="section-label">Select Client</p>
-      <div class="client-list-card">
-        <div class="client-list" id="client-list"></div>
-      </div>
-      <div class="actions">
-        <button class="btn btn-primary" onclick="goToStep2()">Continue to Checklist</button>
-      </div>
-    </div>
-
-  </div><!-- /step-1 -->
-
-  <!-- STEP 2: JOB CHECKLIST (new) -->
-  <div class="step" id="step-2">
-
-    <div class="job-banner" id="checklist-banner"></div>
-    <div id="checklist-container"></div>
-
-    <div class="actions">
-      <button class="btn btn-primary" onclick="goToStep(3)">Continue to Hours</button>
-      <button class="btn btn-secondary" onclick="goToStep(1)">Back</button>
-    </div>
-
-  </div><!-- /step-2 -->
-
-  <!-- STEP 3: TIMES & DETAILS (was step-2) -->
-  <div class="step" id="step-3">
-
-    <div class="job-banner visible" id="job-banner">
-      <div class="job-name" id="banner-customer"></div>
-      <div class="job-meta">
-        <span id="banner-address"></span>
-        <span id="banner-job-number"></span>
-      </div>
-      <span class="job-type-tag" id="banner-job-type"></span>
-    </div>
-
-    <p class="section-label">Your Hours</p>
-    <div class="card">
-      <div class="form-row">
-        <span class="row-label">Commission Start</span>
-        <input type="time" id="comm-start">
-      </div>
-      <div class="form-row">
-        <span class="row-label">Commission End</span>
-        <input type="time" id="comm-end">
-      </div>
-      <div class="form-row">
-        <span class="row-label">Hourly Start <small>optional</small></span>
-        <input type="time" id="hrly-start">
-      </div>
-      <div class="form-row">
-        <span class="row-label">Hourly End <small>optional</small></span>
-        <input type="time" id="hrly-end">
-      </div>
-      <div class="toggle-field">
-        <div>
-          <div class="toggle-label">Lunch Break</div>
-          <div class="toggle-sub">Did you take a lunch break?</div>
-        </div>
-        <label class="toggle">
-          <input type="checkbox" id="lunch">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-    </div>
-
-    <p class="section-label">Photos</p>
-    <div class="card">
-      <div class="photo-section">
-        <div class="photo-upload" id="job-photo-upload">
-          <input type="file" id="job-photos" accept="image/*" multiple capture="environment" onchange="previewPhotos(this, 'job-preview')">
-          <div class="photo-upload-icon">📸</div>
-          <p>Tap to take photos or <strong>browse</strong></p>
-        </div>
-        <div class="photo-preview" id="job-preview"></div>
-      </div>
-      <div class="photo-section">
-        <div class="photo-upload">
-          <input type="file" id="safety-photo" accept="image/*" capture="environment" onchange="previewPhotos(this, 'safety-preview')">
-          <div class="photo-upload-icon">🦺</div>
-          <p>Photo of you in safety gear</p>
-        </div>
-        <div class="photo-preview" id="safety-preview"></div>
-      </div>
-    </div>
-
-    <div class="actions">
-      <button class="btn btn-primary" onclick="goToStep4()">Safety Check</button>
-      <button class="btn btn-secondary" onclick="goToStep(2)">Back</button>
-    </div>
-
-  </div><!-- /step-3 -->
-
-  <!-- STEP 4: SAFETY & SUBMIT (was step-3) -->
-  <div class="step" id="step-4">
-
-    <p class="section-label">Departure</p>
-    <div class="card" id="departure-container"></div>
-
-    <p class="section-label">Safety Checklist</p>
-    <div class="card">
-      <div class="toggle-field">
-        <div><div class="toggle-label">Ladder Secured</div></div>
-        <label class="toggle">
-          <input type="checkbox" id="ladder-secured">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <div class="toggle-field">
-        <div><div class="toggle-label">PPE Worn</div></div>
-        <label class="toggle">
-          <input type="checkbox" id="ppe-worn">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <div class="toggle-field">
-        <div><div class="toggle-label">Area Clear</div></div>
-        <label class="toggle">
-          <input type="checkbox" id="area-clear">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <div class="toggle-field">
-        <div>
-          <div class="toggle-label">Incident Occurred</div>
-          <div class="toggle-sub">Any accidents or issues?</div>
-        </div>
-        <label class="toggle">
-          <input type="checkbox" id="incident" onchange="toggleIncidentNotes()">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <div id="incident-notes-field">
-        <label>Incident Notes</label>
-        <textarea id="incident-notes" placeholder="Describe what happened..."></textarea>
-      </div>
-    </div>
-
-    <p class="section-label">Notes</p>
-    <div class="card">
-      <textarea id="notes" placeholder="Any additional notes about this job..."></textarea>
-    </div>
-
-    <div class="actions">
-      <button class="btn btn-primary" onclick="submitForm()" id="submit-btn">Submit Job</button>
-      <button class="btn btn-secondary" onclick="goToStep(3)">Back</button>
-    </div>
-
-  </div><!-- /step-4 -->
-
-  <!-- SUCCESS -->
-  <div class="success-screen" id="success-screen">
-    <div class="success-icon">✅</div>
-    <h2>Job Submitted</h2>
-    <p>Great work today. Your job has been recorded.</p>
-    <p id="photo-warning" style="display:none; color:#c0392b; font-size:14px; margin-bottom:16px;">Photos could not be uploaded. Job data was saved — please add photos manually in Airtable.</p>
-    <button class="btn btn-primary" onclick="resetForm()">Submit Another Job</button>
-  </div>
-
-</div><!-- /container -->
+</div>
 
 <script>
-// ============================================================
-// CONFIGURATION
-// ============================================================
 const AIRTABLE_BASE_ID = 'appVXuyAYj47nZwyz';
 const AIRTABLE_PAT = 'pat51Bpz1DmsTICb1.4cc6011c585d7167d45c6214905f55c09fe042e18742b3fdd53f09646cfb00a0';
-const EMPLOYEES_TABLE = 'Employees';
-const JOBS_TABLE = 'Jobs';
-// ============================================================
 
-const headers = {
-  'Authorization': `Bearer ${AIRTABLE_PAT}`,
-  'Content-Type': 'application/json'
-};
+// Greeting and date
+const now = new Date();
+const hour = now.getHours();
+const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+document.getElementById('greeting').textContent = greeting;
+document.getElementById('date-label').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+document.getElementById('today-label').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-let selectedEmployee = null;
-let selectedClient = null; // { name, jobs: [...records] }
-let currentStep = 1;
-let allJobs = [];
-
-// ── CHECKLIST DATA ──────────────────────────────────────────
-const CHECKLIST_DATA = {
-  'Arrival': {
-    type: 'toggles',
-    items: [
-      'Call or Text Customer when on way',
-      'Determine accurate prices for the job',
-      'Go over prices, disclaimers, and get customer signature on Invoice before begin work. If customer not comfortable signing your device, ask if can put an "X" for their signature',
-      'Let customer know have 1 Goal today: do such good job that earn 5-Star Google or Yelp Review',
-      'Take "Before" photos on the Customer Factor app',
-      'Do a hazard assessment: Identify exposed electrical wires, potential slip areas, electrical outlets without covers, electrical panels, and any other potential hazards',
-      'Set up barriers for hazards'
-    ]
-  },
-  'House Wash': {
-    type: 'toggles',
-    items: [
-      'Tape over key hole, put tape over electrical outlets, put plastic over speakers, lights, etc.',
-      'Do NOT put bleach on painted doors. Just use water on them',
-      'Rinse all surrounding vegetation before and after you apply bleach',
-      'Mix 3 gallons bleach, 2 gallons water, and 5 oz. Gain or other soap in 5 gallon bucket on truck',
-      'Apply solution onto house from bottom up, using proper spray tips',
-      'Let solution dwell 5-10 minutes on surface of house, but don\'t let it dry. If starts to dry, mist it to keep wet',
-      'Change tips to rinse solution off house. Make sure to get all spider webs. Use only WATER around painted wood',
-      'Move all pet bowls far away from house',
-      'Rinse off all vegetation again',
-      'If customer is happy, roll up hoses, and put tools away',
-      'Drop siphon hose in bucket of clear water. Put soap nozzle on gun, and spray 2-3 minutes to rinse out injector and hose',
-      'Turn Gas Lever OFF on Pressure Washer'
-    ]
-  },
-  'Window Cleaning': {
-    type: 'toggles',
-    items: [
-      'If you notice any damaged property (frayed screens, bent screen frames, cracked windows, hard water, etc) bring to customer\'s attention ASAP',
-      'Put large towel down as drop cloth for squeegee drips',
-      'If this is a Bronze WC, clean exterior tracks',
-      'If doing Gold WC, make sure all tracks are cleaned. Use screwdriver & towel to get dirt out of corners',
-      'Vacuum out tracks, unless there is not much in them',
-      'Wear booties or remove shoes inside home',
-      'Secure towels to ends of ladders when resting them on inside walls',
-      'Use steel or bronze wool or mini-scraper to remove any debris from glass scrubber doesn\'t remove',
-      'Ask permission before using customer\'s bathroom and only use the one they suggest',
-      'Make sure all smudges, streaks, lines, and edges are detailed',
-      'Clean screens with soap and water',
-      'Use WFP only on maintenance cleans which have been cleaned less than 2 years before. Use scrubber and squeegee on all others'
-    ]
-  },
-  'Residential Gutter Cleaning': {
-    type: 'toggles',
-    items: [
-      'Remove all debris from gutters and flush all downspouts',
-      'If gutters are dry, you can blow out gutters, but you MUST clean up all debris',
-      'Take Before and After photos, and show to customer',
-      'Deposit all debris in Green Waste container. If it is already full, put debris in bags',
-      'Use stabilizer bars on ladder, so that ladder does not lean on and damage gutters',
-      'Flush every downspout with water to make sure they are not clogged',
-      'If gutters are wet, or there is a pool, or they have manicured yard DO NOT blow out gutters',
-      'If you discover broken tiles on roof, notify customer ASAP',
-      'Be sure that there is absolutely no mess when you leave job site'
-    ]
-  },
-  'Rooftop Safety Assessment': {
-    type: 'text',
-    items: [
-      'What was the weather like?',
-      'What "Other Tripping Hazards" were present?',
-      'What precautions were taken for each hazard that was present?'
-    ]
-  },
-  'Roof Cleaning with Bleach': {
-    type: 'toggles',
-    items: [
-      'Have Ground Helper, start watering surrounding vegetation 5 minutes before apply bleach to roof',
-      'Only Treat portion of Roof with Moss or Lichen',
-      'If treating roof with bleach, brush off all moss with brush or push broom first',
-      'Mix a batch of bleach/water at 50% bleach to 50% water, and at least 1 oz. of Gain for each gallon of solution',
-      'Bag the downspouts which will pour out into vegetation. Zip tie them closed',
-      '1 Man applies solution from roof or ladder, while other man wets down surrounding vegetation',
-      'Take bags off of downspouts, and either pour out into rocky/dirt area or put into bucket and dispose of off site',
-      'Rinse out pump by running at least 10 gallons of clear water through it',
-      'Roll up all hoses',
-      'Rinse out gutters at end of job to dilute any leftover bleach'
-    ]
-  },
-  'Roof Cleaning Without Bleach': {
-    type: 'toggles',
-    items: [
-      'Use this method only when roof is not steep',
-      'Get up on roof with pressure washer and remove lichen and moss with surface cleaner or green tip',
-      'Clean up mess on ground',
-      'Be sure to turn gas lever off on PW',
-      'Roll up hoses'
-    ]
-  },
-  'Slimguard': {
-    type: 'toggles',
-    items: [
-      'Pick up Slimguard material before job',
-      'Call or text customer when on way',
-      'Greet customer. Ask customer if have any special concerns about job. Have them sign invoice',
-      'Let customer know if there are any broken tiles immediately when you discover them',
-      'Before installing Slimguard, make sure gutters are clean and downspouts flow freely',
-      'Make sure you install Slimguard, rough side up',
-      'Make an end cap on gutter ends so leaves can not blow in the gutters',
-      'Overlap each Slimguard section by at least 2 inches',
-      'Take pictures of finished installation to show to customer',
-      'Clean up all Slimguard remnant pieces and put in trash',
-      'Show customer photos and make sure they are happy with job'
-    ]
-  },
-  'Weekly Pool Cleaning': {
-    type: 'toggles',
-    items: [
-      'SAFETY & ACCESS: Access confirmed (gate unlocked), Pets secured, Equipment area safe, No visible electrical hazards, PPE used as needed',
-      'PRE-SERVICE VISUAL CHECK: Water level normal, Pool surface OK, Pump running, Filter pressure normal, No visible leaks',
-      'CLEANING TASKS COMPLETED: Skimmed surface, Skimmer baskets emptied, Pump basket emptied, Walls brushed, Steps brushed, Tile line brushed if needed',
-      'WATER TESTING & CHEMICALS',
-      'EQUIPMENT CHECK: Pump basket clean, Filter condition OK, Valves normal, No unusual noises, No leaks observed'
-    ]
-  },
-  'Seam Repair': {
-    type: 'toggles',
-    items: [
-      'Make sure gutter to be repaired is clean and dry',
-      'Spray Flexseal onto seam until you know all cracks and pinholes have been thoroughly covered'
-    ]
-  },
-  'Solar Panel Cleaning': {
-    type: 'toggles',
-    items: [
-      'Scrub the solar panel with WFP brush',
-      'Rinse solar panel after scrubbing with WFP'
-    ]
-  },
-  'Driveway/Pressure Washing': {
-    type: 'toggles',
-    items: [
-      'Rinse off any surrounding grass or vegetation that bleach may contact before start',
-      'Pre-treat surface with bleach & soap. (Downstream straight 12.5% SH; or 1 gallon water to 3 gallons SH with X-Jet)',
-      'Pre-treat surface with degreaser in X-Jet. 1 Gallon Totally Awesome to 2 Gallons Water. This is when there are grease/oil stains',
-      'Clean with surface cleaner',
-      'Rinse with white or green tip',
-      'Use white or green tip to clean anything surface cleaner left behind',
-      'If you use bleach, Put water dam over gutter to block water from going down drain. Hook up sump pump, and pump water to gravel, rocks, dirt, or grass',
-      'Post treat with straight SH downstream or 25% SH X-JET & soap. Do not rinse off. This will brighten concrete & keep algae from growing back',
-      'Rinse all surrounding vegetation',
-      'Let customer know not to walk on driveway until dry, or let pets off leash',
-      'Remove X-Jet & drop nozzle in bucket of clear water to rinse',
-      'Turn Gas lever OFF on Pressure Washer',
-      'Roll up hoses and pack up tools. Walk around job site to make sure have all tools'
-    ]
-  },
-  'Skylight Cleaning': {
-    type: 'toggles',
-    items: [
-      'Scrub Skylight with WFP',
-      'Rinse skylight with WFP'
-    ]
-  },
-  'Hard Water Removal': {
-    type: 'toggles',
-    items: [
-      'Use Bioclean or Sorbo hard water remover',
-      'Wet window. Then use steel wool to apply hard water remover solution'
-    ]
-  },
-  'Storefront Window Cleaning': {
-    type: 'toggles',
-    items: [
-      'Clean the exterior by soaping the window with water, and squeegeeing window dry. Use pole if necessary',
-      'Remove water from bottom ledge with small squeegee or towel',
-      'Detail edges with towel on end of pole',
-      'Clean interior either with soaping windows and squeegeeing dry, or with Speed Clean Kit & Pure Water',
-      'Write up Paper Invoice and give to Customer. If paying with cash, check, or credit card, write "Paid by ..." on invoice',
-      'If they are not paying on date of service, write "Charge" on Invoice and have customer sign it at the bottom. They will use this invoice to mail payment',
-      'Make sure you gather all your tools and put them in the truck'
-    ]
-  },
-  'Departure': {
-    type: 'toggles',
-    items: [
-      'Mark Job as "Completed" on Customer Factor before you leave job site',
-      'Input notes regarding any hazards that you came across',
-      'Ask Customer to do a Walk Around to make sure they are happy before you leave',
-      'Give Customer a "Request for Review" Card',
-      'Remind Customer will receive Invite to leave Review',
-      'Make sure to secure your ladders',
-      'Do 5 Arounds',
-      'Take "After" photos on The Customer Factor app'
-    ]
-  }
-};
-
-// Job type string → job-specific checklists (Arrival/Departure added automatically)
-const JOB_TYPE_MAP = {
-  'House Wash':                      ['House Wash'],
-  'SILVER Window Cleaning':          ['Window Cleaning'],
-  'GOLD Window Cleaning':            ['Window Cleaning'],
-  'BRONZE Window Cleaning':          ['Window Cleaning'],
-  'Residential Gutter Cleaning':     ['Residential Gutter Cleaning', 'Rooftop Safety Assessment'],
-  'Commercial Gutter Cleaning':      ['Rooftop Safety Assessment'],
-  'Skylight Cleaning':               ['Rooftop Safety Assessment', 'Skylight Cleaning'],
-  'Roof Cleaning':                   ['Rooftop Safety Assessment', 'Roof Cleaning with Bleach', 'Roof Cleaning Without Bleach'],
-  'Partial Roof Cleaning':           ['Rooftop Safety Assessment', 'Roof Cleaning with Bleach', 'Roof Cleaning Without Bleach'],
-  'Slimguard':                       ['Slimguard'],
-  'Weekly Pool Cleaning Service':    ['Weekly Pool Cleaning'],
-  'Seam Repair':                     ['Seam Repair'],
-  'Solar Panel Cleaning':            ['Solar Panel Cleaning'],
-  'Driveway Pressure Cleaning':      ['Driveway/Pressure Washing'],
-  'Residential Pressure Washing':    ['Driveway/Pressure Washing'],
-  'Hard Water Removal':              ['Hard Water Removal'],
-  'Commercial WC - Exterior Only':   ['Storefront Window Cleaning']
-};
-
-// ── HELPERS ─────────────────────────────────────────────────
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-function escAttr(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-}
-
-// ── DATE SETUP ───────────────────────────────────────────────
-const today = new Date();
-const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
-document.getElementById('job-date').value = todayStr;
-updateDateDisplay();
-
-function updateDateDisplay() {
-  const d = new Date(document.getElementById('job-date').value + 'T00:00:00');
-  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  document.getElementById('date-display').textContent = d.toLocaleDateString('en-US', options);
-}
-
-document.getElementById('job-date').addEventListener('change', updateDateDisplay);
-
-// ── LOAD EMPLOYEES ───────────────────────────────────────────
-async function loadEmployees() {
+// Load unlinked review count
+async function loadReviewCount() {
   try {
-    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${EMPLOYEES_TABLE}?sort[0][field]=Name&sort[0][direction]=asc`;
-    const res = await fetch(url, { headers });
+    const formula = encodeURIComponent(`NOT({Linked by Office})`);
+    const res = await fetch(
+      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Reviews?filterByFormula=${formula}&fields[]=Date`,
+      { headers: { 'Authorization': `Bearer ${AIRTABLE_PAT}` } }
+    );
     const data = await res.json();
-    const select = document.getElementById('employee-select');
-    select.innerHTML = '<option value="">— Select your name —</option>';
-    data.records.forEach(r => {
-      const opt = document.createElement('option');
-      opt.value = r.id;
-      opt.textContent = r.fields.Name;
-      select.appendChild(opt);
-    });
-  } catch(e) {
-    showError('Could not load employees. Check your connection.');
-  }
-}
-
-// ── LOAD JOBS ────────────────────────────────────────────────
-async function tryLoadJobs() {
-  const sel = document.getElementById('employee-select');
-  const empId = sel.value;
-  const empName = sel.options[sel.selectedIndex].text;
-  const date = document.getElementById('job-date').value;
-
-  if (!empId || !date) return;
-
-  selectedEmployee = { id: empId, name: empName };
-  selectedClient = null;
-
-  const section = document.getElementById('client-list-section');
-  const list = document.getElementById('client-list');
-  section.style.display = 'block';
-  list.innerHTML = '<div class="loading"><div class="spinner"></div>Loading your jobs...</div>';
-
-  try {
-    const formula = encodeURIComponent(`IS_SAME({Job Date}, '${date}', 'day')`);
-    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}?filterByFormula=${formula}`;
-    const res = await fetch(url, { headers });
-    const data = await res.json();
-
-    allJobs = data.records.filter(r => {
-      const emps = r.fields['Employee'] || [];
-      return emps.includes(empId);
-    });
-
-    if (allJobs.length === 0) {
-      list.innerHTML = '<div class="no-jobs">No jobs found for this date.</div>';
-      return;
-    }
-
-    // Group by Customer Name
-    const clientMap = {};
-    allJobs.forEach(job => {
-      const customer = job.fields['Customer Name'] || 'Unknown Customer';
-      if (!clientMap[customer]) clientMap[customer] = [];
-      clientMap[customer].push(job);
-    });
-
-    list.innerHTML = '';
-    Object.entries(clientMap).forEach(([clientName, jobs]) => {
-      const jobTypes = jobs
-        .map(j => j.fields['Job Type'] || '')
-        .filter(t => t.toLowerCase() !== 'discount' && t)
-        .join(' · ');
-
-      const item = document.createElement('div');
-      item.className = 'client-item';
-      item.innerHTML = `
-        <div class="client-item-info">
-          <div class="client-item-name">${esc(clientName)}</div>
-          <div class="client-item-jobs">${esc(jobTypes || 'No job type')}</div>
-        </div>
-        <div class="client-item-check">✓</div>
-      `;
-      item.onclick = () => selectClient(clientName, jobs, item);
-      list.appendChild(item);
-    });
-
-  } catch(e) {
-    list.innerHTML = '<div class="no-jobs">Error loading jobs. Check connection.</div>';
-  }
-}
-
-function selectClient(clientName, jobs, el) {
-  document.querySelectorAll('.client-item').forEach(i => i.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedClient = { name: clientName, jobs };
-
-  const jobTypes = jobs
-    .map(j => j.fields['Job Type'] || '')
-    .filter(t => t.toLowerCase() !== 'discount' && t)
-    .join(' · ');
-  document.getElementById('banner-customer').textContent = clientName;
-  document.getElementById('banner-job-type').textContent = jobTypes;
-  document.getElementById('banner-job-number').textContent = '';
-  document.getElementById('banner-address').textContent = '';
-}
-
-// ── CHECKLIST BUILD ──────────────────────────────────────────
-function buildChecklist() {
-  const container = document.getElementById('checklist-container');
-  container.innerHTML = '';
-
-  // Collect job-specific checklists from all selected (non-discount) jobs
-  const billableJobs = selectedClient.jobs.filter(j =>
-    (j.fields['Job Type'] || '').toLowerCase() !== 'discount'
-  );
-  const jobSpecificSections = [];
-  const seen = new Set();
-  billableJobs.forEach(job => {
-    const jobType = (job.fields['Job Type'] || '').trim();
-    const sections = JOB_TYPE_MAP[jobType] || [];
-    sections.forEach(s => { if (!seen.has(s)) { seen.add(s); jobSpecificSections.push(s); } });
-  });
-
-  const allSections = ['Arrival', ...jobSpecificSections];
-  seen.clear();
-  const sections = [];
-  for (const s of allSections) {
-    if (!seen.has(s)) { seen.add(s); sections.push(s); }
-  }
-
-  sections.forEach(sectionName => {
-    const isJobSpecific = sectionName !== 'Arrival' && sectionName !== 'Departure';
-    const def = CHECKLIST_DATA[sectionName];
-    if (!def) return;
-
-    const labelEl = document.createElement('p');
-    labelEl.className = 'section-label';
-    labelEl.textContent = sectionName;
-    container.appendChild(labelEl);
-
-    const card = document.createElement('div');
-    card.className = 'card';
-
-    if (def.type === 'text') {
-      def.items.forEach((q, i) => {
-        const block = document.createElement('div');
-        block.className = 'field-block';
-        block.innerHTML = `
-          <label>${esc(q)}</label>
-          <input type="text" id="rsa-${i}" placeholder="Type your answer…">
-        `;
-        card.appendChild(block);
-      });
+    const count = data.records.length;
+    const el = document.getElementById('review-count');
+    if (count === 0) {
+      el.textContent = 'All reviews linked ✓';
     } else {
-      const safeSection = sectionName.replace(/[^a-z0-9]/gi, '-').toLowerCase();
-      def.items.forEach((item, i) => {
-        const field = document.createElement('div');
-        field.className = 'toggle-field checklist-toggle';
-        const id = `chk-${safeSection}-${i}`;
-        field.innerHTML = `
-          <div class="checklist-item-label">${esc(item)}</div>
-          <label class="toggle">
-            <input type="checkbox" id="${id}"
-              data-job-specific="${isJobSpecific}"
-              data-label="${escAttr(item)}">
-            <span class="toggle-slider"></span>
-          </label>
-        `;
-        card.appendChild(field);
-      });
-    }
-
-    container.appendChild(card);
-  });
-
-  // Populate the checklist banner with client name + job types
-  const banner = document.getElementById('checklist-banner');
-  const customer = selectedClient.name;
-  const jt = selectedClient.jobs
-    .map(j => j.fields['Job Type'] || '')
-    .filter(t => t.toLowerCase() !== 'discount' && t)
-    .join(' · ');
-  banner.innerHTML = `
-    <div class="job-name">${esc(customer)}</div>
-    <div class="job-meta"><span>${esc(jt)}</span></div>
-  `;
-  banner.classList.add('visible');
-}
-
-// ── DEPARTURE CHECKLIST (Step 4) ─────────────────────────────
-function buildDeparture() {
-  const container = document.getElementById('departure-container');
-  container.innerHTML = '';
-
-  const def = CHECKLIST_DATA['Departure'];
-  const safeSection = 'departure';
-  def.items.forEach((item, i) => {
-    const field = document.createElement('div');
-    field.className = 'toggle-field checklist-toggle';
-    const id = `chk-${safeSection}-${i}`;
-    field.innerHTML = `
-      <div class="checklist-item-label">${esc(item)}</div>
-      <label class="toggle">
-        <input type="checkbox" id="${id}"
-          data-departure="true"
-          data-label="${escAttr(item)}">
-        <span class="toggle-slider"></span>
-      </label>
-    `;
-    container.appendChild(field);
-  });
-}
-
-// ── NAVIGATION ───────────────────────────────────────────────
-function goToStep2() {
-  if (!selectedClient) { showError('Please select a client first.'); return; }
-  hideError();
-  buildChecklist();
-  goToStep(2);
-}
-
-function goToStep4() {
-  if (!document.getElementById('comm-start').value) {
-    showError('Please enter your Commission Start time.');
-    return;
-  }
-  if (!document.getElementById('comm-end').value) {
-    showError('Please enter your Commission End time.');
-    return;
-  }
-  hideError();
-  buildDeparture();
-  goToStep(4);
-}
-
-function goToStep(n) {
-  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-  document.getElementById(`step-${n}`).classList.add('active');
-  currentStep = n;
-  updateProgress(n);
-  window.scrollTo(0, 0);
-}
-
-function updateProgress(n) {
-  for (let i = 1; i <= 4; i++) {
-    const dot = document.getElementById(`dot-${i}`);
-    if (dot) dot.classList.toggle('done', i <= n);
-  }
-}
-
-// ── MISC UI ──────────────────────────────────────────────────
-function toggleIncidentNotes() {
-  const field = document.getElementById('incident-notes-field');
-  field.classList.toggle('visible', document.getElementById('incident').checked);
-}
-
-function previewPhotos(input, previewId) {
-  const preview = document.getElementById(previewId);
-  preview.innerHTML = '';
-  Array.from(input.files).forEach(file => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = document.createElement('img');
-      img.src = e.target.result;
-      preview.appendChild(img);
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-// ── FIELD ID CACHE ────────────────────────────────────────────
-let _jobsFieldIds = null;
-
-async function fetchJobsFieldIds() {
-  if (_jobsFieldIds) return _jobsFieldIds;
-  const url = `https://api.airtable.com/v0/meta/bases/${AIRTABLE_BASE_ID}/tables`;
-  const res = await fetch(url, { headers });
-  if (!res.ok) { _jobsFieldIds = {}; return _jobsFieldIds; }
-  const data = await res.json();
-  const table = data.tables.find(t => t.name === JOBS_TABLE) || { fields: [] };
-  _jobsFieldIds = {};
-  table.fields.forEach(f => { _jobsFieldIds[f.name] = f.id; });
-  return _jobsFieldIds;
-}
-
-// ── ATTACHMENT UPLOAD ─────────────────────────────────────────
-async function uploadAttachment(recordId, fieldName, file) {
-  const fieldIds = await fetchJobsFieldIds();
-  const fieldRef = fieldIds[fieldName] || encodeURIComponent(fieldName);
-  const url = `https://content.airtable.com/v0/${AIRTABLE_BASE_ID}/${recordId}/${fieldRef}/uploadAttachment`;
-  const form = new FormData();
-  form.append('file', file, file.name);
-  form.append('filename', file.name);
-  form.append('contentType', file.type || 'image/jpeg');
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${AIRTABLE_PAT}` },
-    body: form
-  });
-  if (!res.ok) {
-    const errBody = await res.json().catch(() => res.text());
-    console.error('uploadAttachment error:', errBody);
-    throw new Error(`Photo upload failed (${fieldName}): ${res.status}`);
-  }
-}
-
-// ── SUBMIT ───────────────────────────────────────────────────
-async function submitForm() {
-  const btn = document.getElementById('submit-btn');
-  btn.textContent = 'Submitting...';
-  btn.disabled = true;
-
-  const date = document.getElementById('job-date').value;
-  const commStart = document.getElementById('comm-start').value;
-  const commEnd   = document.getElementById('comm-end').value;
-  const hrlyStart = document.getElementById('hrly-start').value;
-  const hrlyEnd   = document.getElementById('hrly-end').value;
-
-  const fields = {
-    'Comm Start':        commStart ? `${date}T${commStart}:00` : null,
-    'Comm End':          commEnd   ? `${date}T${commEnd}:00`   : null,
-    'Hrly Start':        hrlyStart ? `${date}T${hrlyStart}:00` : null,
-    'Hrly End':          hrlyEnd   ? `${date}T${hrlyEnd}:00`   : null,
-    'Lunch':             document.getElementById('lunch').checked,
-    'Ladder Secured':    document.getElementById('ladder-secured').checked,
-    'PPE Worn':          document.getElementById('ppe-worn').checked,
-    'Area Clear':        document.getElementById('area-clear').checked,
-    'Incident Occurred': document.getElementById('incident').checked,
-    'Tech Notes':        document.getElementById('notes').value || null,
-  };
-
-  if (document.getElementById('incident').checked) {
-    fields['Incident Notes'] = document.getElementById('incident-notes').value;
-  }
-
-  // Checklist: job-specific toggles + Departure toggles
-  const jobSpecificBoxes = document.querySelectorAll(
-    '#checklist-container input[type="checkbox"][data-job-specific="true"]'
-  );
-  const departureBoxes = document.querySelectorAll(
-    '#departure-container input[type="checkbox"][data-departure="true"]'
-  );
-  const missing = [];
-  const totalBoxes = jobSpecificBoxes.length + departureBoxes.length;
-  jobSpecificBoxes.forEach(cb => { if (!cb.checked) missing.push(cb.dataset.label); });
-  departureBoxes.forEach(cb => { if (!cb.checked) missing.push(cb.dataset.label); });
-  const checkedCount = totalBoxes - missing.length;
-  fields['Checklist Completed'] = checkedCount === 0 ? 'No' : missing.length === 0 ? 'Yes' : 'Partial';
-  fields['Checklist Missing']   = missing.join(', ');
-
-  // Remove null fields
-  Object.keys(fields).forEach(k => fields[k] === null && delete fields[k]);
-
-  // PATCH all records — fatal if this fails
-  let jobIds;
-  try {
-    jobIds = selectedClient.jobs.map(j => j.id);
-    for (const recordId of jobIds) {
-      const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}/${recordId}`;
-      const res = await fetch(url, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({ fields })
-      });
-      if (!res.ok) throw new Error('Submit failed');
+      el.textContent = `${count} unlinked review${count !== 1 ? 's' : ''} waiting`;
+      el.classList.add('alert');
     }
   } catch(e) {
-    showError('Submission failed. Please try again.');
-    btn.textContent = 'Submit Job';
-    btn.disabled = false;
-    return;
+    document.getElementById('review-count').textContent = 'Tap to view reviews';
   }
-
-  // Upload photos — non-fatal, job data is already saved
-  const jobPhotoFiles    = Array.from(document.getElementById('job-photos').files);
-  const safetyPhotoFiles = Array.from(document.getElementById('safety-photo').files);
-  let photosFailed = false;
-  if (jobPhotoFiles.length || safetyPhotoFiles.length) {
-    btn.textContent = 'Uploading photos...';
-    try {
-      for (const recordId of jobIds) {
-        for (const file of jobPhotoFiles) {
-          await uploadAttachment(recordId, 'Photos - Job', file);
-        }
-        for (const file of safetyPhotoFiles) {
-          await uploadAttachment(recordId, 'Safety Gear Photo', file);
-        }
-      }
-    } catch(e) {
-      photosFailed = true;
-    }
-  }
-
-  document.getElementById('progress').style.display = 'none';
-  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-  const photoWarning = document.getElementById('photo-warning');
-  photoWarning.style.display = photosFailed ? 'block' : 'none';
-  document.getElementById('success-screen').classList.add('visible');
 }
 
-// ── RESET ────────────────────────────────────────────────────
-function resetForm() {
-  selectedEmployee = null;
-  selectedClient = null;
-  document.getElementById('employee-select').value = '';
-  document.getElementById('job-date').value = todayStr;
-  document.getElementById('client-list-section').style.display = 'none';
-  document.getElementById('comm-start').value = '';
-  document.getElementById('comm-end').value = '';
-  document.getElementById('hrly-start').value = '';
-  document.getElementById('hrly-end').value = '';
-  document.getElementById('lunch').checked = false;
-  document.getElementById('incident').checked = false;
-  document.getElementById('incident-notes-field').classList.remove('visible');
-  document.getElementById('notes').value = '';
-  document.getElementById('incident-notes').value = '';
-  document.getElementById('checklist-container').innerHTML = '';
-  document.getElementById('departure-container').innerHTML = '';
-  const cb = document.getElementById('checklist-banner');
-  cb.innerHTML = '';
-  cb.classList.remove('visible');
-  document.getElementById('success-screen').classList.remove('visible');
-  document.getElementById('photo-warning').style.display = 'none';
-  document.getElementById('progress').style.display = 'flex';
-  document.getElementById('job-photos').value = '';
-  document.getElementById('safety-photo').value = '';
-  document.getElementById('job-preview').innerHTML = '';
-  document.getElementById('safety-preview').innerHTML = '';
-  goToStep(1);
-}
-
-// ── ERROR HELPERS ────────────────────────────────────────────
-function showError(msg) {
-  const el = document.getElementById('error-msg');
-  el.textContent = msg;
-  el.classList.add('visible');
-  window.scrollTo(0, 0);
-}
-
-function hideError() {
-  document.getElementById('error-msg').classList.remove('visible');
-}
-
-// Init
-loadEmployees();
-fetchJobsFieldIds();
+loadReviewCount();
 </script>
 </body>
 </html>

@@ -4,265 +4,278 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Master's Window Cleaning — Job Form</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --red: #9B0000;
-    --red-dark: #6B0000;
-    --gold: #F5C518;
-    --black: #1A1A1A;
-    --white: #FFFFFF;
-    --gray: #F5F5F5;
-    --gray-mid: #E0E0E0;
-    --text: #2A2A2A;
-    --radius: 12px;
-    --shadow: 0 4px 20px rgba(0,0,0,0.12);
+    --brand:        #C0392B;
+    --brand-dark:   #96281B;
+    --brand-bg:     rgba(192,57,43,0.08);
+    --text:         #1C1C1E;
+    --text-2:       #6C6C70;
+    --text-3:       #8E8E93;
+    --sep:          rgba(60,60,67,0.18);
+    --sep-opaque:   #D1D1D6;
+    --bg:           #F2F2F7;
+    --surface:      #FFFFFF;
+    --radius:       12px;
+    --radius-sm:    10px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    font-family: 'Nunito', sans-serif;
-    background: var(--gray);
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg);
     color: var(--text);
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
   }
 
+  /* ── HEADER ── */
   header {
-    background: var(--red);
-    padding: 16px 20px;
+    background: #a10000;
+    padding: 12px 20px;
     display: flex;
     align-items: center;
     gap: 12px;
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    border-bottom: none;
   }
 
-  header img {
-    height: 48px;
+  .header-logo {
+    height: 44px;
     width: auto;
+    object-fit: contain;
+    flex-shrink: 0;
   }
 
-  header h1 {
-    font-family: 'Bebas Neue', sans-serif;
-    color: var(--white);
-    font-size: 22px;
-    letter-spacing: 1px;
-    line-height: 1;
+  .header-text h1 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #ffffff;
+    letter-spacing: -0.2px;
   }
 
-  header p {
-    color: var(--gold);
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
+  .header-text p {
+    font-size: 12px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.70);
+    margin-top: 1px;
   }
 
+  /* ── CONTAINER ── */
   .container {
     max-width: 540px;
     margin: 0 auto;
-    padding: 20px 16px 40px;
+    padding: 20px 16px 60px;
   }
 
-  /* STEP SYSTEM */
-  .step {
-    display: none;
-    animation: fadeIn 0.3s ease;
-  }
-
-  .step.active {
-    display: block;
-  }
+  /* ── STEPS ── */
+  .step { display: none; animation: fadeIn 0.25s ease; }
+  .step.active { display: block; }
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* PROGRESS BAR */
+  /* ── PROGRESS ── */
   .progress {
     display: flex;
-    gap: 6px;
+    gap: 5px;
     margin-bottom: 24px;
   }
 
   .progress-dot {
     flex: 1;
-    height: 4px;
-    background: var(--gray-mid);
-    border-radius: 4px;
+    height: 3px;
+    background: var(--sep-opaque);
+    border-radius: 2px;
     transition: background 0.3s;
   }
 
-  .progress-dot.done {
-    background: var(--red);
-  }
+  .progress-dot.done { background: var(--brand); }
 
-  /* CARDS */
-  .card {
-    background: var(--white);
-    border-radius: var(--radius);
-    padding: 20px;
-    margin-bottom: 16px;
-    box-shadow: var(--shadow);
-  }
-
-  .card-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 18px;
-    color: var(--red);
-    letter-spacing: 0.5px;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .card-title span {
-    background: var(--red);
-    color: var(--white);
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  /* ── SECTION LABEL ── */
+  .section-label {
     font-size: 12px;
-    font-family: 'Nunito', sans-serif;
-    font-weight: 800;
-  }
-
-  /* JOB INFO BANNER */
-  .job-banner {
-    background: var(--red);
-    color: var(--white);
-    border-radius: var(--radius);
-    padding: 16px 20px;
-    margin-bottom: 16px;
-    display: none;
-  }
-
-  .job-banner.visible {
-    display: block;
-    animation: fadeIn 0.3s ease;
-  }
-
-  .job-banner .job-name {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
-  }
-
-  .job-banner .job-meta {
-    font-size: 13px;
-    color: rgba(255,255,255,0.85);
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .job-banner .job-type-tag {
-    display: inline-block;
-    background: var(--gold);
-    color: var(--black);
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 2px 8px;
-    border-radius: 20px;
-    margin-top: 6px;
-  }
-
-  /* FORM ELEMENTS */
-  label {
-    display: block;
-    font-size: 13px;
-    font-weight: 700;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 6px;
-  }
-
-  select, input[type="text"], input[type="date"], input[type="time"], textarea {
-    width: 100%;
-    padding: 12px 14px;
-    border: 2px solid var(--gray-mid);
-    border-radius: 8px;
-    font-family: 'Nunito', sans-serif;
-    font-size: 15px;
     font-weight: 600;
+    color: var(--text-2);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin: 20px 4px 8px;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  /* Hide the old card-title badges — replaced by section-label */
+  .card-title { display: none; }
+
+  /* ── FORM ROWS (iOS Settings style) ── */
+  .form-row {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 11px 16px;
+    gap: 10px;
+    border-bottom: 0.5px solid var(--sep);
+  }
+
+  .form-row:last-child { border-bottom: none; }
+
+  .form-row .row-label {
+    font-size: 16px;
+    font-weight: 400;
     color: var(--text);
-    background: var(--white);
-    transition: border-color 0.2s;
+    flex-shrink: 0;
+  }
+
+  .form-row .row-label small {
+    font-size: 13px;
+    color: var(--text-3);
+    font-weight: 400;
+  }
+
+  /* ── STANDALONE FIELD (label above) ── */
+  .field-block {
+    padding: 12px 16px;
+    border-bottom: 0.5px solid var(--sep);
+  }
+
+  .field-block:last-child { border-bottom: none; }
+
+  .field-block label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-3);
+    margin-bottom: 5px;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  /* ── SELECT ── */
+  .select-wrapper { position: relative; }
+
+  .select-wrapper select {
+    width: 100%;
+    padding: 0;
+    padding-right: 24px;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--text);
     -webkit-appearance: none;
     appearance: none;
-  }
-
-  select:focus, input:focus, textarea:focus {
     outline: none;
-    border-color: var(--red);
-  }
-
-  .select-wrapper {
-    position: relative;
+    cursor: pointer;
   }
 
   .select-wrapper::after {
-    content: '▼';
+    content: '';
     position: absolute;
-    right: 14px;
+    right: 2px;
     top: 50%;
-    transform: translateY(-50%);
-    font-size: 10px;
-    color: #999;
+    width: 7px;
+    height: 7px;
+    border-right: 1.5px solid var(--text-3);
+    border-bottom: 1.5px solid var(--text-3);
+    transform: translateY(-65%) rotate(45deg);
     pointer-events: none;
   }
 
-  .field-group {
-    margin-bottom: 16px;
+  /* ── DATE / TIME (native pickers) ── */
+  input[type="time"],
+  input[type="date"] {
+    flex: 1;
+    text-align: right;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--brand);
+    border: none;
+    background: transparent;
+    padding: 0;
+    outline: none;
+    cursor: pointer;
+    min-width: 0;
   }
 
-  .field-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+  .date-sub {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 3px;
   }
 
-  /* CHECKBOX TOGGLE */
+  /* ── TEXT INPUT / TEXTAREA ── */
+  input[type="text"] {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 16px;
+    color: var(--text);
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+    padding: 0;
+  }
+
+  textarea {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--text);
+    outline: none;
+    resize: none;
+    min-height: 88px;
+    padding: 14px 16px;
+    line-height: 1.5;
+    display: block;
+  }
+
+  textarea::placeholder { color: var(--text-3); }
+
+  /* ── TOGGLE (iOS style) ── */
   .toggle-field {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 0;
-    border-bottom: 1px solid var(--gray-mid);
+    padding: 10px 16px;
+    min-height: 44px;
+    border-bottom: 0.5px solid var(--sep);
   }
 
-  .toggle-field:last-child {
-    border-bottom: none;
-  }
+  .toggle-field:last-child { border-bottom: none; }
 
   .toggle-label {
-    font-size: 15px;
-    font-weight: 700;
+    font-size: 16px;
+    font-weight: 400;
     color: var(--text);
   }
 
   .toggle-sub {
-    font-size: 12px;
-    color: #999;
-    font-weight: 400;
+    font-size: 13px;
+    color: var(--text-2);
+    margin-top: 1px;
   }
 
   .toggle {
     position: relative;
-    width: 48px;
-    height: 28px;
+    width: 51px;
+    height: 31px;
     flex-shrink: 0;
   }
 
@@ -276,47 +289,45 @@
   .toggle-slider {
     position: absolute;
     inset: 0;
-    background: var(--gray-mid);
-    border-radius: 28px;
-    transition: 0.3s;
+    background: var(--sep-opaque);
+    border-radius: 31px;
+    transition: background 0.25s;
     cursor: pointer;
   }
 
   .toggle-slider::before {
     content: '';
     position: absolute;
-    width: 20px;
-    height: 20px;
-    left: 4px;
-    top: 4px;
+    width: 27px;
+    height: 27px;
+    left: 2px;
+    top: 2px;
     background: white;
     border-radius: 50%;
-    transition: 0.3s;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: transform 0.25s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.20), 0 0.5px 2px rgba(0,0,0,0.12);
   }
 
-  .toggle input:checked + .toggle-slider {
-    background: var(--red);
-  }
+  .toggle input:checked + .toggle-slider { background: var(--brand); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
 
-  .toggle input:checked + .toggle-slider::before {
-    transform: translateX(20px);
-  }
+  /* ── PHOTO UPLOAD ── */
+  .photo-section { padding: 14px 16px; }
+  .photo-section + .photo-section { border-top: 0.5px solid var(--sep); }
 
-  /* PHOTO UPLOAD */
   .photo-upload {
-    border: 2px dashed var(--gray-mid);
-    border-radius: 8px;
-    padding: 24px;
+    border: 1.5px dashed var(--sep-opaque);
+    border-radius: var(--radius-sm);
+    padding: 20px 16px;
     text-align: center;
     cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
     position: relative;
+    transition: border-color 0.2s, background 0.2s;
   }
 
   .photo-upload:active {
-    border-color: var(--red);
-    background: rgba(155,0,0,0.03);
+    border-color: var(--brand);
+    background: var(--brand-bg);
   }
 
   .photo-upload input[type="file"] {
@@ -326,28 +337,21 @@
     cursor: pointer;
     width: 100%;
     height: 100%;
+    border: none;
+    background: none;
+    padding: 0;
   }
 
-  .photo-upload-icon {
-    font-size: 32px;
-    margin-bottom: 8px;
-  }
+  .photo-upload-icon { font-size: 26px; margin-bottom: 5px; line-height: 1; }
 
-  .photo-upload p {
-    font-size: 14px;
-    color: #999;
-    font-weight: 600;
-  }
-
-  .photo-upload strong {
-    color: var(--red);
-  }
+  .photo-upload p { font-size: 14px; color: var(--text-2); }
+  .photo-upload strong { color: var(--brand); font-weight: 600; }
 
   .photo-preview {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-top: 12px;
+    margin-top: 10px;
   }
 
   .photo-preview img {
@@ -355,158 +359,227 @@
     height: 72px;
     object-fit: cover;
     border-radius: 8px;
-    border: 2px solid var(--gray-mid);
   }
 
-  /* BUTTONS */
-  .btn {
-    width: 100%;
-    padding: 16px;
-    border: none;
+  /* ── JOB BANNER ── */
+  .job-banner {
+    background: var(--brand);
+    color: white;
     border-radius: var(--radius);
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 20px;
-    letter-spacing: 1px;
-    cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    display: none;
   }
 
-  .btn:active {
-    transform: scale(0.98);
+  .job-banner.visible {
+    display: block;
+    animation: fadeIn 0.25s ease;
   }
 
-  .btn-primary {
-    background: var(--red);
-    color: var(--white);
-    box-shadow: 0 4px 16px rgba(155,0,0,0.35);
+  .job-banner .job-name {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin-bottom: 3px;
   }
 
-  .btn-primary:hover {
-    background: var(--red-dark);
-  }
-
-  .btn-secondary {
-    background: var(--gray-mid);
-    color: var(--text);
-    margin-bottom: 12px;
-  }
-
-  .btn-gold {
-    background: var(--gold);
-    color: var(--black);
-    box-shadow: 0 4px 16px rgba(245,197,24,0.4);
-  }
-
-  /* JOB LIST */
-  .job-list {
+  .job-banner .job-meta {
+    font-size: 13px;
+    color: rgba(255,255,255,0.80);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 1px;
   }
+
+  .job-banner .job-type-tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.20);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-top: 8px;
+  }
+
+  /* ── JOB LIST ── */
+  .job-list { display: flex; flex-direction: column; }
 
   .job-item {
-    background: var(--white);
-    border: 2px solid var(--gray-mid);
-    border-radius: var(--radius);
-    padding: 16px;
+    background: var(--surface);
+    padding: 12px 16px;
     cursor: pointer;
-    transition: border-color 0.2s, transform 0.1s;
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
+    border-bottom: 0.5px solid var(--sep);
+    transition: background 0.15s;
   }
 
-  .job-item:active {
-    transform: scale(0.99);
+  .job-item:last-child { border-bottom: none; }
+
+  /* Card-like rounding for the list container */
+  .job-list-card {
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 10px;
   }
 
-  .job-item.selected {
-    border-color: var(--red);
-    background: rgba(155,0,0,0.03);
-  }
+  .job-item:active { background: var(--bg); }
+  .job-item.selected { background: var(--brand-bg); }
 
   .job-item-icon {
-    width: 44px;
-    height: 44px;
-    background: var(--red);
+    width: 40px;
+    height: 40px;
+    background: var(--brand-bg);
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 18px;
     flex-shrink: 0;
+    transition: background 0.2s;
   }
 
-  .job-item-info {
-    flex: 1;
-  }
+  .job-item.selected .job-item-icon { background: var(--brand); }
+
+  .job-item-info { flex: 1; min-width: 0; }
 
   .job-item-customer {
     font-size: 16px;
-    font-weight: 800;
+    font-weight: 600;
     color: var(--text);
-    margin-bottom: 2px;
+    margin-bottom: 1px;
   }
 
   .job-item-type {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--red);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--brand);
   }
 
-  .job-item-address {
-    font-size: 12px;
-    color: #999;
-    margin-top: 2px;
-  }
+  .job-item-address { font-size: 12px; color: var(--text-3); margin-top: 1px; }
 
   .job-item-check {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
-    border: 2px solid var(--gray-mid);
+    border: 1.5px solid var(--sep-opaque);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: 0.2s;
+    color: transparent;
+    font-size: 11px;
+    font-weight: 700;
+    transition: all 0.2s;
   }
 
   .job-item.selected .job-item-check {
-    background: var(--red);
-    border-color: var(--red);
+    background: var(--brand);
+    border-color: var(--brand);
     color: white;
-    font-size: 12px;
   }
 
-  /* LOADING */
+  /* ── BUTTONS ── */
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 14px 20px;
+    border: none;
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    text-align: center;
+  }
+
+  .btn:active { opacity: 0.75; transform: scale(0.99); }
+
+  .btn-primary { background: var(--brand); color: white; }
+
+  .btn-secondary {
+    background: none;
+    color: var(--brand);
+    font-weight: 500;
+    padding: 12px 20px;
+  }
+
+  /* gold variant remapped to primary */
+  .btn-gold { background: var(--brand); color: white; }
+
+  .actions { margin-top: 16px; display: flex; flex-direction: column; gap: 2px; }
+
+  /* ── INCIDENT NOTES ── */
+  #incident-notes-field {
+    display: none;
+    border-top: 0.5px solid var(--sep);
+    padding: 4px 16px 12px;
+  }
+
+  #incident-notes-field.visible { display: block; }
+
+  #incident-notes-field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-3);
+    margin: 10px 0 5px;
+  }
+
+  #incident-notes-field textarea { padding: 0; min-height: 72px; }
+
+  /* ── LOADING ── */
   .loading {
     text-align: center;
-    padding: 40px 20px;
-    color: #999;
-    font-weight: 700;
+    padding: 32px 20px;
+    color: var(--text-3);
+    font-size: 14px;
+    font-weight: 500;
   }
 
   .spinner {
-    width: 36px;
-    height: 36px;
-    border: 3px solid var(--gray-mid);
-    border-top-color: var(--red);
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--sep-opaque);
+    border-top-color: var(--brand);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
-    margin: 0 auto 12px;
+    margin: 0 auto 10px;
   }
 
-  @keyframes spin {
-    to { transform: rotate(360deg); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── NO JOBS / ERROR ── */
+  .no-jobs {
+    text-align: center;
+    padding: 32px;
+    color: var(--text-3);
+    font-size: 15px;
   }
 
-  /* SUCCESS */
+  .error-msg {
+    background: rgba(255,59,48,0.10);
+    color: #FF3B30;
+    padding: 11px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    display: none;
+  }
+
+  .error-msg.visible { display: block; }
+
+  /* ── SUCCESS ── */
   .success-screen {
     text-align: center;
-    padding: 40px 20px;
+    padding: 56px 24px 40px;
     display: none;
   }
 
@@ -515,75 +588,29 @@
     animation: fadeIn 0.4s ease;
   }
 
-  .success-icon {
-    font-size: 64px;
-    margin-bottom: 16px;
-  }
+  .success-icon { font-size: 64px; margin-bottom: 20px; line-height: 1; }
 
   .success-screen h2 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 32px;
-    color: var(--red);
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
     margin-bottom: 8px;
   }
 
   .success-screen p {
-    color: #999;
+    color: var(--text-2);
     font-size: 15px;
-    margin-bottom: 24px;
-  }
-
-  /* INCIDENT NOTES (conditional) */
-  #incident-notes-field {
-    display: none;
-    margin-top: 12px;
-  }
-
-  #incident-notes-field.visible {
-    display: block;
-  }
-
-  textarea {
-    resize: none;
-    min-height: 80px;
-  }
-
-  .date-display {
-    font-size: 13px;
-    color: #999;
-    font-weight: 600;
-    margin-top: 4px;
-  }
-
-  .no-jobs {
-    text-align: center;
-    padding: 32px;
-    color: #999;
-    font-weight: 700;
-    font-size: 15px;
-  }
-
-  .error-msg {
-    background: #fff3f3;
-    border: 1px solid #ffcccc;
-    color: #cc0000;
-    padding: 12px 16px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 16px;
-    display: none;
-  }
-
-  .error-msg.visible {
-    display: block;
+    margin-bottom: 32px;
+    line-height: 1.5;
   }
 </style>
 </head>
 <body>
 
 <header>
-  <div>
+  <img class="header-logo" src="https://www.masterswindowcleaning.com/wp-content/uploads/2023/05/Final-logo.png" alt="Master's Window Cleaning">
+  <div class="header-text">
     <h1>Master's Window Cleaning</h1>
     <p>Job Completion Form</p>
   </div>
@@ -596,83 +623,75 @@
     <div class="progress-dot" id="dot-1"></div>
     <div class="progress-dot" id="dot-2"></div>
     <div class="progress-dot" id="dot-3"></div>
-    <div class="progress-dot" id="dot-4"></div>
   </div>
 
   <!-- ERROR -->
   <div class="error-msg" id="error-msg"></div>
 
-  <!-- JOB BANNER -->
-  <div class="job-banner" id="job-banner">
-    <div class="job-name" id="banner-customer"></div>
-    <div class="job-meta">
-      <span id="banner-address"></span>
-      <span id="banner-job-number"></span>
-    </div>
-    <span class="job-type-tag" id="banner-job-type"></span>
-  </div>
-
-  <!-- STEP 1: WHO ARE YOU -->
+  <!-- STEP 1: WHO ARE YOU + PICK JOB -->
   <div class="step active" id="step-1">
-    <div class="card">
-      <div class="card-title"><span>1</span> Who are you?</div>
 
-      <div class="field-group">
+    <div class="card">
+      <!-- Employee select -->
+      <div class="field-block">
         <label>Your Name</label>
         <div class="select-wrapper">
-          <select id="employee-select">
-            <option value="">Loading employees...</option>
+          <select id="employee-select" onchange="tryLoadJobs()">
+            <option value="">Select your name</option>
           </select>
         </div>
       </div>
 
-      <div class="field-group">
-        <label>Date</label>
-        <input type="date" id="job-date">
-        <div class="date-display" id="date-display"></div>
+      <!-- Date picker -->
+      <div class="form-row" style="flex-wrap: wrap; gap: 6px;">
+        <span class="row-label">Date</span>
+        <input type="date" id="job-date" onchange="tryLoadJobs()">
+        <div class="date-sub" id="date-display" style="width:100%;"></div>
       </div>
     </div>
 
-    <button class="btn btn-primary" onclick="goToStep2()">See My Jobs Today →</button>
-  </div>
+    <div id="job-list-section" style="display:none">
+      <p class="section-label">Select Job</p>
+      <div class="job-list-card">
+        <div class="job-list" id="job-list"></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="goToStep2()">Continue to Hours</button>
+      </div>
+    </div>
 
-  <!-- STEP 2: PICK YOUR JOB -->
+  </div><!-- /step-1 -->
+
+  <!-- STEP 2: TIMES & DETAILS -->
   <div class="step" id="step-2">
-    <div class="card">
-      <div class="card-title"><span>2</span> Pick Your Job</div>
-      <div class="job-list" id="job-list">
-        <div class="loading"><div class="spinner"></div>Loading jobs...</div>
+
+    <div class="job-banner visible" id="job-banner">
+      <div class="job-name" id="banner-customer"></div>
+      <div class="job-meta">
+        <span id="banner-address"></span>
+        <span id="banner-job-number"></span>
       </div>
+      <span class="job-type-tag" id="banner-job-type"></span>
     </div>
-    <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
-    <button class="btn btn-primary" onclick="goToStep3()">Continue →</button>
-  </div>
 
-  <!-- STEP 3: TIMES & DETAILS -->
-  <div class="step" id="step-3">
+    <p class="section-label">Your Hours</p>
     <div class="card">
-      <div class="card-title"><span>3</span> Your Hours</div>
-
-      <div class="field-group">
-        <label>Commission Start</label>
+      <div class="form-row">
+        <span class="row-label">Commission Start</span>
         <input type="time" id="comm-start">
       </div>
-
-      <div class="field-group">
-        <label>Commission End</label>
+      <div class="form-row">
+        <span class="row-label">Commission End</span>
         <input type="time" id="comm-end">
       </div>
-
-      <div class="field-group">
-        <label>Hourly Start <span style="font-weight:400;text-transform:none;letter-spacing:0">(if applicable)</span></label>
+      <div class="form-row">
+        <span class="row-label">Hourly Start <small>optional</small></span>
         <input type="time" id="hrly-start">
       </div>
-
-      <div class="field-group">
-        <label>Hourly End <span style="font-weight:400;text-transform:none;letter-spacing:0">(if applicable)</span></label>
+      <div class="form-row">
+        <span class="row-label">Hourly End <small>optional</small></span>
         <input type="time" id="hrly-end">
       </div>
-
       <div class="toggle-field">
         <div>
           <div class="toggle-label">Lunch Break</div>
@@ -685,11 +704,9 @@
       </div>
     </div>
 
+    <p class="section-label">Photos</p>
     <div class="card">
-      <div class="card-title"><span>3</span> Photos</div>
-
-      <div class="field-group">
-        <label>Job Photos</label>
+      <div class="photo-section">
         <div class="photo-upload" id="job-photo-upload">
           <input type="file" id="job-photos" accept="image/*" multiple capture="environment" onchange="previewPhotos(this, 'job-preview')">
           <div class="photo-upload-icon">📸</div>
@@ -697,9 +714,7 @@
         </div>
         <div class="photo-preview" id="job-preview"></div>
       </div>
-
-      <div class="field-group">
-        <label>Safety Gear Photo</label>
+      <div class="photo-section">
         <div class="photo-upload">
           <input type="file" id="safety-photo" accept="image/*" capture="environment" onchange="previewPhotos(this, 'safety-preview')">
           <div class="photo-upload-icon">🦺</div>
@@ -709,45 +724,39 @@
       </div>
     </div>
 
-    <button class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
-    <button class="btn btn-primary" onclick="goToStep4()">Safety Check →</button>
-  </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="goToStep3()">Safety Check</button>
+      <button class="btn btn-secondary" onclick="goToStep(1)">Back</button>
+    </div>
 
-  <!-- STEP 4: SAFETY & SUBMIT -->
-  <div class="step" id="step-4">
+  </div><!-- /step-2 -->
+
+  <!-- STEP 3: SAFETY & SUBMIT -->
+  <div class="step" id="step-3">
+
+    <p class="section-label">Safety Checklist</p>
     <div class="card">
-      <div class="card-title"><span>4</span> Safety Checklist</div>
-
       <div class="toggle-field">
-        <div>
-          <div class="toggle-label">Ladder Secured</div>
-        </div>
+        <div><div class="toggle-label">Ladder Secured</div></div>
         <label class="toggle">
           <input type="checkbox" id="ladder-secured">
           <span class="toggle-slider"></span>
         </label>
       </div>
-
       <div class="toggle-field">
-        <div>
-          <div class="toggle-label">PPE Worn</div>
-        </div>
+        <div><div class="toggle-label">PPE Worn</div></div>
         <label class="toggle">
           <input type="checkbox" id="ppe-worn">
           <span class="toggle-slider"></span>
         </label>
       </div>
-
       <div class="toggle-field">
-        <div>
-          <div class="toggle-label">Area Clear</div>
-        </div>
+        <div><div class="toggle-label">Area Clear</div></div>
         <label class="toggle">
           <input type="checkbox" id="area-clear">
           <span class="toggle-slider"></span>
         </label>
       </div>
-
       <div class="toggle-field">
         <div>
           <div class="toggle-label">Incident Occurred</div>
@@ -758,38 +767,40 @@
           <span class="toggle-slider"></span>
         </label>
       </div>
-
       <div id="incident-notes-field">
         <label>Incident Notes</label>
         <textarea id="incident-notes" placeholder="Describe what happened..."></textarea>
       </div>
     </div>
 
+    <p class="section-label">Notes</p>
     <div class="card">
-      <div class="card-title"><span>4</span> Notes</div>
       <textarea id="notes" placeholder="Any additional notes about this job..."></textarea>
     </div>
 
-    <button class="btn btn-secondary" onclick="goToStep(3)">← Back</button>
-    <button class="btn btn-gold" onclick="submitForm()" id="submit-btn">✓ Submit Job</button>
-  </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="submitForm()" id="submit-btn">Submit Job</button>
+      <button class="btn btn-secondary" onclick="goToStep(2)">Back</button>
+    </div>
+
+  </div><!-- /step-3 -->
 
   <!-- SUCCESS -->
   <div class="success-screen" id="success-screen">
     <div class="success-icon">✅</div>
-    <h2>Job Submitted!</h2>
+    <h2>Job Submitted</h2>
     <p>Great work today. Your job has been recorded.</p>
     <button class="btn btn-primary" onclick="resetForm()">Submit Another Job</button>
   </div>
 
-</div>
+</div><!-- /container -->
 
 <script>
 // ============================================================
 // CONFIGURATION — PASTE YOUR VALUES HERE
 // ============================================================
 const AIRTABLE_BASE_ID = 'appVXuyAYj47nZwyz';
-const AIRTABLE_PAT = 'YOUR_PERSONAL_ACCESS_TOKEN_HERE'; // paste your token here
+const AIRTABLE_PAT = 'pat51Bpz1DmsTICb1.4cc6011c585d7167d45c6214905f55c09fe042e18742b3fdd53f09646cfb00a0'; // paste your token here
 const EMPLOYEES_TABLE = 'Employees';
 const JOBS_TABLE = 'Jobs';
 // ============================================================
@@ -804,9 +815,9 @@ let selectedJob = null;
 let currentStep = 1;
 let allJobs = [];
 
-// Set today's date
+// Set today's date (local timezone, not UTC)
 const today = new Date();
-const todayStr = today.toISOString().split('T')[0];
+const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
 document.getElementById('job-date').value = todayStr;
 updateDateDisplay();
 
@@ -837,39 +848,34 @@ async function loadEmployees() {
   }
 }
 
-async function goToStep2() {
-  const empId = document.getElementById('employee-select').value;
-  const empName = document.getElementById('employee-select').options[document.getElementById('employee-select').selectedIndex].text;
+async function tryLoadJobs() {
+  const sel = document.getElementById('employee-select');
+  const empId = sel.value;
+  const empName = sel.options[sel.selectedIndex].text;
   const date = document.getElementById('job-date').value;
 
-  if (!empId) { showError('Please select your name.'); return; }
+  if (!empId || !date) return;
 
   selectedEmployee = { id: empId, name: empName };
-  hideError();
-  goToStep(2);
-  loadJobsForDate(date, empName);
-}
-
-async function loadJobsForDate(date, empName) {
+  selectedJob = null;
+  const section = document.getElementById('job-list-section');
   const list = document.getElementById('job-list');
+  section.style.display = 'block';
   list.innerHTML = '<div class="loading"><div class="spinner"></div>Loading your jobs...</div>';
 
   try {
-    // Filter jobs by date
     const formula = encodeURIComponent(`IS_SAME({Job Date}, '${date}', 'day')`);
     const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}?filterByFormula=${formula}`;
     const res = await fetch(url, { headers });
     const data = await res.json();
 
-    // Filter jobs assigned to this employee
     allJobs = data.records.filter(r => {
-      const employees = r.fields['Employee'] || [];
-      // Check if employee is linked
-      return true; // Show all jobs for today, tech picks theirs
+      const emps = r.fields['Employee'] || [];
+      return emps.includes(empId);
     });
 
     if (allJobs.length === 0) {
-      list.innerHTML = '<div class="no-jobs">No jobs scheduled for today.</div>';
+      list.innerHTML = '<div class="no-jobs">No jobs found for this date.</div>';
       return;
     }
 
@@ -878,7 +884,6 @@ async function loadJobsForDate(date, empName) {
       const customer = job.fields['Customer Name'] || 'Unknown Customer';
       const jobType = job.fields['Job Type'] || '';
       const jobNum = job.fields['Job Number'] || '';
-      const address = '';
 
       const item = document.createElement('div');
       item.className = 'job-item';
@@ -901,6 +906,13 @@ async function loadJobsForDate(date, empName) {
   }
 }
 
+function goToStep2() {
+  if (!selectedJob) { showError('Please select a job first.'); return; }
+  hideError();
+  goToStep(2);
+}
+
+
 function selectJob(job, el) {
   document.querySelectorAll('.job-item').forEach(i => {
     i.classList.remove('selected');
@@ -911,21 +923,13 @@ function selectJob(job, el) {
   selectedJob = job;
 
   // Update banner
-  const banner = document.getElementById('job-banner');
   document.getElementById('banner-customer').textContent = job.fields['Customer Name'] || '';
   document.getElementById('banner-job-number').textContent = job.fields['Job Number'] ? 'Job #' + job.fields['Job Number'] : '';
   document.getElementById('banner-job-type').textContent = job.fields['Job Type'] || '';
   document.getElementById('banner-address').textContent = '';
-  banner.classList.add('visible');
 }
 
 function goToStep3() {
-  if (!selectedJob) { showError('Please select a job.'); return; }
-  hideError();
-  goToStep(3);
-}
-
-function goToStep4() {
   if (!document.getElementById('comm-start').value) {
     showError('Please enter your Commission Start time.');
     return;
@@ -935,7 +939,7 @@ function goToStep4() {
     return;
   }
   hideError();
-  goToStep(4);
+  goToStep(3);
 }
 
 function goToStep(n) {
@@ -947,7 +951,7 @@ function goToStep(n) {
 }
 
 function updateProgress(n) {
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 3; i++) {
     const dot = document.getElementById(`dot-${i}`);
     dot.classList.toggle('done', i <= n);
   }
@@ -985,17 +989,16 @@ async function submitForm() {
   const hrlyEnd = document.getElementById('hrly-end').value;
 
   const fields = {
-    'Employee': [selectedEmployee.id],
-    'Comm Start': commStart ? `${date}T${commStart}:00.000Z` : null,
-    'Comm End': commEnd ? `${date}T${commEnd}:00.000Z` : null,
-    'Hrly Start': hrlyStart ? `${date}T${hrlyStart}:00.000Z` : null,
-    'Hrly End': hrlyEnd ? `${date}T${hrlyEnd}:00.000Z` : null,
+    'Comm Start': commStart ? `${date}T${commStart}:00` : null,
+    'Comm End': commEnd ? `${date}T${commEnd}:00` : null,
+    'Hrly Start': hrlyStart ? `${date}T${hrlyStart}:00` : null,
+    'Hrly End': hrlyEnd ? `${date}T${hrlyEnd}:00` : null,
     'Lunch': document.getElementById('lunch').checked,
     'Ladder Secured': document.getElementById('ladder-secured').checked,
     'PPE Worn': document.getElementById('ppe-worn').checked,
     'Area Clear': document.getElementById('area-clear').checked,
     'Incident Occurred': document.getElementById('incident').checked,
-    'Notes': document.getElementById('notes').value || null,
+    'Tech Notes': document.getElementById('notes').value || null,
   };
 
   if (document.getElementById('incident').checked) {
@@ -1023,7 +1026,7 @@ async function submitForm() {
 
   } catch(e) {
     showError('Submission failed. Please try again.');
-    btn.textContent = '✓ Submit Job';
+    btn.textContent = 'Submit Job';
     btn.disabled = false;
   }
 }
@@ -1033,6 +1036,7 @@ function resetForm() {
   selectedJob = null;
   document.getElementById('employee-select').value = '';
   document.getElementById('job-date').value = todayStr;
+  document.getElementById('job-list-section').style.display = 'none';
   document.getElementById('comm-start').value = '';
   document.getElementById('comm-end').value = '';
   document.getElementById('hrly-start').value = '';
@@ -1041,7 +1045,6 @@ function resetForm() {
   document.getElementById('incident').checked = false;
   document.getElementById('notes').value = '';
   document.getElementById('incident-notes').value = '';
-  document.getElementById('job-banner').classList.remove('visible');
   document.getElementById('success-screen').classList.remove('visible');
   document.getElementById('progress').style.display = 'flex';
   document.getElementById('job-preview').innerHTML = '';
