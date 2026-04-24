@@ -71,7 +71,7 @@ async function init() {
     ]);
     employees = empData.records.map(r => ({ id: r.id, name: r.fields.Name }));
     payPeriods = ppData.records
-      .map(r => ({ id: r.id, name: r.fields['Pay Period Name'], endDate: r.fields['End Date'] || '' }))
+      .map(r => ({ id: r.id, name: r.fields['Pay Period Name'], startDate: r.fields['Start Date'] || '', endDate: r.fields['End Date'] || '' }))
       .sort((a, b) => new Date(b.endDate) - new Date(a.endDate));
     pendingReviews = revData.records;
 
@@ -138,8 +138,8 @@ function renderReviews() {
         <div class="review-field">
           <label>Pay Period (optional)</label>
           <div class="select-wrapper">
-            <select id="pp-${review.id}" onchange="handlePayPeriodChange('${review.id}', this)">
-              ${buildPayPeriodOptions(false)}
+            <select id="pp-${review.id}" data-review-date="${f['Date'] || ''}" onchange="handlePayPeriodChange('${review.id}', this)">
+              ${buildPayPeriodOptions(false, f['Date'])}
             </select>
           </div>
         </div>
@@ -151,13 +151,37 @@ function renderReviews() {
   });
 }
 
-function buildPayPeriodOptions(showAll) {
-  // payPeriods is sorted desc (most recent first); display in asc order so most recent is at bottom
-  const source = showAll ? payPeriods : payPeriods.slice(0, 5);
-  const displayList = [...source].reverse();
-  const moreOption = !showAll && payPeriods.length > 5
+function buildPayPeriodOptions(showAll, reviewDate) {
+  if (showAll) {
+    return `<option value="">— Select pay period —</option>
+      ${[...payPeriods].reverse().map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}`;
+  }
+
+  // payPeriods is sorted desc by endDate
+  // Find the period whose range contains the review date
+  const reviewTs = reviewDate ? new Date(reviewDate + 'T00:00:00').getTime() : Date.now();
+
+  let matchIdx = payPeriods.findIndex(p => {
+    const s = new Date(p.startDate + 'T00:00:00').getTime();
+    const e = new Date(p.endDate + 'T00:00:00').getTime();
+    return s <= reviewTs && reviewTs <= e;
+  });
+
+  // Fallback: most recent period that ended before the review date
+  if (matchIdx === -1) {
+    matchIdx = payPeriods.findIndex(p => new Date(p.endDate + 'T00:00:00').getTime() < reviewTs);
+  }
+  if (matchIdx === -1) matchIdx = 0;
+
+  // Take up to matchIdx (inclusive), show the last 5
+  const relevant = payPeriods.slice(0, matchIdx + 1);
+  const show5 = relevant.slice(-5);
+  const displayList = [...show5].reverse(); // ascending: oldest on top, match at bottom
+
+  const moreOption = payPeriods.length > show5.length
     ? `<option value="__more__">Show more...</option>`
     : '';
+
   return `<option value="">— Select pay period —</option>
     ${displayList.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}
     ${moreOption}`;
@@ -165,7 +189,7 @@ function buildPayPeriodOptions(showAll) {
 
 function handlePayPeriodChange(reviewId, selectEl) {
   if (selectEl.value === '__more__') {
-    selectEl.innerHTML = buildPayPeriodOptions(true);
+    selectEl.innerHTML = buildPayPeriodOptions(true, selectEl.dataset.reviewDate);
     selectEl.value = '';
   }
 }
