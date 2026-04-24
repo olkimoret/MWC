@@ -66,11 +66,13 @@ async function init() {
     const formula = encodeURIComponent(`NOT({Linked by Office})`);
     const [empData, ppData, revData] = await Promise.all([
       fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${EMPLOYEES_TABLE}?sort[0][field]=Name&sort[0][direction]=asc`, { headers }).then(r => r.json()),
-      fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Pay%20Periods?sort[0][field]=End%20Date&sort[0][direction]=desc`, { headers }).then(r => r.json()),
+      fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Pay%20Periods`, { headers }).then(r => r.json()),
       fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${REVIEWS_TABLE}?filterByFormula=${formula}&sort[0][field]=Date&sort[0][direction]=desc`, { headers }).then(r => r.json())
     ]);
     employees = empData.records.map(r => ({ id: r.id, name: r.fields.Name }));
-    payPeriods = ppData.records.map(r => ({ id: r.id, name: r.fields['Pay Period Name'] }));
+    payPeriods = ppData.records
+      .map(r => ({ id: r.id, name: r.fields['Pay Period Name'], endDate: r.fields['End Date'] || '' }))
+      .sort((a, b) => new Date(b.endDate) - new Date(a.endDate));
     pendingReviews = revData.records;
 
     document.getElementById('loading-screen').style.display = 'none';
@@ -150,12 +152,14 @@ function renderReviews() {
 }
 
 function buildPayPeriodOptions(showAll) {
-  const list = showAll ? payPeriods : payPeriods.slice(0, 5);
+  // payPeriods is sorted desc (most recent first); display in asc order so most recent is at bottom
+  const source = showAll ? payPeriods : payPeriods.slice(0, 5);
+  const displayList = [...source].reverse();
   const moreOption = !showAll && payPeriods.length > 5
     ? `<option value="__more__">Show more...</option>`
     : '';
   return `<option value="">— Select pay period —</option>
-    ${list.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}
+    ${displayList.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}
     ${moreOption}`;
 }
 
