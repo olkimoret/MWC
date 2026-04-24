@@ -106,7 +106,7 @@ function renderReviews() {
 
   pendingReviews.forEach(review => {
     const f = review.fields;
-    const date = f['Date'] ? new Date(f['Date']).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+    const date = f['Date'] ? new Date(f['Date'] + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
     const source = f['Source'] || '';
     const customerName = f['Customer Name'] || '';
     const reviewText = f['Review Text'] || '';
