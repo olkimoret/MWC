@@ -4,8 +4,265 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Master's Window Cleaning — Arrival Times</title>
+<link rel="stylesheet" href="/mwc.css">
 </head>
 <body>
-<p style="font-family:sans-serif;padding:40px;text-align:center;color:#888">Arrival time form — coming soon</p>
+
+<header>
+  <img class="header-logo" src="https://www.masterswindowcleaning.com/wp-content/uploads/2023/05/Final-logo.png" alt="Master's Window Cleaning">
+  <div class="header-text">
+    <h1>Master's Window Cleaning</h1>
+    <p>Arrival Times</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="error-msg" id="error-msg"></div>
+
+  <div class="card" style="margin-bottom: 24px">
+    <div class="form-row" style="border-bottom: none">
+      <span class="row-label">Date</span>
+      <input type="date" id="date-picker">
+    </div>
+  </div>
+
+  <div id="loading-screen" class="loading">
+    <div class="spinner"></div>
+    Loading employees...
+  </div>
+
+  <div id="no-employees" class="no-jobs" style="display:none">
+    No scheduled employees for this date.
+  </div>
+
+  <div id="employee-list" style="display:none"></div>
+
+  <div id="save-row" style="display:none; margin-top: 8px">
+    <button class="btn btn-primary" id="save-btn" onclick="saveAll()">Save All</button>
+  </div>
+
+  <div class="success-screen" id="success-screen">
+    <div class="success-icon">✅</div>
+    <h2>Saved</h2>
+    <p>Arrival times have been recorded.</p>
+    <button class="btn btn-primary" onclick="resetSuccess()">Done</button>
+  </div>
+
+</div>
+
+<script>
+const AIRTABLE_BASE_ID = 'appVXuyAYj47nZwyz';
+const AIRTABLE_PAT = 'pat51Bpz1DmsTICb1.4cc6011c585d7167d45c6214905f55c09fe042e18742b3fdd53f09646cfb00a0';
+
+const headers = {
+  'Authorization': `Bearer ${AIRTABLE_PAT}`,
+  'Content-Type': 'application/json'
+};
+
+let employeeMap = {};
+let currentEmployeeIds = [];
+let existingScores = {};
+
+function todayLocal() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function to12h(val) {
+  if (!val) return '';
+  const [h, m] = val.split(':').map(Number);
+  const period = h < 12 ? 'AM' : 'PM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${period}`;
+}
+
+function to24h(str) {
+  if (!str) return '';
+  const match = str.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
+  if (!match) return '';
+  let h = parseInt(match[1]);
+  const m = match[2];
+  const period = match[3].toUpperCase();
+  if (period === 'PM' && h !== 12) h += 12;
+  if (period === 'AM' && h === 12) h = 0;
+  return `${String(h).padStart(2, '0')}:${m}`;
+}
+
+async function loadForDate(dateStr) {
+  document.getElementById('loading-screen').style.display = '';
+  document.getElementById('no-employees').style.display = 'none';
+  document.getElementById('employee-list').style.display = 'none';
+  document.getElementById('save-row').style.display = 'none';
+  document.getElementById('success-screen').classList.remove('visible');
+  hideError();
+
+  try {
+    const jobFormula = encodeURIComponent(`AND(DATESTR({Job Date})='${dateStr}',NOT({Job Type}='Discount'))`);
+    const scoreFormula = encodeURIComponent(`DATESTR({Date})='${dateStr}'`);
+
+    const [empData, jobData, scoreData] = await Promise.all([
+      fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Employees?sort[0][field]=Name&sort[0][direction]=asc`, { headers }).then(r => r.json()),
+      fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Jobs?filterByFormula=${jobFormula}&fields[]=Employee`, { headers }).then(r => r.json()),
+      fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Monthly%20Scores?filterByFormula=${scoreFormula}`, { headers }).then(r => r.json())
+    ]);
+
+    employeeMap = {};
+    empData.records.forEach(r => { employeeMap[r.id] = r.fields.Name; });
+
+    const empSet = new Set();
+    jobData.records.forEach(r => {
+      const emps = r.fields['Employee'];
+      if (Array.isArray(emps)) emps.forEach(id => empSet.add(id));
+    });
+    currentEmployeeIds = [...empSet]
+      .filter(id => employeeMap[id])
+      .sort((a, b) => (employeeMap[a] || '').localeCompare(employeeMap[b] || ''));
+
+    existingScores = {};
+    scoreData.records.forEach(r => {
+      const emps = r.fields['Employee'];
+      if (Array.isArray(emps)) emps.forEach(id => { existingScores[id] = r; });
+    });
+
+    document.getElementById('loading-screen').style.display = 'none';
+
+    if (currentEmployeeIds.length === 0) {
+      document.getElementById('no-employees').style.display = 'block';
+      return;
+    }
+
+    renderEmployees();
+    document.getElementById('employee-list').style.display = 'block';
+    document.getElementById('save-row').style.display = 'block';
+
+  } catch(e) {
+    document.getElementById('loading-screen').style.display = 'none';
+    showError('Could not load data. Check your connection.');
+  }
+}
+
+function renderEmployees() {
+  const list = document.getElementById('employee-list');
+  list.innerHTML = '';
+
+  currentEmployeeIds.forEach(empId => {
+    const name = employeeMap[empId];
+    const score = existingScores[empId];
+    const existingTime = score ? to24h(score.fields['Arrival Time'] || '') : '';
+    const excusedLate = score ? (score.fields['Excused Late'] || false) : false;
+    const callOut = score ? (score.fields['Call Out'] || false) : false;
+
+    const label = document.createElement('p');
+    label.className = 'section-label';
+    label.textContent = name;
+    list.appendChild(label);
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.id = `emp-${empId}`;
+    card.innerHTML = `
+      <div class="form-row">
+        <span class="row-label">Arrival Time</span>
+        <input type="time" id="time-${empId}" value="${existingTime}">
+      </div>
+      <div class="toggle-field">
+        <div class="toggle-label">Excused Late</div>
+        <label class="toggle">
+          <input type="checkbox" id="excused-${empId}" ${excusedLate ? 'checked' : ''}>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-field" style="border-bottom: none">
+        <div class="toggle-label">Call Out</div>
+        <label class="toggle">
+          <input type="checkbox" id="callout-${empId}" ${callOut ? 'checked' : ''}>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+async function saveAll() {
+  const btn = document.getElementById('save-btn');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+  hideError();
+
+  const dateStr = document.getElementById('date-picker').value;
+  let failed = 0;
+
+  for (const empId of currentEmployeeIds) {
+    const timeVal = document.getElementById(`time-${empId}`).value;
+    const excusedLate = document.getElementById(`excused-${empId}`).checked;
+    const callOut = document.getElementById(`callout-${empId}`).checked;
+
+    const fields = {
+      'Arrival Time': to12h(timeVal),
+      'Excused Late': excusedLate,
+      'Call Out': callOut
+    };
+
+    const existing = existingScores[empId];
+
+    try {
+      if (existing) {
+        const res = await fetch(
+          `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Monthly%20Scores/${existing.id}`,
+          { method: 'PATCH', headers, body: JSON.stringify({ fields }) }
+        );
+        if (!res.ok) throw new Error();
+      } else {
+        fields['Employee'] = [empId];
+        fields['Date'] = dateStr;
+        const res = await fetch(
+          `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Monthly%20Scores`,
+          { method: 'POST', headers, body: JSON.stringify({ fields }) }
+        );
+        if (!res.ok) throw new Error();
+      }
+    } catch(e) {
+      failed++;
+    }
+  }
+
+  btn.textContent = 'Save All';
+  btn.disabled = false;
+
+  if (failed > 0) {
+    showError(`${failed} record${failed !== 1 ? 's' : ''} failed to save. Please try again.`);
+  } else {
+    document.getElementById('employee-list').style.display = 'none';
+    document.getElementById('save-row').style.display = 'none';
+    document.getElementById('success-screen').classList.add('visible');
+  }
+}
+
+function resetSuccess() {
+  document.getElementById('success-screen').classList.remove('visible');
+  loadForDate(document.getElementById('date-picker').value);
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.classList.add('visible');
+  window.scrollTo(0, 0);
+}
+
+function hideError() {
+  document.getElementById('error-msg').classList.remove('visible');
+}
+
+const picker = document.getElementById('date-picker');
+picker.value = todayLocal();
+picker.addEventListener('change', () => loadForDate(picker.value));
+loadForDate(picker.value);
+</script>
 </body>
 </html>
