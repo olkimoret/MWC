@@ -91,6 +91,7 @@
 
   @media (min-width: 641px) {
     .container {
+      max-width: 500px;
       padding: 40px 24px 80px;
     }
   }
@@ -469,6 +470,10 @@
     #review-list {
       grid-template-columns: repeat(2, 1fr);
       gap: 40px;
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+      margin-right: calc(-50vw + 50%);
+      padding: 0 24px;
     }
   }
 
