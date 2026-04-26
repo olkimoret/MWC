@@ -85,15 +85,13 @@
 
   /* ── CONTAINER ── */
   .container {
-    max-width: 540px;
     margin: 0 auto;
     padding: 20px 16px 60px;
   }
 
   @media (min-width: 641px) {
     .container {
-      max-width: 800px;
-      padding: 40px 32px 80px;
+      padding: 40px 24px 80px;
     }
   }
 
@@ -470,14 +468,14 @@
   @media (min-width: 641px) {
     #review-list {
       grid-template-columns: repeat(2, 1fr);
-      gap: 24px;
+      gap: 40px;
     }
   }
 
   @media (min-width: 1024px) {
     #review-list {
       grid-template-columns: repeat(3, 1fr);
-      gap: 28px;
+      gap: 40px;
     }
   }
 
