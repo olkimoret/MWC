@@ -597,6 +597,8 @@
   }
 
   .btn:active { opacity: 0.75; transform: scale(0.99); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn:disabled:active { opacity: 0.5; transform: none; }
   .btn-primary { background: var(--brand); color: white; }
   .btn-secondary { background: none; color: var(--brand); font-weight: 500; padding: 12px 20px; }
 

@@ -786,6 +786,46 @@ function buildOshaForm() {
     <div class="job-name">${esc(customer)}</div>
     <div class="job-meta"><span>${esc(jt)}</span></div>
   `;
+
+  // Add event listeners for real-time validation
+  const hazardCheckboxes = [
+    'osha-skylights',
+    'osha-solar-panels',
+    'osha-tripping-hazards',
+    'osha-electrical-wires',
+    'osha-broken-tiles',
+    'osha-moss-lichen'
+  ];
+
+  hazardCheckboxes.forEach(id => {
+    document.getElementById(id).addEventListener('change', updateOshaButtonState);
+  });
+
+  document.getElementById('osha-precautions').addEventListener('input', updateOshaButtonState);
+  updateOshaButtonState();
+}
+
+function updateOshaButtonState() {
+  const hazardCheckboxes = [
+    'osha-skylights',
+    'osha-solar-panels',
+    'osha-tripping-hazards',
+    'osha-electrical-wires',
+    'osha-broken-tiles',
+    'osha-moss-lichen'
+  ];
+
+  const anyHazardChecked = hazardCheckboxes.some(id => document.getElementById(id).checked);
+  const precautionsValue = document.getElementById('osha-precautions').value.trim();
+  const continueBtn = document.querySelector('#step-3 .actions .btn-primary');
+
+  if (anyHazardChecked && !precautionsValue) {
+    continueBtn.disabled = true;
+    document.getElementById('osha-precautions-error').style.display = 'block';
+  } else {
+    continueBtn.disabled = false;
+    document.getElementById('osha-precautions-error').style.display = 'none';
+  }
 }
 
 // ── DEPARTURE CHECKLIST (Step 5) ─────────────────────────────
