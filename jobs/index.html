@@ -18,12 +18,13 @@
 
 <div class="container">
 
-  <!-- PROGRESS — 4 dots -->
+  <!-- PROGRESS — 5 dots (dot-3 hidden if OSHA not needed) -->
   <div class="progress" id="progress">
     <div class="progress-dot" id="dot-1"></div>
     <div class="progress-dot" id="dot-2"></div>
-    <div class="progress-dot" id="dot-3"></div>
+    <div class="progress-dot" id="dot-3" style="display:none"></div>
     <div class="progress-dot" id="dot-4"></div>
+    <div class="progress-dot" id="dot-5"></div>
   </div>
 
   <!-- ERROR -->
@@ -68,14 +69,121 @@
     <div id="checklist-container"></div>
 
     <div class="actions">
-      <button class="btn btn-primary" onclick="goToStep(3)">Continue to Hours</button>
+      <button class="btn btn-primary" onclick="continueFromStep2()">Continue to Hours</button>
       <button class="btn btn-secondary" onclick="goToStep(1)">Back</button>
     </div>
 
   </div><!-- /step-2 -->
 
-  <!-- STEP 3: TIMES & DETAILS (was step-2) -->
+  <!-- STEP 3: OSHA JOB HAZARD ASSESSMENT (conditional) -->
   <div class="step" id="step-3">
+
+    <div class="job-banner visible" id="osha-banner"></div>
+
+    <p class="section-label">Hazards Present</p>
+    <div class="card">
+      <div class="toggle-field">
+        <div class="toggle-label">Skylights present</div>
+        <label class="toggle">
+          <input type="checkbox" id="osha-skylights">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-field">
+        <div class="toggle-label">Solar Panels present</div>
+        <label class="toggle">
+          <input type="checkbox" id="osha-solar-panels">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-field">
+        <div class="toggle-label">Tripping Hazards present</div>
+        <label class="toggle">
+          <input type="checkbox" id="osha-tripping-hazards">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-field">
+        <div class="toggle-label">Electrical Wires present</div>
+        <label class="toggle">
+          <input type="checkbox" id="osha-electrical-wires">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-field">
+        <div class="toggle-label">Broken Tiles present</div>
+        <label class="toggle">
+          <input type="checkbox" id="osha-broken-tiles">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-field" style="border-bottom: none">
+        <div class="toggle-label">Moss/Lichen present</div>
+        <label class="toggle">
+          <input type="checkbox" id="osha-moss-lichen">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <p class="section-label">Weather Conditions</p>
+    <div class="card">
+      <div class="toggle-field">
+        <div class="toggle-label">Windy</div>
+        <label class="toggle">
+          <input type="checkbox" id="osha-windy">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-field">
+        <div class="toggle-label">Rainy</div>
+        <label class="toggle">
+          <input type="checkbox" id="osha-rainy">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-field">
+        <div class="toggle-label">Cloudy</div>
+        <label class="toggle">
+          <input type="checkbox" id="osha-cloudy">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-field" style="border-bottom: none">
+        <div class="toggle-label">Extreme Heat</div>
+        <label class="toggle">
+          <input type="checkbox" id="osha-extreme-heat">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <p class="section-label">Hazard Details</p>
+    <div class="card">
+      <div class="field-block">
+        <label>Hazards Identified</label>
+        <textarea id="osha-hazards-identified" placeholder="List any tripping hazards found..."></textarea>
+      </div>
+      <div class="field-block">
+        <label>Other Hazards Not Listed Above</label>
+        <textarea id="osha-other-hazards" placeholder="Describe any other hazards..."></textarea>
+      </div>
+      <div class="field-block" style="border-bottom: none">
+        <label>Precautionary Steps Taken <span style="color:#c0392b">*</span></label>
+        <textarea id="osha-precautions" placeholder="Describe what precautions were taken to avoid hazards..."></textarea>
+        <div class="error-text" id="osha-precautions-error" style="display:none; color:#c0392b; font-size:14px; margin-top:8px;">Required if any hazard is checked</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="goToStep(4)">Continue to Hours</button>
+      <button class="btn btn-secondary" onclick="goToStep(2)">Back</button>
+    </div>
+
+  </div><!-- /step-3 -->
+
+  <!-- STEP 4: TIMES & DETAILS (was step-3) -->
+  <div class="step" id="step-4">
 
     <div class="job-banner visible" id="job-banner">
       <div class="job-name" id="banner-customer"></div>
@@ -137,14 +245,14 @@
     </div>
 
     <div class="actions">
-      <button class="btn btn-primary" onclick="goToStep4()">Safety Check</button>
-      <button class="btn btn-secondary" onclick="goToStep(2)">Back</button>
+      <button class="btn btn-primary" onclick="goToStep5()">Safety Check</button>
+      <button class="btn btn-secondary" onclick="goBackFromStep4()">Back</button>
     </div>
 
-  </div><!-- /step-3 -->
+  </div><!-- /step-4 -->
 
-  <!-- STEP 4: SAFETY & SUBMIT (was step-3) -->
-  <div class="step" id="step-4">
+  <!-- STEP 5: SAFETY & SUBMIT (was step-4) -->
+  <div class="step" id="step-5">
 
     <p class="section-label">Departure</p>
     <div class="card" id="departure-container"></div>
@@ -195,10 +303,10 @@
 
     <div class="actions">
       <button class="btn btn-primary" onclick="submitForm()" id="submit-btn">Submit Job</button>
-      <button class="btn btn-secondary" onclick="goToStep(3)">Back</button>
+      <button class="btn btn-secondary" onclick="goToStep(4)">Back</button>
     </div>
 
-  </div><!-- /step-4 -->
+  </div><!-- /step-5 -->
 
   <!-- SUCCESS -->
   <div class="success-screen" id="success-screen">
@@ -230,6 +338,7 @@ let selectedEmployee = null;
 let selectedClient = null; // { name, jobs: [...records] }
 let currentStep = 1;
 let allJobs = [];
+let oshaRequired = false;
 
 // ── CHECKLIST DATA ──────────────────────────────────────────
 const CHECKLIST_DATA = {
@@ -446,6 +555,20 @@ const JOB_TYPE_MAP = {
   'Commercial WC - Exterior Only':   ['Storefront Window Cleaning']
 };
 
+// OSHA assessment required for these job types (exact case-sensitive match)
+const OSHA_REQUIRED_JOB_TYPES = new Set([
+  'Residential Gutter Cleaning',
+  'Commercial Gutter Cleaning',
+  'Roof Cleaning',
+  'Partial Roof Cleaning',
+  'Skylight Cleaning'
+]);
+
+function isOshaRequired(jobs) {
+  const billableJobs = jobs.filter(j => (j.fields['Job Type'] || '').toLowerCase() !== 'discount');
+  return billableJobs.some(j => OSHA_REQUIRED_JOB_TYPES.has(j.fields['Job Type']));
+}
+
 // ── HELPERS ─────────────────────────────────────────────────
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -651,7 +774,21 @@ function buildChecklist() {
   banner.classList.add('visible');
 }
 
-// ── DEPARTURE CHECKLIST (Step 4) ─────────────────────────────
+// ── OSHA FORM (Step 3, conditional) ────────────────────────
+function buildOshaForm() {
+  const banner = document.getElementById('osha-banner');
+  const customer = selectedClient.name;
+  const jt = selectedClient.jobs
+    .map(j => j.fields['Job Type'] || '')
+    .filter(t => t.toLowerCase() !== 'discount' && t)
+    .join(' · ');
+  banner.innerHTML = `
+    <div class="job-name">${esc(customer)}</div>
+    <div class="job-meta"><span>${esc(jt)}</span></div>
+  `;
+}
+
+// ── DEPARTURE CHECKLIST (Step 5) ─────────────────────────────
 function buildDeparture() {
   const container = document.getElementById('departure-container');
   container.innerHTML = '';
@@ -680,10 +817,29 @@ function goToStep2() {
   if (!selectedClient) { showError('Please select a client first.'); return; }
   hideError();
   buildChecklist();
+  oshaRequired = isOshaRequired(selectedClient.jobs);
+  updateProgressBar();
   goToStep(2);
 }
 
-function goToStep4() {
+function continueFromStep2() {
+  if (oshaRequired) {
+    buildOshaForm();
+    goToStep(3);
+  } else {
+    goToStep(4);
+  }
+}
+
+function goBackFromStep4() {
+  if (oshaRequired) {
+    goToStep(3);
+  } else {
+    goToStep(2);
+  }
+}
+
+function goToStep5() {
   if (!document.getElementById('comm-start').value) {
     showError('Please enter your Commission Start time.');
     return;
@@ -694,7 +850,15 @@ function goToStep4() {
   }
   hideError();
   buildDeparture();
-  goToStep(4);
+  goToStep(5);
+}
+
+function updateProgressBar() {
+  if (oshaRequired) {
+    document.getElementById('dot-3').style.display = '';
+  } else {
+    document.getElementById('dot-3').style.display = 'none';
+  }
 }
 
 function goToStep(n) {
@@ -706,9 +870,15 @@ function goToStep(n) {
 }
 
 function updateProgress(n) {
-  for (let i = 1; i <= 4; i++) {
+  const maxDots = oshaRequired ? 5 : 4;
+  for (let i = 1; i <= 5; i++) {
     const dot = document.getElementById(`dot-${i}`);
-    if (dot) dot.classList.toggle('done', i <= n);
+    if (!dot) continue;
+    if (i === 3 && !oshaRequired) {
+      dot.classList.remove('done');
+      continue;
+    }
+    dot.classList.toggle('done', i <= n);
   }
 }
 
@@ -770,6 +940,28 @@ async function uploadAttachment(recordId, fieldName, file) {
 
 // ── SUBMIT ───────────────────────────────────────────────────
 async function submitForm() {
+  // Validate OSHA precautions if hazards were checked
+  if (oshaRequired) {
+    const hazardCheckboxes = [
+      'osha-skylights',
+      'osha-solar-panels',
+      'osha-tripping-hazards',
+      'osha-electrical-wires',
+      'osha-broken-tiles',
+      'osha-moss-lichen'
+    ];
+    const anyHazardChecked = hazardCheckboxes.some(id => document.getElementById(id).checked);
+    const precautionsValue = document.getElementById('osha-precautions').value.trim();
+
+    if (anyHazardChecked && !precautionsValue) {
+      document.getElementById('osha-precautions-error').style.display = 'block';
+      goToStep(3);
+      showError('Please describe the precautionary steps taken when hazards are identified.');
+      return;
+    }
+    document.getElementById('osha-precautions-error').style.display = 'none';
+  }
+
   const btn = document.getElementById('submit-btn');
   btn.textContent = 'Submitting...';
   btn.disabled = true;
@@ -795,6 +987,23 @@ async function submitForm() {
 
   if (document.getElementById('incident').checked) {
     fields['Incident Notes'] = document.getElementById('incident-notes').value;
+  }
+
+  // OSHA fields (if applicable)
+  if (oshaRequired) {
+    fields['OSHA Skylights']           = document.getElementById('osha-skylights').checked;
+    fields['OSHA Solar Panels']        = document.getElementById('osha-solar-panels').checked;
+    fields['OSHA Tripping Hazards']    = document.getElementById('osha-tripping-hazards').checked;
+    fields['OSHA Electrical Wires']    = document.getElementById('osha-electrical-wires').checked;
+    fields['OSHA Broken Tiles']        = document.getElementById('osha-broken-tiles').checked;
+    fields['OSHA Moss Lichen']         = document.getElementById('osha-moss-lichen').checked;
+    fields['OSHA Windy']               = document.getElementById('osha-windy').checked;
+    fields['OSHA Rainy']               = document.getElementById('osha-rainy').checked;
+    fields['OSHA Cloudy']              = document.getElementById('osha-cloudy').checked;
+    fields['OSHA Extreme Heat']        = document.getElementById('osha-extreme-heat').checked;
+    fields['OSHA Hazards Identified']  = document.getElementById('osha-hazards-identified').value || null;
+    fields['OSHA Other Hazards']       = document.getElementById('osha-other-hazards').value || null;
+    fields['OSHA Precautions']         = document.getElementById('osha-precautions').value || null;
   }
 
   // Checklist: job-specific toggles + Departure toggles
@@ -866,6 +1075,7 @@ async function submitForm() {
 function resetForm() {
   selectedEmployee = null;
   selectedClient = null;
+  oshaRequired = false;
   document.getElementById('employee-select').value = '';
   document.getElementById('job-date').value = todayStr;
   document.getElementById('client-list-section').style.display = 'none';
@@ -883,6 +1093,25 @@ function resetForm() {
   const cb = document.getElementById('checklist-banner');
   cb.innerHTML = '';
   cb.classList.remove('visible');
+
+  // Reset OSHA fields
+  document.getElementById('osha-skylights').checked = false;
+  document.getElementById('osha-solar-panels').checked = false;
+  document.getElementById('osha-tripping-hazards').checked = false;
+  document.getElementById('osha-electrical-wires').checked = false;
+  document.getElementById('osha-broken-tiles').checked = false;
+  document.getElementById('osha-moss-lichen').checked = false;
+  document.getElementById('osha-windy').checked = false;
+  document.getElementById('osha-rainy').checked = false;
+  document.getElementById('osha-cloudy').checked = false;
+  document.getElementById('osha-extreme-heat').checked = false;
+  document.getElementById('osha-hazards-identified').value = '';
+  document.getElementById('osha-other-hazards').value = '';
+  document.getElementById('osha-precautions').value = '';
+  document.getElementById('osha-precautions-error').style.display = 'none';
+  document.getElementById('osha-banner').innerHTML = '';
+  document.getElementById('osha-banner').classList.remove('visible');
+
   document.getElementById('success-screen').classList.remove('visible');
   document.getElementById('photo-warning').style.display = 'none';
   document.getElementById('progress').style.display = 'flex';
@@ -890,6 +1119,7 @@ function resetForm() {
   document.getElementById('safety-photo').value = '';
   document.getElementById('job-preview').innerHTML = '';
   document.getElementById('safety-preview').innerHTML = '';
+  updateProgressBar();
   goToStep(1);
 }
 
