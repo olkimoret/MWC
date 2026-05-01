@@ -1238,15 +1238,17 @@ function hideError() {
   document.getElementById('error-msg').classList.remove('visible');
 }
 
-// Init
+fetchJobsFieldIds();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="/custom-select.js"></script>
+<script src="/timepicker.js"></script>
+<script>
+// Init after all scripts loaded
 loadEmployees().then(() => {
   window.initCustomSelects(document.getElementById('employee-select').closest('.card'));
 });
 window.initTimePickers();
-fetchJobsFieldIds();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="/timepicker.js"></script>
-<script src="/custom-select.js"></script>
 </body>
 </html>
