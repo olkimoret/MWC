@@ -1,0 +1,68 @@
+/* ── CUSTOM SELECT ── */
+.cs-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  width: 100%;
+  min-height: 28px;
+  user-select: none;
+}
+
+.cs-value {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cs-value.placeholder { color: var(--text-3); font-weight: 400; }
+
+.cs-chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--text-3);
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.cs-wrapper { position: relative; }
+.cs-wrapper.open .cs-chevron { transform: rotate(180deg); }
+
+/* Portal dropdown — appended to <body>, position:fixed */
+.cs-dropdown {
+  display: none;
+  position: fixed;
+  background: var(--surface, #fff);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.07);
+  border: 1px solid var(--border, #E5E7EB);
+  z-index: 9999;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.cs-dropdown.cs-open { display: block; }
+
+.cs-option {
+  padding: 13px 16px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text, #111827);
+  cursor: pointer;
+  transition: background 0.12s;
+  border-bottom: 1px solid var(--border, #E5E7EB);
+  line-height: 1.3;
+}
+
+.cs-option:last-child { border-bottom: none; }
+.cs-option:hover,
+.cs-option:active { background: var(--bg, #F3F4F6); }
+.cs-option.selected { color: var(--primary, #111827); font-weight: 700; }
+.cs-option.cs-placeholder { color: var(--text-3, #9CA3AF); font-weight: 400; }

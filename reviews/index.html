@@ -4,39 +4,45 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Master's Window Cleaning — Review Linker</title>
-<link rel="stylesheet" href="/mwc.css">
+<link rel="stylesheet" href="/mwc-new.css">
+<link rel="stylesheet" href="/custom-select.css">
 </head>
 <body>
 
 <header>
-  <img class="header-logo" src="https://www.masterswindowcleaning.com/wp-content/uploads/2023/05/Final-logo.png" alt="Master's Window Cleaning">
+  <img class="header-lion" src="/assets/lion.png" alt="Lion">
   <div class="header-text">
     <h1>Master's Window Cleaning</h1>
     <p>Review Linker</p>
   </div>
-  <a class="header-back" href="/" title="Back to dashboard">☰</a>
+  <a class="header-back" href="/index.html" title="Back to dashboard">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
+    Dashboard
+  </a>
 </header>
 
-<div class="container">
+<div class="container-wide">
 
   <div class="error-msg" id="error-msg"></div>
 
   <div id="loading-screen" class="loading">
     <div class="spinner"></div>
-    Loading unlinked reviews...
+    Loading unlinked reviews…
   </div>
 
   <div id="no-reviews" class="no-jobs" style="display:none">
-    🎉 All reviews are linked. Nothing to do!
+    All reviews are linked — nothing to do!
   </div>
 
   <div id="review-list" style="display:none"></div>
 
   <div class="success-screen" id="success-screen">
-    <div class="success-icon">✅</div>
+    <div class="success-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+    </div>
     <h2>All Done</h2>
     <p>All reviews have been linked.</p>
-    <button class="btn btn-primary" onclick="location.reload()">Check Again</button>
+    <button class="btn btn-primary" style="max-width:240px;margin:0 auto;" onclick="location.reload()">Check Again</button>
   </div>
 
 </div>
@@ -70,6 +76,7 @@ async function init() {
       fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Pay%20Periods`, { headers }).then(r => r.json()),
       fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${REVIEWS_TABLE}?filterByFormula=${formula}&sort[0][field]=Date&sort[0][direction]=desc`, { headers }).then(r => r.json())
     ]);
+
     employees = empData.records.map(r => ({ id: r.id, name: r.fields.Name }));
     payPeriods = ppData.records
       .map(r => ({ id: r.id, name: r.fields['Pay Period Name'], startDate: r.fields['Start Date'] || '', endDate: r.fields['End Date'] || '' }))
@@ -98,6 +105,7 @@ function renderReviews() {
 
   const heading = document.createElement('p');
   heading.className = 'section-label';
+  heading.style.gridColumn = '1 / -1';
   heading.textContent = `${pendingReviews.length} unlinked review${pendingReviews.length !== 1 ? 's' : ''}`;
   list.appendChild(heading);
 
@@ -109,47 +117,51 @@ function renderReviews() {
     const reviewText = f['Review Text'] || '';
     const sentiment = f['Sentiment'] || '';
 
-    const sentimentColor = sentiment === 'Positive' ? '#34C759' : sentiment === 'Negative' ? '#FF3B30' : '#8E8E93';
+    const sentimentColor = sentiment === 'Positive' ? 'var(--success)' : sentiment === 'Negative' ? 'var(--error)' : 'var(--text-3)';
 
     const card = document.createElement('div');
     card.className = 'review-card';
     card.id = `review-${review.id}`;
     card.innerHTML = `
       <div class="review-meta">
-        <span class="review-source">${esc(source)}</span>
+        ${source ? `<span class="review-source">${esc(source)}</span>` : ''}
         <span class="review-date">${esc(date)}</span>
-        ${sentiment ? `<span style="font-size:11px;font-weight:600;color:${sentimentColor}">${esc(sentiment)}</span>` : ''}
+        ${sentiment ? `<span style="font-size:11px;font-weight:700;color:${sentimentColor};letter-spacing:0.3px">${esc(sentiment)}</span>` : ''}
       </div>
       <div class="review-customer">${esc(customerName)}</div>
-      ${reviewText ? `<div class="review-text">"${esc(reviewText)}"</div>` : ''}
+      ${reviewText ? `<div class="review-text">"${esc(reviewText)}"</div>` : '<div style="flex:1"></div>'}
       <div class="review-fields">
         <div class="review-field">
-          <label>Customer Name (override if needed)</label>
-          <input type="text" id="name-${review.id}" value="${esc(customerName)}" placeholder="Customer name in CRM">
+          <label>Customer Name</label>
+          <input type="text" id="name-${review.id}" value="${esc(customerName)}" placeholder="Name in CRM">
         </div>
         <div class="review-field">
           <label>Link to Employee</label>
-          <div class="select-wrapper">
-            <select id="emp-${review.id}">
+          <div class="select-wrapper" style="position:relative">
+            <select id="emp-${review.id}" style="padding:10px 32px 10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:14px;font-weight:500;color:var(--text);background:var(--bg);width:100%;-webkit-appearance:none;appearance:none;outline:none;">
               <option value="">— Select employee —</option>
               ${employees.map(e => `<option value="${e.id}">${esc(e.name)}</option>`).join('')}
             </select>
+
           </div>
         </div>
         <div class="review-field">
-          <label>Pay Period (optional)</label>
-          <div class="select-wrapper">
-            <select id="pp-${review.id}" data-review-date="${f['Date'] || ''}" onchange="handlePayPeriodChange('${review.id}', this)">
+          <label>Pay Period <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+          <div class="select-wrapper" style="position:relative">
+            <select id="pp-${review.id}" data-review-date="${f['Date'] || ''}" onchange="handlePayPeriodChange('${review.id}', this)" style="padding:10px 32px 10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:14px;font-weight:500;color:var(--text);background:var(--bg);width:100%;-webkit-appearance:none;appearance:none;outline:none;">
               ${buildPayPeriodOptions(false, f['Date'])}
             </select>
+
           </div>
         </div>
       </div>
-      <button class="review-save-btn" onclick="saveReview('${review.id}')">Save & Link</button>
-      <div class="review-saved" id="saved-${review.id}" style="display:none">✓ Linked</div>
+      <button class="review-save-btn" onclick="saveReview('${review.id}')">Save &amp; Link</button>
+      <div class="review-saved" id="saved-${review.id}" style="display:none">✓ Linked successfully</div>
     `;
     list.appendChild(card);
   });
+  // Init custom selects on dynamically rendered cards
+  requestAnimationFrame(() => window.initCustomSelects(list));
 }
 
 function buildPayPeriodOptions(showAll, reviewDate) {
@@ -157,32 +169,18 @@ function buildPayPeriodOptions(showAll, reviewDate) {
     return `<option value="">— Select pay period —</option>
       ${[...payPeriods].reverse().map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}`;
   }
-
-  // payPeriods is sorted desc by endDate
-  // Find the period whose range contains the review date
   const reviewTs = reviewDate ? new Date(reviewDate + 'T00:00:00').getTime() : Date.now();
-
   let matchIdx = payPeriods.findIndex(p => {
     const s = new Date(p.startDate + 'T00:00:00').getTime();
     const e = new Date(p.endDate + 'T00:00:00').getTime();
     return s <= reviewTs && reviewTs <= e;
   });
-
-  // Fallback: most recent period that ended before the review date
-  if (matchIdx === -1) {
-    matchIdx = payPeriods.findIndex(p => new Date(p.endDate + 'T00:00:00').getTime() < reviewTs);
-  }
+  if (matchIdx === -1) matchIdx = payPeriods.findIndex(p => new Date(p.endDate + 'T00:00:00').getTime() < reviewTs);
   if (matchIdx === -1) matchIdx = 0;
-
-  // Take up to matchIdx (inclusive), show the last 5
   const relevant = payPeriods.slice(0, matchIdx + 1);
   const show5 = relevant.slice(-5);
-  const displayList = [...show5].reverse(); // ascending: oldest on top, match at bottom
-
-  const moreOption = payPeriods.length > show5.length
-    ? `<option value="__more__">Show more...</option>`
-    : '';
-
+  const displayList = [...show5].reverse();
+  const moreOption = payPeriods.length > show5.length ? `<option value="__more__">Show more…</option>` : '';
   return `<option value="">— Select pay period —</option>
     ${displayList.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}
     ${moreOption}`;
@@ -206,49 +204,29 @@ async function saveReview(recordId) {
     return;
   }
 
-  btn.textContent = 'Saving...';
+  btn.textContent = 'Saving…';
   btn.disabled = true;
   hideError();
 
-  const fields = {
-    'Employee': [String(empId)],
-    'Linked by Office': true
-  };
-
-  if (customerName) {
-    fields['Customer Name'] = customerName;
-  }
-
-  if (ppId) {
-    fields['Pay Period'] = [String(ppId)];
-  }
+  const fields = { 'Employee': [String(empId)], 'Linked by Office': true };
+  if (customerName) fields['Customer Name'] = customerName;
+  if (ppId) fields['Pay Period'] = [String(ppId)];
 
   try {
     const res = await fetch(
       `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${REVIEWS_TABLE}/${recordId}`,
-      {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({ fields })
-      }
+      { method: 'PATCH', headers, body: JSON.stringify({ fields }) }
     );
-
     if (!res.ok) throw new Error('Save failed');
 
-    // Hide the card, show saved indicator
     document.getElementById(`saved-${recordId}`).style.display = 'block';
     btn.style.display = 'none';
 
-    // Remove from pending
     pendingReviews = pendingReviews.filter(r => r.id !== recordId);
 
-    // Update count label
-    const heading = document.querySelector('.section-label');
-    if (heading) {
-      heading.textContent = `${pendingReviews.length} unlinked review${pendingReviews.length !== 1 ? 's' : ''}`;
-    }
+    const heading = document.querySelector('#review-list .section-label');
+    if (heading) heading.textContent = `${pendingReviews.length} unlinked review${pendingReviews.length !== 1 ? 's' : ''}`;
 
-    // If all done, show success
     if (pendingReviews.length === 0) {
       setTimeout(() => {
         document.getElementById('review-list').style.display = 'none';
@@ -276,5 +254,6 @@ function hideError() {
 
 init();
 </script>
+<script src="/custom-select.js"></script>
 </body>
 </html>

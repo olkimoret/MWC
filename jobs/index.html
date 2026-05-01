@@ -4,12 +4,59 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Master's Window Cleaning — Job Form</title>
-<link rel="stylesheet" href="/mwc.css">
+<link rel="stylesheet" href="/mwc-new.css">
+<link rel="stylesheet" href="/custom-select.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+.flatpickr-input { cursor: pointer; }
+.flatpickr-calendar {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+  border: 1px solid #E5E7EB;
+}
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover { background: #111827; border-color: #111827; }
+.flatpickr-day:hover { background: #F3F4F6; }
+.flatpickr-months { background: #111827; border-radius: 14px 14px 0 0; }
+.flatpickr-months .flatpickr-month { background: transparent; }
+.flatpickr-current-month { padding: 10px 0; font-size: 14px; }
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+  background: transparent;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.flatpickr-current-month .flatpickr-monthDropdown-months option {
+  background: #1F2937;
+  color: #fff;
+}
+.flatpickr-current-month input.cur-year {
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+}
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month { color: #fff; fill: #fff; padding: 10px; }
+.flatpickr-weekday { color: #9CA3AF; font-weight: 600; font-size: 11px; }
+.numInputWrapper span { border-color: rgba(255,255,255,0.2); }
+.numInputWrapper span svg { fill: #fff; }
+
+.fp-time {
+  flex: 1; text-align: right; font-family: inherit;
+  font-size: 15px; font-weight: 500; color: var(--amber, #D97706);
+  border: none; background: transparent; outline: none;
+  cursor: pointer; min-width: 0;
+}
+.fp-time::placeholder { color: var(--text-3, #9CA3AF); font-weight: 400; }
+</style>
 </head>
 <body>
 
 <header>
-  <img class="header-logo" src="https://www.masterswindowcleaning.com/wp-content/uploads/2023/05/Final-logo.png" alt="Master's Window Cleaning">
+  <img class="header-lion" src="/assets/lion.png" alt="Lion">
   <div class="header-text">
     <h1>Master's Window Cleaning</h1>
     <p>Job Completion Form</p>
@@ -43,9 +90,9 @@
         </div>
       </div>
 
-      <div class="form-row" style="flex-wrap: wrap; gap: 6px;">
+      <div class="form-row" style="flex-wrap:wrap;gap:6px;">
         <span class="row-label">Date</span>
-        <input type="date" id="job-date" onchange="tryLoadJobs()">
+        <input type="text" id="job-date" placeholder="Select date" readonly style="cursor:pointer;flex:1;text-align:right;font-family:inherit;font-size:15px;font-weight:500;color:var(--amber);border:none;background:transparent;outline:none;">
         <div class="date-sub" id="date-display" style="width:100%;"></div>
       </div>
     </div>
@@ -198,19 +245,19 @@
     <div class="card">
       <div class="form-row">
         <span class="row-label">Commission Start</span>
-        <input type="time" id="comm-start">
+        <input type="text" id="comm-start" class="fp-time" placeholder="Set time…" readonly>
       </div>
       <div class="form-row">
         <span class="row-label">Commission End</span>
-        <input type="time" id="comm-end">
+        <input type="text" id="comm-end" class="fp-time" placeholder="Set time…" readonly>
       </div>
       <div class="form-row">
         <span class="row-label">Hourly Start <small>optional</small></span>
-        <input type="time" id="hrly-start">
+        <input type="text" id="hrly-start" class="fp-time" placeholder="Set time…" readonly>
       </div>
       <div class="form-row">
         <span class="row-label">Hourly End <small>optional</small></span>
-        <input type="time" id="hrly-end">
+        <input type="text" id="hrly-end" class="fp-time" placeholder="Set time…" readonly>
       </div>
       <div class="toggle-field">
         <div>
@@ -229,7 +276,9 @@
       <div class="photo-section">
         <div class="photo-upload" id="job-photo-upload">
           <input type="file" id="job-photos" accept="image/*" multiple capture="environment" onchange="previewPhotos(this, 'job-preview')">
-          <div class="photo-upload-icon">📸</div>
+          <div class="photo-upload-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor" style="color:var(--text-3)"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" /></svg>
+          </div>
           <p>Tap to take photos or <strong>browse</strong></p>
         </div>
         <div class="photo-preview" id="job-preview"></div>
@@ -237,8 +286,10 @@
       <div class="photo-section">
         <div class="photo-upload">
           <input type="file" id="safety-photo" accept="image/*" capture="environment" onchange="previewPhotos(this, 'safety-preview')">
-          <div class="photo-upload-icon">🦺</div>
-          <p>Photo of you in safety gear</p>
+          <div class="photo-upload-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor" style="color:var(--text-3)"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" /></svg>
+          </div>
+          <p>Photo of you in <strong>safety gear</strong></p>
         </div>
         <div class="photo-preview" id="safety-preview"></div>
       </div>
@@ -310,11 +361,13 @@
 
   <!-- SUCCESS -->
   <div class="success-screen" id="success-screen">
-    <div class="success-icon">✅</div>
+    <div class="success-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+    </div>
     <h2>Job Submitted</h2>
     <p>Great work today. Your job has been recorded.</p>
-    <p id="photo-warning" style="display:none; color:#c0392b; font-size:14px; margin-bottom:16px;">Photos could not be uploaded. Job data was saved — please add photos manually in Airtable.</p>
-    <button class="btn btn-primary" onclick="resetForm()">Submit Another Job</button>
+    <p id="photo-warning" style="display:none;color:var(--error);font-size:13px;margin-bottom:16px;font-weight:600;">Photos could not be uploaded. Job data was saved — please add photos manually in Airtable.</p>
+    <button class="btn btn-primary" style="max-width:240px;margin:0 auto;" onclick="resetForm()">Submit Another Job</button>
   </div>
 
 </div><!-- /container -->
@@ -580,16 +633,20 @@ function escAttr(s) {
 // ── DATE SETUP ───────────────────────────────────────────────
 const today = new Date();
 const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
-document.getElementById('job-date').value = todayStr;
-updateDateDisplay();
 
 function updateDateDisplay() {
-  const d = new Date(document.getElementById('job-date').value + 'T00:00:00');
+  const dateStr = document.getElementById('job-date').value || todayStr;
+  const d = new Date(dateStr + 'T00:00:00');
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   document.getElementById('date-display').textContent = d.toLocaleDateString('en-US', options);
 }
 
-document.getElementById('job-date').addEventListener('change', updateDateDisplay);
+flatpickr('#job-date', {
+  dateFormat: 'Y-m-d',
+  defaultDate: todayStr,
+  onChange: () => { updateDateDisplay(); tryLoadJobs(); }
+});
+updateDateDisplay();
 
 // ── LOAD EMPLOYEES ───────────────────────────────────────────
 async function loadEmployees() {
@@ -670,6 +727,7 @@ async function tryLoadJobs() {
       item.onclick = () => selectClient(clientName, jobs, item);
       list.appendChild(item);
     });
+    requestAnimationFrame(() => window.initCustomSelects(list));
 
   } catch(e) {
     list.innerHTML = '<div class="no-jobs">Error loading jobs. Check connection.</div>';
@@ -880,11 +938,11 @@ function goBackFromStep4() {
 }
 
 function goToStep5() {
-  if (!document.getElementById('comm-start').value) {
+  if (!document.getElementById('comm-start').dataset.h24) {
     showError('Please enter your Commission Start time.');
     return;
   }
-  if (!document.getElementById('comm-end').value) {
+  if (!document.getElementById('comm-end').dataset.h24) {
     showError('Please enter your Commission End time.');
     return;
   }
@@ -1007,10 +1065,10 @@ async function submitForm() {
   btn.disabled = true;
 
   const date = document.getElementById('job-date').value;
-  const commStart = document.getElementById('comm-start').value;
-  const commEnd   = document.getElementById('comm-end').value;
-  const hrlyStart = document.getElementById('hrly-start').value;
-  const hrlyEnd   = document.getElementById('hrly-end').value;
+  const commStart = document.getElementById('comm-start').dataset.h24 || '';
+  const commEnd   = document.getElementById('comm-end').dataset.h24 || '';
+  const hrlyStart = document.getElementById('hrly-start').dataset.h24 || '';
+  const hrlyEnd   = document.getElementById('hrly-end').dataset.h24 || '';
 
   const fields = {
     'Comm Start':        commStart ? `${date}T${commStart}:00` : null,
@@ -1118,11 +1176,16 @@ function resetForm() {
   oshaRequired = false;
   document.getElementById('employee-select').value = '';
   document.getElementById('job-date').value = todayStr;
+  updateDateDisplay();
   document.getElementById('client-list-section').style.display = 'none';
   document.getElementById('comm-start').value = '';
+  document.getElementById('comm-start').dataset.h24 = '';
   document.getElementById('comm-end').value = '';
+  document.getElementById('comm-end').dataset.h24 = '';
   document.getElementById('hrly-start').value = '';
+  document.getElementById('hrly-start').dataset.h24 = '';
   document.getElementById('hrly-end').value = '';
+  document.getElementById('hrly-end').dataset.h24 = '';
   document.getElementById('lunch').checked = false;
   document.getElementById('incident').checked = false;
   document.getElementById('incident-notes-field').classList.remove('visible');
@@ -1176,8 +1239,14 @@ function hideError() {
 }
 
 // Init
-loadEmployees();
+loadEmployees().then(() => {
+  window.initCustomSelects(document.getElementById('employee-select').closest('.card'));
+});
+window.initTimePickers();
 fetchJobsFieldIds();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="/timepicker.js"></script>
+<script src="/custom-select.js"></script>
 </body>
 </html>

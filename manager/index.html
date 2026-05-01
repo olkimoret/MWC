@@ -4,54 +4,104 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Master's Window Cleaning — Arrival Times</title>
-<link rel="stylesheet" href="/mwc.css">
+<link rel="stylesheet" href="/mwc-new.css">
+<link rel="stylesheet" href="/custom-select.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+.flatpickr-input { cursor: pointer; }
+.flatpickr-calendar {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+  border: 1px solid #E5E7EB;
+}
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover { background: #111827; border-color: #111827; }
+.flatpickr-day:hover { background: #F3F4F6; }
+.flatpickr-months { background: #111827; border-radius: 14px 14px 0 0; }
+.flatpickr-months .flatpickr-month { background: transparent; }
+.flatpickr-current-month { padding: 10px 0; font-size: 14px; }
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+  background: transparent;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.flatpickr-current-month .flatpickr-monthDropdown-months option {
+  background: #1F2937;
+  color: #fff;
+}
+.flatpickr-current-month input.cur-year {
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+}
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month { color: #fff; fill: #fff; padding: 10px; }
+.flatpickr-weekday { color: #9CA3AF; font-weight: 600; font-size: 11px; }
+.numInputWrapper span { border-color: rgba(255,255,255,0.2); }
+.numInputWrapper span svg { fill: #fff; }
+.flatpickr-time input { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 16px; font-weight: 600; }
+</style>
 </head>
 <body>
 
 <header>
-  <img class="header-logo" src="https://www.masterswindowcleaning.com/wp-content/uploads/2023/05/Final-logo.png" alt="Master's Window Cleaning">
+  <img class="header-lion" src="/assets/lion.png" alt="Lion">
   <div class="header-text">
     <h1>Master's Window Cleaning</h1>
     <p>Arrival Times</p>
   </div>
-  <a class="header-back" href="/" title="Back to dashboard">☰</a>
+  <a class="header-back" href="/index.html" title="Back to dashboard">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
+    Dashboard
+  </a>
 </header>
 
-<div class="container">
+<div class="container-wide">
 
   <div class="error-msg" id="error-msg"></div>
 
-  <div class="card" style="margin-bottom: 24px">
-    <div class="form-row" style="border-bottom: none">
-      <span class="row-label">Date</span>
-      <input type="date" id="date-picker">
+  <!-- Date picker card -->
+  <div style="max-width:320px; margin-bottom:28px;">
+    <div class="card" style="margin-bottom:0">
+      <div class="form-row" style="border-bottom: none">
+        <span class="row-label">Date</span>
+        <input type="text" id="date-picker" placeholder="Select date" readonly style="cursor:pointer;flex:1;text-align:right;font-family:inherit;font-size:15px;font-weight:500;color:var(--amber);border:none;background:transparent;outline:none;">
+      </div>
     </div>
   </div>
 
   <div id="loading-screen" class="loading">
     <div class="spinner"></div>
-    Loading employees...
+    Loading employees…
   </div>
 
   <div id="no-employees" class="no-jobs" style="display:none">
     No scheduled employees for this date.
   </div>
 
-  <div id="employee-list" style="display:none"></div>
-
-  <div id="save-row" style="display:none; margin-top: 8px">
-    <button class="btn btn-primary" id="save-btn" onclick="saveAll()">Save All</button>
-  </div>
+  <div id="employee-list" class="employee-grid" style="display:none"></div>
 
   <div class="success-screen" id="success-screen">
-    <div class="success-icon">✅</div>
+    <div class="success-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+    </div>
     <h2>Saved</h2>
     <p>Arrival times have been recorded.</p>
-    <button class="btn btn-primary" onclick="resetSuccess()">Done</button>
+    <button class="btn btn-primary" style="max-width:240px;margin:0 auto;" onclick="resetSuccess()">Done</button>
   </div>
 
 </div>
 
+<!-- Sticky save bar -->
+<div class="save-bar" id="save-bar" style="display:none">
+  <button class="btn btn-primary" id="save-btn" onclick="saveAll()">Save All</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
 const AIRTABLE_BASE_ID = 'appVXuyAYj47nZwyz';
 const AIRTABLE_PAT = 'pat51Bpz1DmsTICb1.4cc6011c585d7167d45c6214905f55c09fe042e18742b3fdd53f09646cfb00a0';
@@ -67,10 +117,7 @@ let existingScores = {};
 
 function todayLocal() {
   const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
 function to12h(val) {
@@ -78,7 +125,7 @@ function to12h(val) {
   const [h, m] = val.split(':').map(Number);
   const period = h < 12 ? 'AM' : 'PM';
   const h12 = h % 12 || 12;
-  return `${h12}:${String(m).padStart(2, '0')} ${period}`;
+  return `${h12}:${String(m).padStart(2,'0')} ${period}`;
 }
 
 function to24h(str) {
@@ -90,14 +137,18 @@ function to24h(str) {
   const period = match[3].toUpperCase();
   if (period === 'PM' && h !== 12) h += 12;
   if (period === 'AM' && h === 12) h = 0;
-  return `${String(h).padStart(2, '0')}:${m}`;
+  return `${String(h).padStart(2,'0')}:${m}`;
+}
+
+function initials(name) {
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
 }
 
 async function loadForDate(dateStr) {
   document.getElementById('loading-screen').style.display = '';
   document.getElementById('no-employees').style.display = 'none';
   document.getElementById('employee-list').style.display = 'none';
-  document.getElementById('save-row').style.display = 'none';
+  document.getElementById('save-bar').style.display = 'none';
   document.getElementById('success-screen').classList.remove('visible');
   hideError();
 
@@ -137,8 +188,8 @@ async function loadForDate(dateStr) {
     }
 
     renderEmployees();
-    document.getElementById('employee-list').style.display = 'block';
-    document.getElementById('save-row').style.display = 'block';
+    document.getElementById('employee-list').style.display = 'grid';
+    document.getElementById('save-bar').style.display = 'block';
 
   } catch(e) {
     document.getElementById('loading-screen').style.display = 'none';
@@ -153,45 +204,52 @@ function renderEmployees() {
   currentEmployeeIds.forEach(empId => {
     const name = employeeMap[empId];
     const score = existingScores[empId];
-    const existingTime = score ? to24h(score.fields['Arrival Time'] || '') : '';
+    const existingTime = score ? score.fields['Arrival Time'] || '' : '';
     const excusedLate = score ? (score.fields['Excused Late'] || false) : false;
     const callOut = score ? (score.fields['Call Out'] || false) : false;
 
-    const label = document.createElement('p');
-    label.className = 'section-label';
-    label.textContent = name;
-    list.appendChild(label);
-
     const card = document.createElement('div');
-    card.className = 'card';
+    card.className = 'emp-card';
     card.id = `emp-${empId}`;
     card.innerHTML = `
-      <div class="form-row">
-        <span class="row-label">Arrival Time</span>
-        <input type="time" id="time-${empId}" value="${existingTime}">
+      <div class="emp-card-header">
+        <div class="emp-avatar">${initials(name)}</div>
+        <div class="emp-name">${name}</div>
       </div>
-      <div class="toggle-field">
-        <div class="toggle-label">Excused Late</div>
-        <label class="toggle">
-          <input type="checkbox" id="excused-${empId}" ${excusedLate ? 'checked' : ''}>
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <div class="toggle-field" style="border-bottom: none">
-        <div class="toggle-label">Call Out</div>
-        <label class="toggle">
-          <input type="checkbox" id="callout-${empId}" ${callOut ? 'checked' : ''}>
-          <span class="toggle-slider"></span>
-        </label>
+      <div class="emp-card-body">
+        <div class="form-row">
+          <span class="row-label">Arrival Time</span>
+          <input type="text" id="time-${empId}" class="fp-time" placeholder="Set time…" readonly data-default="${existingTime ? existingTime.split(' ')[0].replace(/^(\d)/, '0$1') : ''}">
+        </div>
+        <div class="toggle-field">
+          <div>
+            <div class="toggle-label">Excused Late</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="excused-${empId}" ${excusedLate ? 'checked' : ''}>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-field" style="border-bottom:none">
+          <div>
+            <div class="toggle-label">Call Out</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="callout-${empId}" ${callOut ? 'checked' : ''}>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
       </div>
     `;
     list.appendChild(card);
   });
+
+  window.initTimePickers(list);
 }
 
 async function saveAll() {
   const btn = document.getElementById('save-btn');
-  btn.textContent = 'Saving...';
+  btn.textContent = 'Saving…';
   btn.disabled = true;
   hideError();
 
@@ -199,15 +257,18 @@ async function saveAll() {
   let failed = 0;
 
   for (const empId of currentEmployeeIds) {
-    const timeVal = document.getElementById(`time-${empId}`).value;
+    const timeVal = document.getElementById(`time-${empId}`).dataset.h24 || '';
     const excusedLate = document.getElementById(`excused-${empId}`).checked;
     const callOut = document.getElementById(`callout-${empId}`).checked;
 
     const fields = {
-      'Arrival Time': to12h(timeVal),
+      'Arrival Time': timeVal ? to12h(timeVal) : null,
       'Excused Late': excusedLate,
       'Call Out': callOut
     };
+
+    // Remove null fields
+    Object.keys(fields).forEach(k => fields[k] === null && delete fields[k]);
 
     const existing = existingScores[empId];
 
@@ -239,7 +300,7 @@ async function saveAll() {
     showError(`${failed} record${failed !== 1 ? 's' : ''} failed to save. Please try again.`);
   } else {
     document.getElementById('employee-list').style.display = 'none';
-    document.getElementById('save-row').style.display = 'none';
+    document.getElementById('save-bar').style.display = 'none';
     document.getElementById('success-screen').classList.add('visible');
   }
 }
@@ -260,10 +321,16 @@ function hideError() {
   document.getElementById('error-msg').classList.remove('visible');
 }
 
-const picker = document.getElementById('date-picker');
-picker.value = todayLocal();
-picker.addEventListener('change', () => loadForDate(picker.value));
-loadForDate(picker.value);
+// Init date picker with Flatpickr
+flatpickr('#date-picker', {
+  dateFormat: 'Y-m-d',
+  defaultDate: todayLocal(),
+  onChange: (selectedDates, dateStr) => loadForDate(dateStr)
+});
+
+loadForDate(todayLocal());
 </script>
+<script src="/timepicker.js"></script>
+<script src="/custom-select.js"></script>
 </body>
 </html>
