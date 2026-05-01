@@ -641,13 +641,6 @@ function updateDateDisplay() {
   document.getElementById('date-display').textContent = d.toLocaleDateString('en-US', options);
 }
 
-flatpickr('#job-date', {
-  dateFormat: 'Y-m-d',
-  defaultDate: todayStr,
-  onChange: () => { updateDateDisplay(); tryLoadJobs(); }
-});
-updateDateDisplay();
-
 // ── LOAD EMPLOYEES ───────────────────────────────────────────
 async function loadEmployees() {
   try {
@@ -1244,6 +1237,14 @@ fetchJobsFieldIds();
 <script src="/custom-select.js"></script>
 <script src="/timepicker.js"></script>
 <script>
+// Init date picker with Flatpickr
+flatpickr('#job-date', {
+  dateFormat: 'Y-m-d',
+  defaultDate: todayStr,
+  onChange: () => { updateDateDisplay(); tryLoadJobs(); }
+});
+updateDateDisplay();
+
 // Init after all scripts loaded
 loadEmployees().then(() => {
   window.initCustomSelects(document.getElementById('employee-select').closest('.card'));
