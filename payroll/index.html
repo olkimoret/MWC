@@ -623,11 +623,15 @@ function showEmployee() {
   hideError();
 }
 
-function showCalculate() {
+async function showCalculate() {
   document.getElementById('calc-emp-label').textContent = selectedEmpName;
 
   const today = todayLocal();
-  const available = payPeriods.filter(pp => {
+  const select = document.getElementById('calc-period-select');
+  select.innerHTML = '<option value="">— Select pay period —</option>';
+
+  // Filter completed periods with no existing payroll
+  const completedWithoutPayroll = payPeriods.filter(pp => {
     if (!pp.endDate || pp.endDate >= today) return false;
     const exists = payrollRecords.some(pr => {
       const empIds = pr.fields.Employee || [];
@@ -637,14 +641,32 @@ function showCalculate() {
     return !exists;
   });
 
-  const select = document.getElementById('calc-period-select');
-  select.innerHTML = '<option value="">— Select pay period —</option>';
-  available.forEach(pp => {
-    const option = document.createElement('option');
-    option.value = pp.id;
-    option.textContent = pp.name;
-    select.appendChild(option);
-  });
+  // For each candidate period, check if employee has jobs in that period
+  for (const pp of completedWithoutPayroll) {
+    try {
+      const jobsInPeriod = await fetchJobsForPeriod(pp.startDate, pp.endDate);
+      const hasJobForEmp = jobsInPeriod.some(j => {
+        const empIds = j.fields.Employee || [];
+        const ppIds = j.fields['Pay Period'] || [];
+        const commStart = j.fields['Comm Start'];
+        const jobType = j.fields['Job Type'];
+        return empIds.includes(selectedEmpId) && ppIds.includes(pp.id) && commStart && jobType !== 'Discount';
+      });
+
+      if (hasJobForEmp) {
+        const option = document.createElement('option');
+        option.value = pp.id;
+        option.textContent = pp.name;
+        select.appendChild(option);
+      }
+    } catch (e) {
+      // If fetch fails, include the period anyway (fail open)
+      const option = document.createElement('option');
+      option.value = pp.id;
+      option.textContent = pp.name;
+      select.appendChild(option);
+    }
+  }
 
   document.getElementById('team-view').style.display = 'none';
   document.getElementById('employee-view').style.display = 'none';
@@ -695,6 +717,28 @@ document.getElementById('confirm-yes').addEventListener('click', () => {
 
 document.getElementById('confirm-no').addEventListener('click', hideConfirm);
 
+async function fetchJobsForPeriod(startDate, endDate) {
+  const formula = encodeURIComponent(
+    `AND(DATESTR({Job Date})>='${startDate}',DATESTR({Job Date})<='${endDate}')`
+  );
+  const res = await fetch(
+    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Jobs?filterByFormula=${formula}&fields[]=Job%20Date&fields[]=Job%20Revenue&fields[]=Commission%20Rate&fields[]=Net%20Hours&fields[]=Job%20Type&fields[]=Comm%20Start&fields[]=Employee&fields[]=Pay%20Period`,
+    { headers }
+  );
+  const data = await res.json();
+  return data.records || [];
+}
+
+function filterJobs(jobs, empId, ppId) {
+  return jobs.filter(j => {
+    const empIds = j.fields.Employee || [];
+    const ppIds = j.fields['Pay Period'] || [];
+    const commStart = j.fields['Comm Start'];
+    const jobType = j.fields['Job Type'];
+    return empIds.includes(empId) && ppIds.includes(ppId) && commStart && jobType !== 'Discount';
+  });
+}
+
 async function doCalculate() {
   const btn = document.getElementById('calc-btn');
   btn.textContent = 'Calculating…';
@@ -702,15 +746,16 @@ async function doCalculate() {
   hideError();
 
   try {
-    const formula = encodeURIComponent(
-      `AND(FIND('${selectedEmpId}',ARRAYJOIN({Employee},',')),FIND('${selectedPpId}',ARRAYJOIN({Pay Period},',')),NOT({Job Type}='Discount'),{Comm Start}!='')`
-    );
-    const res = await fetch(
-      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Jobs?filterByFormula=${formula}&fields[]=Job%20Date&fields[]=Job%20Revenue&fields[]=Commission%20Rate&fields[]=Net%20Hours&fields[]=Job%20Type&fields[]=Comm%20Start`,
-      { headers }
-    );
-    const jobData = await res.json();
-    const jobs = jobData.records || [];
+    const pp = payPeriods.find(p => p.id === selectedPpId);
+    if (!pp) {
+      showError('Pay period not found.');
+      btn.textContent = 'Calculate';
+      btn.disabled = false;
+      return;
+    }
+
+    const allJobsInPeriod = await fetchJobsForPeriod(pp.startDate, pp.endDate);
+    const jobs = filterJobs(allJobsInPeriod, selectedEmpId, selectedPpId);
 
     if (jobs.length === 0) {
       showError('No jobs found for this employee and period.');
@@ -722,21 +767,17 @@ async function doCalculate() {
     const payrollFields = computePayroll(jobs);
 
     // Check fresh for existing record before write
-    const checkFormula = encodeURIComponent(
-      `AND(FIND('${selectedEmpId}',ARRAYJOIN({Employee},',')),FIND('${selectedPpId}',ARRAYJOIN({Pay Period},',')))`
-    );
-    const checkRes = await fetch(
-      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Payroll?filterByFormula=${checkFormula}`,
-      { headers }
-    );
-    const checkData = await checkRes.json();
-    const existingRecord = checkData.records && checkData.records.length > 0 ? checkData.records[0] : null;
+    const existingPayroll = payrollRecords.find(pr => {
+      const empIds = pr.fields.Employee || [];
+      const ppIds = pr.fields['Pay Period'] || [];
+      return empIds.includes(selectedEmpId) && ppIds.includes(selectedPpId);
+    });
 
     payrollFields['Calculated At'] = new Date().toISOString();
 
-    if (existingRecord) {
+    if (existingPayroll) {
       const patchRes = await fetch(
-        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Payroll/${existingRecord.id}`,
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Payroll/${existingPayroll.id}`,
         { method: 'PATCH', headers, body: JSON.stringify({ fields: payrollFields }) }
       );
       if (!patchRes.ok) throw new Error('PATCH failed');
@@ -750,12 +791,14 @@ async function doCalculate() {
       if (!postRes.ok) throw new Error('POST failed');
     }
 
-    // Refresh payroll records and re-render
+    // Refresh payroll records from Airtable
     const refreshRes = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Payroll`, { headers });
     const refreshData = await refreshRes.json();
     payrollRecords = refreshData.records || [];
 
+    // Re-render both employee cards and team summary
     renderEmployeeView();
+    renderTeamView();
 
   } catch (e) {
     showError('Calculation failed. Please try again.');
