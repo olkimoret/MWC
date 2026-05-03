@@ -108,6 +108,7 @@ header {
   transition: background 0.15s, color 0.15s;
   border-radius: 8px;
   text-decoration: none;
+  align-self: center;
 }
 
 .header-back:hover { background: rgba(255,255,255,0.13); color: #fff; }
