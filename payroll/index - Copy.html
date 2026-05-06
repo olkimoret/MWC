@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Master's Window Cleaning — Run Payroll</title>
+<link rel="stylesheet" href="/mwc-new.css">
+<link rel="stylesheet" href="/custom-select.css">
+<style>
+/* Payroll table */
+.team-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+}
+
+.team-table th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-3);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.team-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.team-table tbody tr {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.team-table tbody tr:hover {
+  background: var(--bg);
+}
+
+.team-table .col-name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.team-table .col-amount {
+  text-align: right;
+  font-weight: 600;
+  color: var(--text);
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+}
+
+.team-table .col-hours {
+  text-align: right;
+  color: var(--text-2);
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
+}
+
+.team-table .col-status {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.team-table .status-ok {
+  color: var(--success);
+}
+
+.team-table .status-missing {
+  color: var(--error);
+}
+
+.team-header {
+  padding: 0 0 20px 0;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.team-header-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 4px 0;
+}
+
+.team-header-dates {
+  font-size: 13px;
+  color: var(--text-2);
+  margin: 0;
+}
+
+.team-table-wrap {
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.team-total {
+  text-align: right;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  padding: 16px 0;
+  border-top: 2px solid var(--border);
+}
+
+.badge-safety {
+  display: inline-block;
+  background: var(--amber-bg);
+  color: var(--amber);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+/* Payroll cards (employee detail view) */
+.payroll-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.payroll-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.payroll-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.payroll-card-period {
+  font-size: 12px;
+  color: var(--text-2);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  margin: 0 0 8px 0;
+}
+
+.payroll-card-amount {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 12px 0;
+  font-family: 'Courier New', monospace;
+}
+
+.payroll-card-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-2);
+  margin: 8px 0;
+}
+
+.payroll-card-row-label {
+  font-weight: 500;
+}
+
+.payroll-card-row-value {
+  text-align: right;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.payroll-card-path {
+  font-size: 12px;
+  color: var(--text-3);
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.payroll-card-delta {
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.delta-up {
+  color: var(--success);
+}
+
+.delta-down {
+  color: var(--error);
+}
+
+/* Confirmation dialog overlay */
+#confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+#confirm-dialog {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  max-width: 360px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+#confirm-msg {
+  font-size: 15px;
+  color: var(--text);
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+#confirm-dialog .actions {
+  gap: 12px;
+}
+
+/* Back button */
+.btn-back {
+  background: none;
+  border: none;
+  color: var(--text-2);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0 0 20px 0;
+  transition: color 0.2s;
+}
+
+.btn-back:hover {
+  color: var(--text);
+}
+
+/* Empty states */
+.no-jobs {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-2);
+  font-size: 15px;
+}
+
+/* Header styling - uses mwc-new.css styles */
+.header-back svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
+/* Section heading */
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 20px 0 16px 0;
+}
+
+/* Actions button group */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.actions .btn {
+  width: 100%;
+}
+</style>
+</head>
+<body>
+<script>
+  (function() {
+    const PASSWORD = 'mwc2026';
+    const AUTH_KEY = 'mwc_manager_auth';
+    if (localStorage.getItem(AUTH_KEY) !== PASSWORD) {
+      const entered = prompt('Manager access — enter password:');
+      if (entered === PASSWORD) {
+        localStorage.setItem(AUTH_KEY, PASSWORD);
+      } else {
+        window.location.replace('/jobs/index.html');
+      }
+    }
+  })();
+</script>
+<header>
+  <img class="header-lion" src="/assets/lion.png" alt="Lion">
+  <div class="header-text">
+    <h1>Master's Window Cleaning</h1>
+    <p>Run Payroll</p>
+  </div>
+  <a class="header-back" href="/index.html" title="Back to dashboard">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
+    Dashboard
+  </a>
+</header>
+
+<div class="container-wide">
+
+  <div class="error-msg" id="error-msg"></div>
+
+  <div id="loading-screen" class="loading">
+    <div class="spinner"></div>
+    Loading payroll data…
+  </div>
+
+  <!-- TEAM VIEW (default) -->
+  <div id="team-view">
+    <div class="team-header">
+      <h2 class="team-header-title" id="period-name"></h2>
+      <p class="team-header-dates" id="period-dates"></p>
+    </div>
+
+    <div class="team-table-wrap">
+      <table class="team-table">
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th>Gross Wages</th>
+            <th>Regular</th>
+            <th>OT</th>
+            <th></th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="team-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="team-total">
+      Total: <span id="total-wages">$0.00</span>
+    </div>
+  </div>
+
+  <!-- EMPLOYEE VIEW -->
+  <div id="employee-view" style="display: none">
+    <button class="btn-back" onclick="showTeam()">← All Employees</button>
+    <h2 id="emp-name-heading"></h2>
+
+    <p class="section-title">Last 4 Payroll Records</p>
+    <div class="payroll-cards-grid" id="payroll-cards"></div>
+
+    <div id="no-payroll" class="no-jobs" style="display: none">
+      No payroll calculated yet for this employee.
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="showCalculate()">Calculate Payroll</button>
+    </div>
+  </div>
+
+  <!-- CALCULATE VIEW -->
+  <div id="calculate-view" style="display: none">
+    <button class="btn-back" onclick="showEmployee()">← Back</button>
+    <h2>Calculate Payroll</h2>
+    <p id="calc-emp-label" style="color: var(--text-2); margin: 0 0 20px 0;"></p>
+
+    <div class="card" style="margin-bottom: 20px">
+      <div class="form-row">
+        <span class="row-label">Pay Period</span>
+        <div class="select-wrapper" style="position: relative">
+          <select id="calc-period-select" style="padding: 10px 32px 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; font-weight: 500; color: var(--text); background: var(--bg); width: 100%; -webkit-appearance: none; appearance: none; outline: none;">
+            <option value="">— Select pay period —</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="calc-btn" onclick="runCalculate()">Calculate</button>
+      <button class="btn btn-secondary" onclick="showEmployee()">Cancel</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- CONFIRMATION DIALOG OVERLAY -->
+<div id="confirm-overlay" style="display: none">
+  <div id="confirm-dialog">
+    <p id="confirm-msg"></p>
+    <div class="actions">
+      <button class="btn btn-primary" id="confirm-yes">Recalculate & Overwrite</button>
+      <button class="btn btn-secondary" id="confirm-no">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const AIRTABLE_BASE_ID = 'appVXuyAYj47nZwyz';
+const AIRTABLE_PAT = 'pat51Bpz1DmsTICb1.4cc6011c585d7167d45c6214905f55c09fe042e18742b3fdd53f09646cfb00a0';
+
+const headers = {
+  'Authorization': `Bearer ${AIRTABLE_PAT}`,
+  'Content-Type': 'application/json'
+};
+
+let employees = [];
+let payPeriods = [];
+let payrollRecords = [];
+let currentPayPeriod = null;
+let selectedEmpId = null;
+let selectedEmpName = null;
+let selectedPpId = null;
+let pendingConfirmCallback = null;
+
+function todayLocal() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function fmt(n) {
+  return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function fmtH(n) {
+  return n.toFixed(1) + ' h';
+}
+
+function getMonday(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(d.setDate(diff));
+}
+
+function esc(str) {
+  const d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
+}
+
+async function init() {
+  try {
+    const [empData, ppData, payrollData] = await Promise.all([
+      fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Employees?sort[0][field]=Name&sort[0][direction]=asc`, { headers }).then(r => r.json()),
+      fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Pay%20Periods?sort[0][field]=End%20Date&sort[0][direction]=desc`, { headers }).then(r => r.json()),
+      fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Payroll`, { headers }).then(r => r.json())
+    ]);
+
+    employees = empData.records.map(r => ({ id: r.id, name: r.fields.Name }));
+    payPeriods = ppData.records.map(r => ({
+      id: r.id,
+      name: r.fields['Pay Period Name'],
+      startDate: r.fields['Start Date'] || '',
+      endDate: r.fields['End Date'] || ''
+    }));
+    payrollRecords = payrollData.records;
+
+    const today = todayLocal();
+    currentPayPeriod = payPeriods.find(p => p.endDate && p.endDate < today);
+
+    if (!currentPayPeriod) {
+      document.getElementById('loading-screen').style.display = 'none';
+      showError('No completed pay periods found.');
+      return;
+    }
+
+    document.getElementById('loading-screen').style.display = 'none';
+    renderTeamView();
+
+  } catch (e) {
+    document.getElementById('loading-screen').style.display = 'none';
+    showError('Could not load payroll data. Check your connection.');
+  }
+}
+
+function renderTeamView() {
+  const tbody = document.getElementById('team-tbody');
+  tbody.innerHTML = '';
+
+  document.getElementById('period-name').textContent = currentPayPeriod.name;
+  document.getElementById('period-dates').textContent = `${currentPayPeriod.startDate} – ${currentPayPeriod.endDate}`;
+
+  let totalWages = 0;
+
+  employees.forEach(emp => {
+    const payroll = payrollRecords.find(pr => {
+      const empIds = pr.fields.Employee || [];
+      const ppIds = pr.fields['Pay Period'] || [];
+      return empIds.includes(emp.id) && ppIds.includes(currentPayPeriod.id);
+    });
+
+    const grossWages = payroll ? (payroll.fields['Gross Wages'] || 0) : 0;
+    const regHours = payroll ? (payroll.fields['Regular Hours'] || 0) : 0;
+    const otHours = payroll ? (payroll.fields['OT Hours'] || 0) : 0;
+    const safetyNet = payroll ? (payroll.fields['Safety Net Triggered'] || false) : false;
+
+    totalWages += grossWages;
+
+    const tr = document.createElement('tr');
+    tr.onclick = () => selectEmployee(emp.id, emp.name);
+    tr.innerHTML = `
+      <td class="col-name">${esc(emp.name)}</td>
+      <td class="col-amount">${payroll ? fmt(grossWages) : '—'}</td>
+      <td class="col-hours">${payroll ? fmtH(regHours) : '—'}</td>
+      <td class="col-hours">${payroll ? fmtH(otHours) : '—'}</td>
+      <td>${safetyNet ? '<span class="badge-safety">Safety Net</span>' : ''}</td>
+      <td class="col-status">${payroll ? '<span class="status-ok">✓</span>' : '<span class="status-missing">Not calculated</span>'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('total-wages').textContent = fmt(totalWages);
+}
+
+function selectEmployee(empId, empName) {
+  selectedEmpId = empId;
+  selectedEmpName = empName;
+  renderEmployeeView();
+}
+
+function renderEmployeeView() {
+  document.getElementById('emp-name-heading').textContent = selectedEmpName;
+
+  const empPayrolls = payrollRecords
+    .filter(pr => {
+      const empIds = pr.fields.Employee || [];
+      return empIds.includes(selectedEmpId);
+    })
+    .map(pr => ({
+      id: pr.id,
+      ppId: (pr.fields['Pay Period'] || [])[0],
+      grossWages: pr.fields['Gross Wages'] || 0,
+      regHours: pr.fields['Regular Hours'] || 0,
+      otHours: pr.fields['OT Hours'] || 0,
+      safetyNet: pr.fields['Safety Net Triggered'] || false,
+      regComm: pr.fields['Reg Commission'] || 0,
+      otComm: pr.fields['OT on Commission'] || 0,
+      totalComm: pr.fields['Total Commission'] || 0,
+      commHours: pr.fields['Commission Hours'] || 0,
+      avgHourly: pr.fields['Average Hourly Commission'] || 0
+    }));
+
+  empPayrolls.sort((a, b) => {
+    const ppA = payPeriods.find(pp => pp.id === a.ppId);
+    const ppB = payPeriods.find(pp => pp.id === b.ppId);
+    const endA = ppA ? new Date(ppA.endDate).getTime() : 0;
+    const endB = ppB ? new Date(ppB.endDate).getTime() : 0;
+    return endB - endA;
+  });
+
+  const last4 = empPayrolls.slice(0, 4);
+
+  const cardsDiv = document.getElementById('payroll-cards');
+  cardsDiv.innerHTML = '';
+
+  if (last4.length === 0) {
+    document.getElementById('no-payroll').style.display = 'block';
+  } else {
+    document.getElementById('no-payroll').style.display = 'none';
+
+    last4.forEach((payroll, idx) => {
+      const pp = payPeriods.find(p => p.id === payroll.ppId);
+      const prev = last4[idx + 1];
+      let deltaStr = '';
+
+      if (prev) {
+        const delta = payroll.grossWages - prev.grossWages;
+        const absStr = fmt(Math.abs(delta));
+        if (delta > 0) {
+          deltaStr = `<div class="payroll-card-delta delta-up">↑ ${absStr} from previous</div>`;
+        } else if (delta < 0) {
+          deltaStr = `<div class="payroll-card-delta delta-down">↓ ${absStr} from previous</div>`;
+        }
+      }
+
+      const path = payroll.safetyNet ? 'Safety Net Applied' : `Commission: ${fmtH(payroll.commHours)} @ $${payroll.avgHourly.toFixed(2)}/hr`;
+
+      const card = document.createElement('div');
+      card.className = 'payroll-card';
+      card.innerHTML = `
+        <div class="payroll-card-period">${pp ? esc(pp.name) : 'Unknown'}</div>
+        <div class="payroll-card-amount">${fmt(payroll.grossWages)}</div>
+        <div class="payroll-card-row">
+          <span class="payroll-card-row-label">Regular Hours:</span>
+          <span class="payroll-card-row-value">${fmtH(payroll.regHours)}</span>
+        </div>
+        <div class="payroll-card-row">
+          <span class="payroll-card-row-label">OT Hours:</span>
+          <span class="payroll-card-row-value">${fmtH(payroll.otHours)}</span>
+        </div>
+        <div class="payroll-card-path">${path}</div>
+        ${deltaStr}
+      `;
+      cardsDiv.appendChild(card);
+    });
+  }
+
+  showEmployee();
+}
+
+function showTeam() {
+  document.getElementById('team-view').style.display = 'block';
+  document.getElementById('employee-view').style.display = 'none';
+  document.getElementById('calculate-view').style.display = 'none';
+  hideError();
+}
+
+function showEmployee() {
+  document.getElementById('team-view').style.display = 'none';
+  document.getElementById('employee-view').style.display = 'block';
+  document.getElementById('calculate-view').style.display = 'none';
+  hideError();
+}
+
+async function showCalculate() {
+  document.getElementById('calc-emp-label').textContent = selectedEmpName;
+
+  const today = todayLocal();
+  const select = document.getElementById('calc-period-select');
+  select.innerHTML = '<option value="">— Select pay period —</option>';
+
+  // Filter completed periods with no existing payroll
+  const completedWithoutPayroll = payPeriods.filter(pp => {
+    if (!pp.endDate || pp.endDate >= today) return false;
+    const exists = payrollRecords.some(pr => {
+      const empIds = pr.fields.Employee || [];
+      const ppIds = pr.fields['Pay Period'] || [];
+      return empIds.includes(selectedEmpId) && ppIds.includes(pp.id);
+    });
+    return !exists;
+  });
+
+  // For each candidate period, check if employee has jobs in that period
+  for (const pp of completedWithoutPayroll) {
+    try {
+      const jobsInPeriod = await fetchJobsForPeriod(pp.startDate, pp.endDate);
+      const hasJobForEmp = jobsInPeriod.some(j => {
+        const empIds = j.fields.Employee || [];
+        const ppIds = j.fields['Pay Period'] || [];
+        const commStart = j.fields['Comm Start'];
+        const jobType = j.fields['Job Type'];
+        return empIds.includes(selectedEmpId) && ppIds.includes(pp.id) && commStart && jobType !== 'Discount';
+      });
+
+      if (hasJobForEmp) {
+        const option = document.createElement('option');
+        option.value = pp.id;
+        option.textContent = pp.name;
+        select.appendChild(option);
+      }
+    } catch (e) {
+      // If fetch fails, include the period anyway (fail open)
+      const option = document.createElement('option');
+      option.value = pp.id;
+      option.textContent = pp.name;
+      select.appendChild(option);
+    }
+  }
+
+  document.getElementById('team-view').style.display = 'none';
+  document.getElementById('employee-view').style.display = 'none';
+  document.getElementById('calculate-view').style.display = 'block';
+
+  requestAnimationFrame(() => window.initCustomSelects(document.getElementById('calculate-view')));
+}
+
+function runCalculate() {
+  const select = document.getElementById('calc-period-select');
+  selectedPpId = select.value;
+
+  if (!selectedPpId) {
+    showError('Please select a pay period.');
+    return;
+  }
+
+  const existing = payrollRecords.find(pr => {
+    const empIds = pr.fields.Employee || [];
+    const ppIds = pr.fields['Pay Period'] || [];
+    return empIds.includes(selectedEmpId) && ppIds.includes(selectedPpId);
+  });
+
+  if (existing) {
+    const pp = payPeriods.find(p => p.id === selectedPpId);
+    const msg = `Payroll for ${esc(selectedEmpName)} — ${esc(pp.name)} has already been calculated. Recalculate and overwrite?`;
+    showConfirm(msg, doCalculate);
+  } else {
+    doCalculate();
+  }
+}
+
+function showConfirm(msg, callback) {
+  document.getElementById('confirm-msg').textContent = msg;
+  pendingConfirmCallback = callback;
+  document.getElementById('confirm-overlay').style.display = 'flex';
+}
+
+function hideConfirm() {
+  document.getElementById('confirm-overlay').style.display = 'none';
+  pendingConfirmCallback = null;
+}
+
+document.getElementById('confirm-yes').addEventListener('click', () => {
+  if (pendingConfirmCallback) pendingConfirmCallback();
+  hideConfirm();
+});
+
+document.getElementById('confirm-no').addEventListener('click', hideConfirm);
+
+async function fetchJobsForPeriod(startDate, endDate) {
+  const formula = encodeURIComponent(
+    `AND(DATESTR({Job Date})>='${startDate}',DATESTR({Job Date})<='${endDate}')`
+  );
+  const res = await fetch(
+    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Jobs?filterByFormula=${formula}&fields[]=Job%20Date&fields[]=Job%20Revenue&fields[]=Commission%20Rate&fields[]=Net%20Hours&fields[]=Job%20Type&fields[]=Comm%20Start&fields[]=Employee&fields[]=Pay%20Period`,
+    { headers }
+  );
+  const data = await res.json();
+  return data.records || [];
+}
+
+function filterJobs(jobs, empId, ppId) {
+  return jobs.filter(j => {
+    const empIds = j.fields.Employee || [];
+    const ppIds = j.fields['Pay Period'] || [];
+    const commStart = j.fields['Comm Start'];
+    const jobType = j.fields['Job Type'];
+    return empIds.includes(empId) && ppIds.includes(ppId) && commStart && jobType !== 'Discount';
+  });
+}
+
+async function doCalculate() {
+  const btn = document.getElementById('calc-btn');
+  btn.textContent = 'Calculating…';
+  btn.disabled = true;
+  hideError();
+
+  try {
+    const pp = payPeriods.find(p => p.id === selectedPpId);
+    if (!pp) {
+      showError('Pay period not found.');
+      btn.textContent = 'Calculate';
+      btn.disabled = false;
+      return;
+    }
+
+    const allJobsInPeriod = await fetchJobsForPeriod(pp.startDate, pp.endDate);
+    const jobs = filterJobs(allJobsInPeriod, selectedEmpId, selectedPpId);
+
+    if (jobs.length === 0) {
+      showError('No jobs found for this employee and period.');
+      btn.textContent = 'Calculate';
+      btn.disabled = false;
+      return;
+    }
+
+    const payrollFields = computePayroll(jobs);
+
+    // Check fresh for existing record before write
+    const existingPayroll = payrollRecords.find(pr => {
+      const empIds = pr.fields.Employee || [];
+      const ppIds = pr.fields['Pay Period'] || [];
+      return empIds.includes(selectedEmpId) && ppIds.includes(selectedPpId);
+    });
+
+    payrollFields['Calculated At'] = new Date().toISOString();
+
+    if (existingPayroll) {
+      const patchRes = await fetch(
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Payroll/${existingPayroll.id}`,
+        { method: 'PATCH', headers, body: JSON.stringify({ fields: payrollFields }) }
+      );
+      if (!patchRes.ok) throw new Error('PATCH failed');
+    } else {
+      payrollFields['Employee'] = [selectedEmpId];
+      payrollFields['Pay Period'] = [selectedPpId];
+      const postRes = await fetch(
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Payroll`,
+        { method: 'POST', headers, body: JSON.stringify({ fields: payrollFields }) }
+      );
+      if (!postRes.ok) throw new Error('POST failed');
+    }
+
+    // Refresh payroll records from Airtable
+    const refreshRes = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Payroll`, { headers });
+    const refreshData = await refreshRes.json();
+    payrollRecords = refreshData.records || [];
+
+    // Re-render both employee cards and team summary
+    renderEmployeeView();
+    renderTeamView();
+
+  } catch (e) {
+    showError('Calculation failed. Please try again.');
+  } finally {
+    btn.textContent = 'Calculate';
+    btn.disabled = false;
+  }
+}
+
+function computePayroll(jobs) {
+  // Step 1: Group jobs by date
+  const jobsByDate = {};
+  jobs.forEach(j => {
+    const date = j.fields['Job Date'];
+    if (!jobsByDate[date]) jobsByDate[date] = [];
+    jobsByDate[date].push(j.fields);
+  });
+
+  const dates = Object.keys(jobsByDate).sort();
+
+  // Step 2: Daily OT (over 8 hrs/day)
+  let dailyOT = 0;
+  dates.forEach(date => {
+    const dayTotal = jobsByDate[date].reduce((sum, job) => sum + (job['Net Hours'] || 0), 0);
+    if (dayTotal > 8) dailyOT += dayTotal - 8;
+  });
+
+  // Step 3: Weekly OT (over 40 hrs/week)
+  const weekMap = {};
+  dates.forEach(dateStr => {
+    const date = new Date(dateStr + 'T00:00:00');
+    const monday = getMonday(date);
+    const weekKey = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
+    if (!weekMap[weekKey]) weekMap[weekKey] = 0;
+    weekMap[weekKey] += jobsByDate[dateStr].reduce((sum, job) => sum + (job['Net Hours'] || 0), 0);
+  });
+
+  let weeklyOT = 0;
+  Object.values(weekMap).forEach(weekHours => {
+    if (weekHours > 40) weeklyOT += weekHours - 40;
+  });
+
+  const otHours = Math.max(dailyOT, weeklyOT);
+
+  // Step 4: Hours
+  const totalNetHours = dates.reduce((sum, date) => sum + jobsByDate[date].reduce((s, job) => s + (job['Net Hours'] || 0), 0), 0);
+  const regHours = totalNetHours - otHours;
+  const commHours = totalNetHours;
+
+  // Step 5: Commission
+  const regComm = jobs.reduce((sum, j) => sum + ((j.fields['Job Revenue'] || 0) * (j.fields['Commission Rate'] || 0)), 0);
+  const otComm = commHours > 0 && otHours > 0 ? (regComm / commHours) * 0.5 * otHours : 0;
+  const totalComm = regComm + otComm;
+
+  // Step 6: Hourly rate check
+  const avgHourly = commHours > 0 ? totalComm / commHours : 0;
+  const safetyNetTriggered = avgHourly < 17;
+
+  // Step 7: Gross Wages
+  const grossWages = safetyNetTriggered
+    ? (17 * regHours) + (17 * 1.5 * otHours)
+    : totalComm;
+
+  return {
+    'Reg Commission': regComm,
+    'OT on Commission': otComm,
+    'Total Commission': totalComm,
+    'Commission Hours': commHours,
+    'Regular Hours': regHours,
+    'OT Hours': otHours,
+    'Average Hourly Commission': avgHourly,
+    'Safety Net Triggered': safetyNetTriggered,
+    'Gross Wages': grossWages
+  };
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.classList.add('visible');
+  window.scrollTo(0, 0);
+}
+
+function hideError() {
+  document.getElementById('error-msg').classList.remove('visible');
+}
+
+init();
+</script>
+<script src="/custom-select.js"></script>
+</body>
+</html>
