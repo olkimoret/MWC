@@ -8,7 +8,20 @@
 <link rel="stylesheet" href="/custom-select.css">
 </head>
 <body>
-
+<script>
+  (function() {
+    const PASSWORD = 'mwc2026';
+    const AUTH_KEY = 'mwc_manager_auth';
+    if (localStorage.getItem(AUTH_KEY) !== PASSWORD) {
+      const entered = prompt('Manager access — enter password:');
+      if (entered === PASSWORD) {
+        localStorage.setItem(AUTH_KEY, PASSWORD);
+      } else {
+        window.location.replace('/jobs/index.html');
+      }
+    }
+  })();
+</script>
 <header>
   <img class="header-lion" src="/assets/lion.png" alt="Lion">
   <div class="header-text">
@@ -48,6 +61,7 @@
 </div>
 
 <script>
+  
 const AIRTABLE_BASE_ID = 'appVXuyAYj47nZwyz';
 const AIRTABLE_PAT = 'pat51Bpz1DmsTICb1.4cc6011c585d7167d45c6214905f55c09fe042e18742b3fdd53f09646cfb00a0';
 const REVIEWS_TABLE = 'Reviews';

@@ -287,7 +287,20 @@
 </style>
 </head>
 <body>
-
+<script>
+  (function() {
+    const PASSWORD = 'mwc2026';
+    const AUTH_KEY = 'mwc_manager_auth';
+    if (localStorage.getItem(AUTH_KEY) !== PASSWORD) {
+      const entered = prompt('Manager access — enter password:');
+      if (entered === PASSWORD) {
+        localStorage.setItem(AUTH_KEY, PASSWORD);
+      } else {
+        window.location.replace('/jobs/index.html');
+      }
+    }
+  })();
+</script>
 <header>
   <img class="header-lion" src="/assets/lion.png" alt="Lion">
   <div class="header-text">
