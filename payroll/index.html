@@ -720,7 +720,7 @@ async function fetchJobsForPeriod(startDate, endDate) {
     `AND(DATESTR({Job Date})>='${startDate}',DATESTR({Job Date})<='${endDate}')`
   );
   const res = await fetch(
-    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Jobs?filterByFormula=${formula}&fields[]=Job%20Date&fields[]=Job%20Revenue&fields[]=Commission%20Rate&fields[]=Net%20Hours&fields[]=Gross%20Hours&fields[]=Job%20Type&fields[]=Comm%20Start&fields[]=Employee&fields[]=Pay%20Period`,
+    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Jobs?filterByFormula=${formula}&fields[]=Job%20Date&fields[]=Job%20Revenue&fields[]=Commission%20Rate&fields[]=Min%20Hourly%20Rate&fields[]=Net%20Hours&fields[]=Gross%20Hours&fields[]=Job%20Type&fields[]=Comm%20Start&fields[]=Employee&fields[]=Pay%20Period`,
     { headers }
   );
   const data = await res.json();
@@ -860,11 +860,12 @@ function computePayroll(jobs) {
   // Step 6: Hourly rate check
   // avgHourly uses regComm only, matching spreadsheet W17 = regComm / commHours
   const avgHourly = commHours > 0 ? regComm / commHours : 0;
-  const safetyNetTriggered = avgHourly < 17;
+  const minHourlyRate = jobs[0]?.fields['Min Hourly Rate'] || 17;
+  const safetyNetTriggered = avgHourly < minHourlyRate;
 
   // Step 7: Gross Wages
   const grossWages = safetyNetTriggered
-    ? (17 * regHours) + (17 * 1.5 * otHours)
+    ? (minHourlyRate * regHours) + (minHourlyRate * 1.5 * otHours)
     : totalComm;
 
   return {
