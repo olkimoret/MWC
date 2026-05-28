@@ -940,7 +940,11 @@ function computePayroll(jobs, employeeHourlyRate) {
   const regHours = totalHours - otHours;
 
   // Step 6: Commission earnings
-  const regComm = commJobs.reduce((sum, j) => sum + ((j.fields['Job Revenue'] || 0) * (j.fields['Commission Rate'] || 0)), 0);
+  const regComm = commJobs.reduce((sum, j) => {
+    const numTechs = (j.fields['Employee'] || []).length || 1;
+    const effectiveRevenue = (j.fields['Job Revenue'] || 0) / numTechs;
+    return sum + (effectiveRevenue * (j.fields['Commission Rate'] || 0));
+  }, 0);
   const otComm = totalCommHours > 0 && otHours > 0 ? (regComm / totalCommHours) * 0.5 * otHours : 0;
   const totalComm = regComm + otComm;
 
