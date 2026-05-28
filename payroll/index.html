@@ -823,6 +823,7 @@ async function doCalculate() {
     const employeeHourlyRate = empData.fields?.['Hourly Rate'] || 17;
 
     const payrollFields = computePayroll(jobs, employeeHourlyRate);
+    console.log('Payroll fields to write:', payrollFields);
 
     // Check fresh for existing record before write
     const existingPayroll = payrollRecords.find(pr => {
