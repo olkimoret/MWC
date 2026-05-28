@@ -80,17 +80,37 @@
   <!-- SPLASH SCREEN: Choice between Job & Non-Commission Hours -->
   <div class="step active" id="splash-screen">
     <p class="section-label">What would you like to do?</p>
-    <div class="cards" style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-      <div class="dash-card" onclick="goToStep(1)" style="cursor: pointer; text-align: center; padding: 24px 16px;">
-        <div style="font-size: 32px; margin-bottom: 8px;">✅</div>
-        <div class="dash-title" style="margin-bottom: 4px;">Complete a Job</div>
-        <div class="dash-sub">Client work with commission</div>
-      </div>
-      <div class="dash-card" onclick="goToNonCommission()" style="cursor: pointer; text-align: center; padding: 24px 16px;">
-        <div style="font-size: 32px; margin-bottom: 8px;">🕐</div>
-        <div class="dash-title" style="margin-bottom: 4px;">Log Non-Commission Hours</div>
-        <div class="dash-sub">Maintenance & admin time</div>
-      </div>
+    <div class="cards">
+      <a class="dash-card" onclick="goToStep(1)" style="cursor: pointer;">
+        <div class="dash-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div class="dash-info">
+          <div class="dash-title">Complete a Job</div>
+          <div class="dash-sub">Client work with commission</div>
+        </div>
+        <div class="dash-arrow">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+        </div>
+      </a>
+
+      <a class="dash-card" onclick="goToNonCommission()" style="cursor: pointer;">
+        <div class="dash-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="currentColor" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 5.99976V11.9998L15.5 13.9998"></path>
+          </svg>
+        </div>
+        <div class="dash-info">
+          <div class="dash-title">Log Non-Commission Hours</div>
+          <div class="dash-sub">Maintenance & admin time</div>
+        </div>
+        <div class="dash-arrow">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+        </div>
+      </a>
     </div>
   </div>
 
