@@ -963,17 +963,17 @@ function computePayroll(jobs, employeeHourlyRate) {
     : totalComm + hourlyPay;
 
   return {
-    'Reg Commission': regComm,
-    'OT on Commission': otComm,
-    'Total Commission': totalComm,
-    'Commission Hours': totalCommHours,
-    'Regular Hours': regHours,
-    'OT Hours': otHours,
-    'Average Hourly Commission': avgHourlyCommission,
-    'Hourly Hours': totalHrlyHours,
-    'Hourly Pay': hourlyPay,
+    'Reg Commission': Math.round(regComm * 100) / 100,
+    'OT on Commission': Math.round(otComm * 100) / 100,
+    'Total Commission': Math.round(totalComm * 100) / 100,
+    'Commission Hours': Math.round(totalCommHours * 10) / 10,
+    'Regular Hours': Math.round(regHours * 10) / 10,
+    'OT Hours': Math.round(otHours * 10) / 10,
+    'Average Hourly Commission': Math.round(avgHourlyCommission * 100) / 100,
+    'Hourly Hours': Math.round(totalHrlyHours * 10) / 10,
+    'Hourly Pay': Math.round(hourlyPay * 100) / 100,
     'Safety Net Triggered': safetyNetTriggered,
-    'Gross Wages': grossWages
+    'Gross Wages': Math.round(grossWages * 100) / 100
   };
 }
 
