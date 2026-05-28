@@ -39,19 +39,24 @@
 }
 
 .print-button {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 8px 16px;
-  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.08);
+  border: none;
+  color: rgba(255,255,255,0.80);
+  padding: 0 14px;
+  height: 34px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
-  transition: background 0.2s;
+  transition: background 0.15s, color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .print-button:hover {
-  background: var(--bg);
+  background: rgba(255,255,255,0.13);
+  color: #fff;
 }
 
 .section-card {
@@ -210,12 +215,7 @@
       <h1 class="compliance-title">Compliance Report</h1>
       <p class="compliance-subtitle">Last 2 pay periods</p>
     </div>
-    <button class="print-button" onclick="window.print()">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" width="16" height="16" style="display: inline; margin-right: 6px; vertical-align: -2px;">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a60.773 60.773 0 012.25-.243m-2.25.243v2.445m11.25-8.334v.244m0 0a60.774 60.774 0 012.25.245m-2.25-.245V11.9m0 0a60.776 60.776 0 012.25-.243m2.25.243v2.445M7.74 11.08c.552.177 1.528.477 2.26.477a4.5 4.5 0 005.5-4.431V6.62m0 0h1.5A1.5 1.5 0 0118 8.122M7.74 11.08a24.488 24.488 0 005.514 0m-5.514 0c.674.156 1.488.337 2.257.477m3.257-.477a24.505 24.505 0 002.257-.477m0 0h1.5a1.5 1.5 0 011.5 1.5v1.5m-21 0a3 3 0 015.973-.932A24.487 24.487 0 0112 15m0 0a24.49 24.49 0 005.027-.932A3 3 0 0121 12.765M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-      Print
-    </button>
+    <button class="print-button" onclick="window.print()">Print</button>
   </div>
 
   <div id="loading" class="loading" style="text-align: center; padding: 40px;">
