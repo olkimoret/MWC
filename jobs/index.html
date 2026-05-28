@@ -77,8 +77,25 @@
   <!-- ERROR -->
   <div class="error-msg" id="error-msg"></div>
 
+  <!-- SPLASH SCREEN: Choice between Job & Non-Commission Hours -->
+  <div class="step active" id="splash-screen">
+    <p class="section-label">What would you like to do?</p>
+    <div class="cards" style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+      <div class="dash-card" onclick="goToStep(1)" style="cursor: pointer; text-align: center; padding: 24px 16px;">
+        <div style="font-size: 32px; margin-bottom: 8px;">✅</div>
+        <div class="dash-title" style="margin-bottom: 4px;">Complete a Job</div>
+        <div class="dash-sub">Client work with commission</div>
+      </div>
+      <div class="dash-card" onclick="goToNonCommission()" style="cursor: pointer; text-align: center; padding: 24px 16px;">
+        <div style="font-size: 32px; margin-bottom: 8px;">🕐</div>
+        <div class="dash-title" style="margin-bottom: 4px;">Log Non-Commission Hours</div>
+        <div class="dash-sub">Maintenance & admin time</div>
+      </div>
+    </div>
+  </div>
+
   <!-- STEP 1: WHO ARE YOU + PICK JOB -->
-  <div class="step active" id="step-1">
+  <div class="step" id="step-1">
 
     <div class="card">
       <div class="field-block">
@@ -359,15 +376,58 @@
 
   </div><!-- /step-5 -->
 
+  <!-- NON-COMMISSION HOURS SCREEN -->
+  <div class="step" id="non-commission-screen">
+    <p class="section-label">Log Non-Commission Hours</p>
+    <div class="card">
+      <div class="field-block">
+        <label>Your Name</label>
+        <div class="select-wrapper">
+          <select id="nc-employee-select">
+            <option value="">Select your name</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row" style="flex-wrap:wrap;gap:6px;">
+        <span class="row-label">Date</span>
+        <input type="text" id="nc-date" placeholder="Select date" readonly style="cursor:pointer;flex:1;text-align:right;font-family:inherit;font-size:15px;font-weight:500;color:var(--amber);border:none;background:transparent;outline:none;">
+        <div class="date-sub" id="nc-date-display" style="width:100%;"></div>
+      </div>
+
+      <div class="form-row">
+        <span class="row-label">Hourly Start</span>
+        <input type="text" id="nc-hrly-start" class="fp-time" placeholder="Set time…" readonly>
+      </div>
+
+      <div class="form-row">
+        <span class="row-label">Hourly End</span>
+        <input type="text" id="nc-hrly-end" class="fp-time" placeholder="Set time…" readonly>
+      </div>
+    </div>
+
+    <p class="section-label">About this time</p>
+    <div class="card" style="padding-top: 0; border: none; box-shadow: none; background: transparent;">
+      <p style="font-size: 13px; color: var(--text-2); line-height: 1.5; margin: 0;">
+        Use this for truck maintenance, shop work, training, or any time not spent at a client.
+      </p>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="nc-submit-btn" onclick="submitNonCommission()" disabled>Log Hours</button>
+      <button class="btn btn-secondary" onclick="goToSplash()">Back</button>
+    </div>
+  </div>
+
   <!-- SUCCESS -->
   <div class="success-screen" id="success-screen">
     <div class="success-icon">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
     </div>
-    <h2>Job Submitted</h2>
-    <p>Great work today. Your job has been recorded.</p>
+    <h2 id="success-title">Job Submitted</h2>
+    <p id="success-msg">Great work today. Your job has been recorded.</p>
     <p id="photo-warning" style="display:none;color:var(--error);font-size:13px;margin-bottom:16px;font-weight:600;">Photos could not be uploaded. Job data was saved — please add photos manually in Airtable.</p>
-    <button class="btn btn-primary" style="max-width:240px;margin:0 auto;" onclick="resetForm()">Submit Another Job</button>
+    <button class="btn btn-primary" style="max-width:240px;margin:0 auto;" id="success-button" onclick="resetForm()">Submit Another Job</button>
   </div>
 
 </div><!-- /container -->
@@ -392,6 +452,8 @@ let selectedClient = null; // { name, jobs: [...records] }
 let currentStep = 1;
 let allJobs = [];
 let oshaRequired = false;
+let currentMode = 'job'; // 'job' or 'non-commission'
+let ncSelectedEmployee = null;
 
 // ── CHECKLIST DATA ──────────────────────────────────────────
 const CHECKLIST_DATA = {
@@ -903,6 +965,104 @@ function buildDeparture() {
   });
 }
 
+// ── SPLASH SCREEN & MODE NAVIGATION ────────────────────────
+function goToSplash() {
+  document.querySelectorAll('.step, #splash-screen, #non-commission-screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('splash-screen').classList.add('active');
+  document.getElementById('progress').style.display = 'none';
+  window.scrollTo(0, 0);
+}
+
+function goToNonCommission() {
+  currentMode = 'non-commission';
+  document.getElementById('progress').style.display = 'flex';
+  loadNonCommissionScreen();
+}
+
+function loadNonCommissionScreen() {
+  document.getElementById('nc-date').value = todayStr;
+  updateNCDateDisplay();
+
+  // Load employees in dropdown (reuse loadEmployees logic)
+  const select = document.getElementById('nc-employee-select');
+  select.innerHTML = '<option value="">— Select your name —</option>';
+  const empSelOrig = document.getElementById('employee-select');
+  Array.from(empSelOrig.options).forEach(opt => {
+    if (opt.value) {
+      const newOpt = document.createElement('option');
+      newOpt.value = opt.value;
+      newOpt.textContent = opt.textContent;
+      select.appendChild(newOpt);
+    }
+  });
+
+  select.addEventListener('change', updateNCSubmitButton);
+  document.getElementById('nc-date').addEventListener('change', updateNCSubmitButton);
+  document.getElementById('nc-hrly-start').addEventListener('change', updateNCSubmitButton);
+  document.getElementById('nc-hrly-end').addEventListener('change', updateNCSubmitButton);
+
+  goToStep('non-commission-screen');
+}
+
+function updateNCDateDisplay() {
+  const dateStr = document.getElementById('nc-date').value || todayStr;
+  const d = new Date(dateStr + 'T00:00:00');
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById('nc-date-display').textContent = d.toLocaleDateString('en-US', options);
+}
+
+function updateNCSubmitButton() {
+  const empId = document.getElementById('nc-employee-select').value;
+  const date = document.getElementById('nc-date').value;
+  const start = document.getElementById('nc-hrly-start').dataset.h24 || '';
+  const end = document.getElementById('nc-hrly-end').dataset.h24 || '';
+
+  const allFilled = empId && date && start && end;
+  document.getElementById('nc-submit-btn').disabled = !allFilled;
+}
+
+async function submitNonCommission() {
+  const empId = document.getElementById('nc-employee-select').value;
+  const empName = document.getElementById('nc-employee-select').options[document.getElementById('nc-employee-select').selectedIndex].text;
+  const date = document.getElementById('nc-date').value;
+  const hrlyStart = document.getElementById('nc-hrly-start').dataset.h24 || '';
+  const hrlyEnd = document.getElementById('nc-hrly-end').dataset.h24 || '';
+
+  const btn = document.getElementById('nc-submit-btn');
+  btn.textContent = 'Submitting...';
+  btn.disabled = true;
+
+  const fields = {
+    'Employee': [empId],
+    'Job Date': date,
+    'Hrly Start': `${date}T${hrlyStart}:00`,
+    'Hrly End': `${date}T${hrlyEnd}:00`,
+    'Job Type': 'Non-Commission'
+  };
+
+  try {
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ fields })
+    });
+    if (!res.ok) throw new Error('Submit failed');
+
+    document.getElementById('success-title').textContent = 'Hours Logged';
+    document.getElementById('success-msg').textContent = `${empName}'s non-commission hours have been recorded.`;
+    document.getElementById('success-button').textContent = 'Log Another';
+    document.getElementById('photo-warning').style.display = 'none';
+    document.getElementById('progress').style.display = 'none';
+    document.getElementById('non-commission-screen').classList.remove('active');
+    document.getElementById('success-screen').classList.add('visible');
+  } catch(e) {
+    showError('Failed to log hours. Please try again.');
+    btn.textContent = 'Log Hours';
+    btn.disabled = false;
+  }
+}
+
 // ── NAVIGATION ───────────────────────────────────────────────
 function goToStep2() {
   if (!selectedClient) { showError('Please select a client first.'); return; }
@@ -953,10 +1113,14 @@ function updateProgressBar() {
 }
 
 function goToStep(n) {
-  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-  document.getElementById(`step-${n}`).classList.add('active');
-  currentStep = n;
-  updateProgress(n);
+  document.querySelectorAll('.step, #splash-screen, #non-commission-screen').forEach(s => s.classList.remove('active'));
+  if (typeof n === 'string') {
+    document.getElementById(n).classList.add('active');
+  } else {
+    document.getElementById(`step-${n}`).classList.add('active');
+    currentStep = n;
+    updateProgress(n);
+  }
   window.scrollTo(0, 0);
 }
 
@@ -1167,10 +1331,24 @@ function resetForm() {
   selectedEmployee = null;
   selectedClient = null;
   oshaRequired = false;
+  ncSelectedEmployee = null;
+  currentMode = 'job';
+
   document.getElementById('employee-select').value = '';
   document.getElementById('job-date').value = todayStr;
   updateDateDisplay();
   document.getElementById('client-list-section').style.display = 'none';
+
+  // Reset non-commission fields
+  document.getElementById('nc-employee-select').value = '';
+  document.getElementById('nc-date').value = todayStr;
+  updateNCDateDisplay();
+  document.getElementById('nc-hrly-start').value = '';
+  document.getElementById('nc-hrly-start').dataset.h24 = '';
+  document.getElementById('nc-hrly-end').value = '';
+  document.getElementById('nc-hrly-end').dataset.h24 = '';
+  document.getElementById('nc-submit-btn').disabled = true;
+  document.getElementById('nc-submit-btn').textContent = 'Log Hours';
   document.getElementById('comm-start').value = '';
   document.getElementById('comm-start').dataset.h24 = '';
   document.getElementById('comm-end').value = '';
@@ -1210,13 +1388,13 @@ function resetForm() {
 
   document.getElementById('success-screen').classList.remove('visible');
   document.getElementById('photo-warning').style.display = 'none';
-  document.getElementById('progress').style.display = 'flex';
+  document.getElementById('progress').style.display = 'none';
   document.getElementById('job-photos').value = '';
   document.getElementById('safety-photo').value = '';
   document.getElementById('job-preview').innerHTML = '';
   document.getElementById('safety-preview').innerHTML = '';
   updateProgressBar();
-  goToStep(1);
+  goToSplash();
 }
 
 // ── ERROR HELPERS ────────────────────────────────────────────
@@ -1237,13 +1415,19 @@ fetchJobsFieldIds();
 <script src="/custom-select.js"></script>
 <script src="/timepicker.js"></script>
 <script>
-// Init date picker with Flatpickr
+// Init date pickers with Flatpickr
 flatpickr('#job-date', {
   dateFormat: 'Y-m-d',
   defaultDate: todayStr,
   onChange: () => { updateDateDisplay(); tryLoadJobs(); }
 });
+flatpickr('#nc-date', {
+  dateFormat: 'Y-m-d',
+  defaultDate: todayStr,
+  onChange: () => { updateNCDateDisplay(); updateNCSubmitButton(); }
+});
 updateDateDisplay();
+updateNCDateDisplay();
 
 // Init after all scripts loaded
 loadEmployees().then(() => {
