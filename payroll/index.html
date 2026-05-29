@@ -437,6 +437,7 @@ const headers = {
 };
 
 let employees = [];
+let employeeHourlyRates = {};
 let payPeriods = [];
 let payrollRecords = [];
 let currentPayPeriod = null;
@@ -480,6 +481,9 @@ async function init() {
     ]);
 
     employees = empData.records.map(r => ({ id: r.id, name: r.fields.Name }));
+    empData.records.forEach(r => {
+      employeeHourlyRates[r.id] = r.fields['Hourly Rate'] || 17;
+    });
     payPeriods = ppData.records.map(r => ({
       id: r.id,
       name: r.fields['Pay Period Name'],
@@ -814,14 +818,7 @@ async function doCalculate() {
       return;
     }
 
-    // Fetch employee's Hourly Rate
-    const empRes = await fetch(
-      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Employees/${selectedEmpId}?fields[]=Hourly%20Rate`,
-      { headers }
-    );
-    const empData = await empRes.json();
-    const employeeHourlyRate = empData.fields?.['Hourly Rate'] || 17;
-
+    const employeeHourlyRate = employeeHourlyRates[selectedEmpId] || 17;
     const payrollFields = computePayroll(jobs, employeeHourlyRate);
     console.log('Payroll fields to write:', payrollFields);
 
