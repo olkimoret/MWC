@@ -953,22 +953,12 @@ function computePayroll(jobs, employeeHourlyRate) {
   const regComm = commJobs.reduce((sum, j) => {
     const numTechs = (j.fields['Employee'] || []).length || 1;
     const revenue = j.fields['Job Revenue'] || 0;
-    const rate = j.fields['Commission Rate'] || 0;
+    const rateRaw = j.fields['Commission Rate'];
+    const rate = (typeof rateRaw === 'number') ? rateRaw : (Array.isArray(rateRaw) && rateRaw.length > 0 ? rateRaw[0] : 0);
     const effectiveRevenue = revenue / numTechs;
     const comm = effectiveRevenue * rate;
-    if (isNaN(comm)) {
-      console.log('DEBUG NaN in commission calc:', {
-        date: j.fields['Job Date'],
-        revenue,
-        numTechs,
-        effectiveRevenue,
-        rate,
-        comm
-      });
-    }
     return sum + comm;
   }, 0);
-  console.log('DEBUG regComm calculated:', regComm);
   const otComm = totalCommHours > 0 && otHours > 0 ? (regComm / totalCommHours) * 0.5 * otHours : 0;
   const totalComm = regComm + otComm;
 
