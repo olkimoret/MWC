@@ -775,7 +775,7 @@ async function fetchJobsForPeriod(startDate, endDate) {
     `AND(DATESTR({Job Date})>='${startDate}',DATESTR({Job Date})<='${endDate}')`
   );
   const res = await fetch(
-    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Jobs?filterByFormula=${formula}&fields[]=Job%20Date&fields[]=Job%20Revenue&fields[]=Commission%20Rate&fields[]=Net%20Hours&fields[]=Gross%20Hours&fields[]=Job%20Type&fields[]=Comm%20Start&fields[]=Comm%20End&fields[]=Hrly%20Start&fields[]=Hrly%20End&fields[]=Employee&fields[]=Pay%20Period`,
+    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Jobs?filterByFormula=${formula}&fields[]=Job%20Date&fields[]=Job%20Revenue&fields[]=Commission%20Rate&fields[]=Job%20Type&fields[]=Comm%20Start&fields[]=Comm%20End&fields[]=Hrly%20Start&fields[]=Hrly%20End&fields[]=Employee&fields[]=Pay%20Period`,
     { headers }
   );
   const data = await res.json();
@@ -793,7 +793,8 @@ function filterJobs(jobs, empId, ppId) {
     // If Pay Period is filled, it must match. If empty, trust the date range.
     const ppMatch = ppIds.length === 0 || ppIds.includes(ppId);
 
-    return empIds.includes(empId) && ppMatch && (commStart || hrlyStart) && jobType !== 'Discount';
+    // Include job if: employee matches AND (comm start OR hrly start is filled) AND job type is not 'Non-Commission'
+    return empIds.includes(empId) && ppMatch && (commStart || hrlyStart) && jobType !== 'Non-Commission';
   });
 }
 
@@ -880,13 +881,7 @@ async function doCalculate() {
 }
 
 function computePayroll(jobs, employeeHourlyRate) {
-  // Step 1: Separate job types
-  const commJobs = jobs.filter(j => j.fields['Comm Start']);
-  const hrlyJobs = jobs.filter(j => j.fields['Hrly Start']);
-
-  console.log(`DEBUG computePayroll: ${commJobs.length} commission jobs, ${hrlyJobs.length} hourly jobs`);
-
-  // Helper: parse ISO datetime string to get time
+  // Helper: parse ISO datetime string to decimal hours
   function timeFromISO(isoStr) {
     if (!isoStr) return 0;
     const parts = isoStr.split('T');
@@ -895,108 +890,164 @@ function computePayroll(jobs, employeeHourlyRate) {
     return parseInt(timeParts[0]) + parseInt(timeParts[1]) / 60;
   }
 
-  // Step 2: Calculate hours per day
+  // STEP 1: Group jobs by date and calculate daily metrics
   const jobsByDate = {};
   jobs.forEach(j => {
     const date = j.fields['Job Date'];
-    if (!jobsByDate[date]) jobsByDate[date] = { comm: 0, hrly: 0 };
-    if (j.fields['Gross Hours']) {
-      jobsByDate[date].comm += j.fields['Gross Hours'];
+    if (!jobsByDate[date]) jobsByDate[date] = { jobs: [] };
+    jobsByDate[date].jobs.push(j);
+  });
+
+  // STEP 2: For each day, calculate gross hours, lunch, net hours, and revenue
+  const dailyMetrics = {};
+  let totalCommHours = 0;
+  let totalRevenue = 0;
+
+  Object.keys(jobsByDate).sort().forEach(date => {
+    const dayJobs = jobsByDate[date].jobs;
+
+    // Find first job with Comm Start for gross hours
+    const firstCommJob = dayJobs.find(j => j.fields['Comm Start']);
+    let grossHours = 0;
+    if (firstCommJob) {
+      const commStart = timeFromISO(firstCommJob.fields['Comm Start']);
+      const commEnd = timeFromISO(firstCommJob.fields['Comm End']);
+      grossHours = Math.max(0, commEnd - commStart);
     }
+
+    // Apply lunch deduction: 0.5h if grossHours > 8
+    const lunch = grossHours > 8 ? 0.5 : 0;
+    const netHours = grossHours - lunch;
+
+    // Calculate effective revenue for the day (including discounts, excluding Non-Commission)
+    let dayRevenue = 0;
+    dayJobs.forEach(j => {
+      const jobType = j.fields['Job Type'];
+      if (jobType !== 'Non-Commission') {
+        const numTechs = (j.fields['Employee'] || []).length || 1;
+        const revenue = j.fields['Job Revenue'] || 0;
+        dayRevenue += revenue / numTechs;
+      }
+    });
+
+    // Sum hourly hours for the day (from Hrly Start/End)
+    let dayHrlyHours = 0;
+    dayJobs.forEach(j => {
+      if (j.fields['Hrly Start']) {
+        const start = timeFromISO(j.fields['Hrly Start']);
+        const end = timeFromISO(j.fields['Hrly End']);
+        dayHrlyHours += Math.max(0, end - start);
+      }
+    });
+
+    dailyMetrics[date] = {
+      grossHours,
+      lunch,
+      netHours,
+      dayRevenue,
+      dayHrlyHours,
+      dayJobs
+    };
+
+    totalCommHours += grossHours;
+    totalRevenue += dayRevenue;
   });
 
-  hrlyJobs.forEach(j => {
-    const date = j.fields['Job Date'];
-    if (!jobsByDate[date]) jobsByDate[date] = { comm: 0, hrly: 0 };
-    const start = timeFromISO(j.fields['Hrly Start']);
-    const end = timeFromISO(j.fields['Hrly End']);
-    jobsByDate[date].hrly += Math.max(0, end - start);
-  });
+  console.log(`DEBUG computePayroll: ${Object.keys(dailyMetrics).length} days, totalCommHours=${totalCommHours}, totalRevenue=${totalRevenue}`);
 
-  // Step 3 & 4: Calculate daily and weekly OT
+  // STEP 3: Calculate daily OT (using net hours, which already has lunch deducted)
   let dailyOT = 0;
-  const dailyOTByType = {}; // Track OT by type for proportional allocation
-
-  Object.keys(jobsByDate).forEach(date => {
-    const dayData = jobsByDate[date];
-    const totalHours = dayData.comm + dayData.hrly;
-    if (totalHours > 8) {
-      const dayOT = totalHours - 8;
-      dailyOT += dayOT;
-      dailyOTByType[date] = dayOT;
+  Object.values(dailyMetrics).forEach(dm => {
+    if (dm.netHours > 8) {
+      dailyOT += dm.netHours - 8;
     }
   });
 
-  // Weekly OT calculation (Monday start)
+  // STEP 4: Calculate weekly OT (using net hours per day, Monday start)
   const weekMap = {};
-  Object.keys(jobsByDate).forEach(dateStr => {
+  Object.keys(dailyMetrics).forEach(dateStr => {
     const date = new Date(dateStr + 'T00:00:00');
     const monday = getMonday(date);
     const weekKey = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
     if (!weekMap[weekKey]) weekMap[weekKey] = 0;
-    weekMap[weekKey] += jobsByDate[dateStr].comm + jobsByDate[dateStr].hrly;
+    weekMap[weekKey] += dailyMetrics[dateStr].netHours;
   });
 
   let weeklyOT = 0;
-  Object.values(weekMap).forEach(weekHours => {
-    if (weekHours > 40) weeklyOT += weekHours - 40;
+  Object.values(weekMap).forEach(weekNetHours => {
+    if (weekNetHours > 40) weeklyOT += weekNetHours - 40;
   });
 
-  const otHours = Math.max(dailyOT, weeklyOT);
+  // STEP 5: Total OT hours = max of daily and weekly
+  const totalOTHours = Math.max(dailyOT, weeklyOT);
 
-  // Step 5: Total hours
-  const totalCommHours = commJobs.reduce((sum, j) => sum + (j.fields['Gross Hours'] || 0), 0);
-  const totalHrlyHours = hrlyJobs.reduce((sum, j) => {
-    const start = timeFromISO(j.fields['Hrly Start']);
-    const end = timeFromISO(j.fields['Hrly End']);
-    return sum + Math.max(0, end - start);
-  }, 0);
-  const totalHours = totalCommHours + totalHrlyHours;
-  const regHours = totalHours - otHours;
+  // STEP 6: Total hourly hours
+  let totalHrlyHours = 0;
+  Object.values(dailyMetrics).forEach(dm => {
+    totalHrlyHours += dm.dayHrlyHours;
+  });
 
-  // Step 6: Commission earnings
-  const regComm = commJobs.reduce((sum, j) => {
-    const numTechs = (j.fields['Employee'] || []).length || 1;
-    const revenue = j.fields['Job Revenue'] || 0;
-    const rateRaw = j.fields['Commission Rate'];
-    let rate = 0;
-    if (typeof rateRaw === 'number') {
-      rate = rateRaw;
-    } else if (Array.isArray(rateRaw)) {
-      for (const r of rateRaw) {
-        if (typeof r === 'number' && r > 0) {
-          rate = r;
-          break;
+  // STEP 7: Regular hours = total comm hours - OT hours
+  const regularHours = totalCommHours - totalOTHours;
+
+  // STEP 8: Commission earnings (sum across all commission jobs)
+  let regComm = 0;
+  Object.values(dailyMetrics).forEach(dm => {
+    dm.dayJobs.forEach(j => {
+      if (j.fields['Comm Start']) {
+        const numTechs = (j.fields['Employee'] || []).length || 1;
+        const revenue = j.fields['Job Revenue'] || 0;
+        const rateRaw = j.fields['Commission Rate'];
+
+        // Extract commission rate
+        let rate = 0;
+        if (typeof rateRaw === 'number') {
+          rate = rateRaw;
+        } else if (Array.isArray(rateRaw)) {
+          for (const r of rateRaw) {
+            if (typeof r === 'number' && r > 0) {
+              rate = r;
+              break;
+            }
+          }
         }
+
+        const effectiveRevenue = revenue / numTechs;
+        regComm += effectiveRevenue * rate;
       }
-    }
-    const effectiveRevenue = revenue / numTechs;
-    const comm = effectiveRevenue * rate;
-    return sum + comm;
-  }, 0);
-  const otComm = totalCommHours > 0 && otHours > 0 ? (regComm / totalCommHours) * 0.5 * otHours : 0;
+    });
+  });
+
+  // STEP 9: OT on commission
+  const otComm = totalCommHours > 0 && totalOTHours > 0 ? (regComm / totalCommHours) * 0.5 * totalOTHours : 0;
   const totalComm = regComm + otComm;
 
-  // Step 7: Hourly earnings
+  // STEP 10: Average hourly commission
+  const avgHourlyCommission = totalCommHours > 0 ? regComm / totalCommHours : 0;
+
+  // STEP 11: Hourly pay
   const hourlyPay = totalHrlyHours * employeeHourlyRate;
 
-  // Step 8: Safety net check (hardcoded $17)
-  const avgHourlyCommission = totalCommHours > 0 ? regComm / totalCommHours : 0;
+  // STEP 12: Safety net check (hardcoded $17)
   const SAFETY_NET_THRESHOLD = 17;
   const safetyNetTriggered = avgHourlyCommission < SAFETY_NET_THRESHOLD;
 
-  // Step 9: Gross Wages
+  // STEP 13: Gross wages
   const grossWages = safetyNetTriggered
-    ? (SAFETY_NET_THRESHOLD * regHours) + (SAFETY_NET_THRESHOLD * 1.5 * otHours) + hourlyPay
+    ? (SAFETY_NET_THRESHOLD * regularHours) + (SAFETY_NET_THRESHOLD * 1.5 * totalOTHours) + hourlyPay
     : totalComm + hourlyPay;
+
+  console.log(`DEBUG: regComm=${regComm.toFixed(2)}, otComm=${otComm.toFixed(2)}, totalComm=${totalComm.toFixed(2)}`);
+  console.log(`DEBUG: avgHourlyComm=${avgHourlyCommission.toFixed(2)}, safetyNetTriggered=${safetyNetTriggered}`);
+  console.log(`DEBUG: grossWages=${grossWages.toFixed(2)}`);
 
   return {
     'Reg Commission': Math.round(regComm * 100) / 100,
     'OT on Commission': Math.round(otComm * 100) / 100,
     'Total Commission': Math.round(totalComm * 100) / 100,
     'Commission Hours': Math.round(totalCommHours * 10) / 10,
-    'Regular Hours': Math.round(regHours * 10) / 10,
-    'OT Hours': Math.round(otHours * 10) / 10,
+    'Regular Hours': Math.round(regularHours * 10) / 10,
+    'OT Hours': Math.round(totalOTHours * 10) / 10,
     'Average Hourly Commission': Math.round(avgHourlyCommission * 100) / 100,
     'Hourly Hours': Math.round(totalHrlyHours * 10) / 10,
     'Hourly Pay': Math.round(hourlyPay * 100) / 100,
