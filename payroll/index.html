@@ -954,7 +954,17 @@ function computePayroll(jobs, employeeHourlyRate) {
     const numTechs = (j.fields['Employee'] || []).length || 1;
     const revenue = j.fields['Job Revenue'] || 0;
     const rateRaw = j.fields['Commission Rate'];
-    const rate = (typeof rateRaw === 'number') ? rateRaw : (Array.isArray(rateRaw) && rateRaw.length > 0 ? rateRaw[0] : 0);
+    let rate = 0;
+    if (typeof rateRaw === 'number') {
+      rate = rateRaw;
+    } else if (Array.isArray(rateRaw)) {
+      for (const r of rateRaw) {
+        if (typeof r === 'number' && r > 0) {
+          rate = r;
+          break;
+        }
+      }
+    }
     const effectiveRevenue = revenue / numTechs;
     const comm = effectiveRevenue * rate;
     return sum + comm;
