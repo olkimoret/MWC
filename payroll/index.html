@@ -1020,7 +1020,7 @@ function computePayroll(jobs, employeeHourlyRate) {
   });
 
   // STEP 9: OT on commission
-  const otComm = totalCommHours > 0 && totalOTHours > 0 ? (regComm / totalCommHours) * 0.5 * totalOTHours : 0;
+  const otComm = totalCommHours > 0 && totalOTHours > 0 ? (regComm / totalCommHours) * 1.5 * totalOTHours : 0;
   const totalComm = regComm + otComm;
 
   // STEP 10: Average hourly commission
