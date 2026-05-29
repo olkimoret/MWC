@@ -920,7 +920,10 @@ function computePayroll(jobs, employeeHourlyRate) {
     // Use ONLY the first job with Comm Start filled - one time block per day
     const firstCommJob = dayJobs
       .filter(j => j.fields['Comm Start'] && j.fields['Comm End'])
-      .sort((a, b) => new Date(a.fields['Comm Start']) - new Date(b.fields['Comm Start']))[0];
+      .sort((a, b) => {
+  const normalize = s => s.endsWith('Z') || s.includes('+') ? s : s + 'Z';
+  return new Date(normalize(a.fields['Comm Start'])) - new Date(normalize(b.fields['Comm Start']));
+})[0];
     let grossHours = 0;
     if (firstCommJob) {
       const commStart = timeFromISO(firstCommJob.fields['Comm Start']);
@@ -932,9 +935,8 @@ function computePayroll(jobs, employeeHourlyRate) {
     // Lunch comes from the job record, not auto-calculated
     const lunchRaw = firstCommJob?.fields['Lunch'];
     let lunch = 0;
-    if (lunchRaw) {
-      const d = new Date(lunchRaw);
-      lunch = d.getUTCHours() + d.getUTCMinutes() / 60;
+    if (typeof lunchRaw === 'number' && lunchRaw > 0) {
+      lunch = lunchRaw;
     } else {
       lunch = grossHours >= 9 ? 0.5 : 0;
     }
