@@ -884,10 +884,8 @@ function computePayroll(jobs, employeeHourlyRate) {
   // Helper: parse ISO datetime string to decimal hours
   function timeFromISO(isoStr) {
     if (!isoStr) return 0;
-    const parts = isoStr.split('T');
-    if (parts.length < 2) return 0;
-    const timeParts = parts[1].split(':');
-    return parseInt(timeParts[0]) + parseInt(timeParts[1]) / 60;
+    const date = new Date(isoStr);
+    return date.getHours() + date.getMinutes() / 60;
   }
 
   // STEP 1: Group jobs by date and calculate daily metrics
