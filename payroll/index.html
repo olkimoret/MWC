@@ -703,7 +703,7 @@ async function showCalculate() {
         const ppIds = j.fields['Pay Period'] || [];
         const commStart = j.fields['Comm Start'];
         const jobType = j.fields['Job Type'];
-        return empIds.includes(selectedEmpId) && ppIds.includes(pp.id) && commStart && jobType !== 'Discount';
+        return empIds.includes(selectedEmpId) && ppIds.includes(pp.id) && commStart && jobType !== 'Non-Commission';
       });
 
       if (hasJobForEmp) {
@@ -906,14 +906,15 @@ function computePayroll(jobs, employeeHourlyRate) {
   Object.keys(jobsByDate).sort().forEach(date => {
     const dayJobs = jobsByDate[date].jobs;
 
-    // Find first job with Comm Start for gross hours
-    const firstCommJob = dayJobs.find(j => j.fields['Comm Start']);
+    // Calculate gross hours: sum Comm End - Comm Start across all jobs for this date
     let grossHours = 0;
-    if (firstCommJob) {
-      const commStart = timeFromISO(firstCommJob.fields['Comm Start']);
-      const commEnd = timeFromISO(firstCommJob.fields['Comm End']);
-      grossHours = Math.max(0, commEnd - commStart);
-    }
+    dayJobs.forEach(j => {
+      if (j.fields['Comm Start'] && j.fields['Comm End']) {
+        const commStart = timeFromISO(j.fields['Comm Start']);
+        const commEnd = timeFromISO(j.fields['Comm End']);
+        grossHours += Math.max(0, commEnd - commStart);
+      }
+    });
 
     // Apply lunch deduction: 0.5h if grossHours > 8
     const lunch = grossHours > 8 ? 0.5 : 0;
