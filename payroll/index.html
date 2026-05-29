@@ -958,10 +958,10 @@ function computePayroll(jobs, employeeHourlyRate) {
 
   // STEP 3: Calculate daily OT (using net hours, which already has lunch deducted)
   let dailyOT = 0;
-  Object.values(dailyMetrics).forEach(dm => {
-    if (dm.netHours > 8) {
-      dailyOT += dm.netHours - 8;
-    }
+  Object.entries(dailyMetrics).forEach(([date, dm]) => {
+    const dayOT = dm.netHours > 8 ? dm.netHours - 8 : 0;
+    console.log(`DEBUG OT: date=${date}, grossHours=${dm.grossHours}, lunch=${dm.lunch}, netHours=${dm.netHours}, dayOT=${dayOT}`);
+    dailyOT += dayOT;
   });
 
   // STEP 4: Calculate weekly OT (using net hours per day, Monday start)
