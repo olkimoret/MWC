@@ -907,7 +907,9 @@ function computePayroll(jobs, employeeHourlyRate) {
     const dayJobs = jobsByDate[date].jobs;
 
     // Use ONLY the first job with Comm Start filled - one time block per day
-    const firstCommJob = dayJobs.find(j => j.fields['Comm Start'] && j.fields['Comm End']);
+    const firstCommJob = dayJobs
+      .filter(j => j.fields['Comm Start'] && j.fields['Comm End'])
+      .sort((a, b) => new Date(a.fields['Comm Start']) - new Date(b.fields['Comm Start']))[0];
     let grossHours = 0;
     if (firstCommJob) {
       const commStart = timeFromISO(firstCommJob.fields['Comm Start']);
