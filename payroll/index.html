@@ -775,7 +775,7 @@ async function fetchJobsForPeriod(startDate, endDate) {
     `AND(DATESTR({Job Date})>='${startDate}',DATESTR({Job Date})<='${endDate}')`
   );
   const res = await fetch(
-    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Jobs?filterByFormula=${formula}&fields[]=Job%20Date&fields[]=Job%20Revenue&fields[]=Commission%20Rate&fields[]=Job%20Type&fields[]=Comm%20Start&fields[]=Comm%20End&fields[]=Hrly%20Start&fields[]=Hrly%20End&fields[]=Employee&fields[]=Pay%20Period`,
+    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Jobs?filterByFormula=${formula}&fields[]=Job%20Date&fields[]=Job%20Revenue&fields[]=Commission%20Rate&fields[]=Job%20Type&fields[]=Comm%20Start&fields[]=Comm%20End&fields[]=Hrly%20Start&fields[]=Hrly%20End&fields[]=Employee&fields[]=Pay%20Period&fields[]=Lunch`,
     { headers }
   );
   const data = await res.json();
@@ -916,8 +916,14 @@ function computePayroll(jobs, employeeHourlyRate) {
       console.log(`DEBUG daily hours: date=${date}, commStartRaw=${firstCommJob.fields['Comm Start']}, commStart=${commStart}, commEnd=${commEnd}, grossHours=${grossHours}`);
     }
 
-    // Apply lunch deduction: 0.5h if grossHours > 8
-    const lunch = grossHours > 8 ? 0.5 : 0;
+    // Lunch comes from the job record, not auto-calculated
+    const lunchRaw = firstCommJob?.fields['Lunch'];
+    let lunch = 0;
+    if (lunchRaw) {
+      // Lunch is stored as a duration - convert to hours
+      const d = new Date(lunchRaw);
+      lunch = d.getUTCHours() + d.getUTCMinutes() / 60;
+    }
     const netHours = grossHours - lunch;
 
     // Calculate effective revenue for the day (including discounts, excluding Non-Commission)
