@@ -913,6 +913,7 @@ function computePayroll(jobs, employeeHourlyRate) {
       const commStart = timeFromISO(firstCommJob.fields['Comm Start']);
       const commEnd = timeFromISO(firstCommJob.fields['Comm End']);
       grossHours = Math.max(0, commEnd - commStart);
+      console.log(`DEBUG daily hours: date=${date}, commStartRaw=${firstCommJob.fields['Comm Start']}, commStart=${commStart}, commEnd=${commEnd}, grossHours=${grossHours}`);
     }
 
     // Apply lunch deduction: 0.5h if grossHours > 8
