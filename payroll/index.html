@@ -785,10 +785,15 @@ async function fetchJobsForPeriod(startDate, endDate) {
 function filterJobs(jobs, empId, ppId) {
   return jobs.filter(j => {
     const empIds = j.fields.Employee || [];
+    const ppIds = j.fields['Pay Period'] || [];
     const commStart = j.fields['Comm Start'];
     const hrlyStart = j.fields['Hrly Start'];
     const jobType = j.fields['Job Type'];
-    return empIds.includes(empId) && (commStart || hrlyStart) && jobType !== 'Discount';
+
+    // If Pay Period is filled, it must match. If empty, trust the date range.
+    const ppMatch = ppIds.length === 0 || ppIds.includes(ppId);
+
+    return empIds.includes(empId) && ppMatch && (commStart || hrlyStart) && jobType !== 'Discount';
   });
 }
 
