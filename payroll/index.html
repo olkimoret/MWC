@@ -774,12 +774,25 @@ async function fetchJobsForPeriod(startDate, endDate) {
   const formula = encodeURIComponent(
     `AND(DATESTR({Job Date})>='${startDate}',DATESTR({Job Date})<='${endDate}')`
   );
-  const res = await fetch(
-    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Jobs?filterByFormula=${formula}&fields[]=Job%20Date&fields[]=Job%20Revenue&fields[]=Commission%20Rate&fields[]=Job%20Type&fields[]=Comm%20Start&fields[]=Comm%20End&fields[]=Hrly%20Start&fields[]=Hrly%20End&fields[]=Employee&fields[]=Pay%20Period&fields[]=Lunch`,
-    { headers }
-  );
-  const data = await res.json();
-  return data.records || [];
+  const fields = [
+    'Job%20Date','Job%20Revenue','Commission%20Rate','Job%20Type',
+    'Comm%20Start','Comm%20End','Hrly%20Start','Hrly%20End',
+    'Employee','Pay%20Period','Number%20of%20Techs','Lunch'
+  ].join('&fields[]=');
+
+  let allRecords = [];
+  let offset = null;
+
+  do {
+    let url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Jobs?filterByFormula=${formula}&fields[]=${fields}&pageSize=100`;
+    if (offset) url += `&offset=${offset}`;
+    const res = await fetch(url, { headers });
+    const data = await res.json();
+    allRecords = allRecords.concat(data.records || []);
+    offset = data.offset || null;
+  } while (offset);
+
+  return allRecords;
 }
 
 function filterJobs(jobs, empId, ppId) {
