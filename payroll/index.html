@@ -783,41 +783,13 @@ async function fetchJobsForPeriod(startDate, endDate) {
 }
 
 function filterJobs(jobs, empId, ppId) {
-  const filtered = [];
-  const excluded = [];
-
-  jobs.forEach(j => {
+  return jobs.filter(j => {
     const empIds = j.fields.Employee || [];
-    const ppIds = j.fields['Pay Period'] || [];
     const commStart = j.fields['Comm Start'];
     const hrlyStart = j.fields['Hrly Start'];
     const jobType = j.fields['Job Type'];
-
-    const hasEmp = empIds.includes(empId);
-    const hasPp = ppIds.includes(ppId);
-    const hasTimes = !!(commStart || hrlyStart);
-    const notDiscount = jobType !== 'Discount';
-    const passes = hasEmp && hasPp && hasTimes && notDiscount;
-
-    if (passes) {
-      filtered.push(j);
-    } else {
-      excluded.push({
-        date: j.fields['Job Date'],
-        customer: j.fields['Customer Name'],
-        hasEmp,
-        hasPp,
-        hasTimes,
-        notDiscount
-      });
-    }
+    return empIds.includes(empId) && (commStart || hrlyStart) && jobType !== 'Discount';
   });
-
-  if (excluded.length > 0) {
-    console.log(`DEBUG filterJobs: ${excluded.length} jobs excluded:`, excluded);
-  }
-
-  return filtered;
 }
 
 async function doCalculate() {
