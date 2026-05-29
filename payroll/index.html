@@ -920,9 +920,10 @@ function computePayroll(jobs, employeeHourlyRate) {
     const lunchRaw = firstCommJob?.fields['Lunch'];
     let lunch = 0;
     if (lunchRaw) {
-      // Lunch is stored as a duration - convert to hours
       const d = new Date(lunchRaw);
       lunch = d.getUTCHours() + d.getUTCMinutes() / 60;
+    } else {
+      lunch = grossHours >= 9 ? 0.5 : 0;
     }
     const netHours = grossHours - lunch;
 
