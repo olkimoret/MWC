@@ -906,15 +906,14 @@ function computePayroll(jobs, employeeHourlyRate) {
   Object.keys(jobsByDate).sort().forEach(date => {
     const dayJobs = jobsByDate[date].jobs;
 
-    // Calculate gross hours: sum Comm End - Comm Start across all jobs for this date
+    // Use ONLY the first job with Comm Start filled - one time block per day
+    const firstCommJob = dayJobs.find(j => j.fields['Comm Start'] && j.fields['Comm End']);
     let grossHours = 0;
-    dayJobs.forEach(j => {
-      if (j.fields['Comm Start'] && j.fields['Comm End']) {
-        const commStart = timeFromISO(j.fields['Comm Start']);
-        const commEnd = timeFromISO(j.fields['Comm End']);
-        grossHours += Math.max(0, commEnd - commStart);
-      }
-    });
+    if (firstCommJob) {
+      const commStart = timeFromISO(firstCommJob.fields['Comm Start']);
+      const commEnd = timeFromISO(firstCommJob.fields['Comm End']);
+      grossHours = Math.max(0, commEnd - commStart);
+    }
 
     // Apply lunch deduction: 0.5h if grossHours > 8
     const lunch = grossHours > 8 ? 0.5 : 0;
@@ -995,7 +994,7 @@ function computePayroll(jobs, employeeHourlyRate) {
   let regComm = 0;
   Object.values(dailyMetrics).forEach(dm => {
     dm.dayJobs.forEach(j => {
-      if (j.fields['Comm Start']) {
+      if (j.fields['Job Type'] !== 'Non-Commission') {
         const numTechs = (j.fields['Employee'] || []).length || 1;
         const revenue = j.fields['Job Revenue'] || 0;
         const rateRaw = j.fields['Commission Rate'];
