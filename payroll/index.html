@@ -811,6 +811,17 @@ async function doCalculate() {
     const allJobsInPeriod = await fetchJobsForPeriod(pp.startDate, pp.endDate);
     const jobs = filterJobs(allJobsInPeriod, selectedEmpId, selectedPpId);
 
+    console.log(`DEBUG: All jobs fetched for period ${pp.startDate} to ${pp.endDate}:`, allJobsInPeriod.length);
+    console.log(`DEBUG: Jobs filtered for ${selectedEmpName} (${selectedEmpId}):`, jobs.length);
+    console.log(`DEBUG: Filtered jobs:`, jobs.map(j => ({
+      date: j.fields['Job Date'],
+      customer: j.fields['Customer Name'],
+      employees: j.fields['Employee'],
+      commStart: j.fields['Comm Start'],
+      revenue: j.fields['Job Revenue'],
+      numTechs: (j.fields['Employee'] || []).length
+    })));
+
     if (jobs.length === 0) {
       showError('No jobs found for this employee and period.');
       btn.textContent = 'Calculate';
@@ -868,6 +879,8 @@ function computePayroll(jobs, employeeHourlyRate) {
   // Step 1: Separate job types
   const commJobs = jobs.filter(j => j.fields['Comm Start']);
   const hrlyJobs = jobs.filter(j => j.fields['Hrly Start']);
+
+  console.log(`DEBUG computePayroll: ${commJobs.length} commission jobs, ${hrlyJobs.length} hourly jobs`);
 
   // Helper: parse ISO datetime string to get time
   function timeFromISO(isoStr) {
