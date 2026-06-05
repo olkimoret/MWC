@@ -383,17 +383,16 @@ function filterJobs(jobs, empId, ppId) {
 
 async function doCalculate() {
   const btn = document.getElementById('calc-btn');
-  const calcLoading = document.getElementById('calc-loading');
-
+  btn.textContent = 'Calculating…';
+  btn.disabled = true;
   hideError();
-  document.querySelector('#calculate-view .card').style.display = 'none';
-  document.querySelector('#calculate-view .actions').style.display = 'none';
-  calcLoading.style.display = 'block';
 
   try {
     const pp = payPeriods.find(p => p.id === selectedPpId);
     if (!pp) {
       showError('Pay period not found.');
+      btn.textContent = 'Calculate';
+      btn.disabled = false;
       return;
     }
 
@@ -413,6 +412,8 @@ async function doCalculate() {
 
     if (jobs.length === 0) {
       showError('No jobs found for this employee and period.');
+      btn.textContent = 'Calculate';
+      btn.disabled = false;
       return;
     }
 
@@ -457,19 +458,18 @@ async function doCalculate() {
   } catch (e) {
     showError('Calculation failed. Please try again.');
   } finally {
-    calcLoading.style.display = 'none';
-    document.querySelector('#calculate-view .card').style.display = 'block';
-    document.querySelector('#calculate-view .actions').style.display = 'flex';
+    btn.textContent = 'Calculate';
+    btn.disabled = false;
   }
 }
 
 function computePayroll(jobs, employeeHourlyRate) {
-  // Helper: parse ISO datetime string to decimal hours
-function timeFromISO(isoStr) {
-  if (!isoStr) return 0;
-  const date = new Date(isoStr);
-  return date.getUTCHours() + date.getUTCMinutes() / 60;
-}
+  // Helper: parse ISO datetime string to decimal hours (UTC to avoid timezone shift)
+  function timeFromISO(isoStr) {
+    if (!isoStr) return 0;
+    const date = new Date(isoStr);
+    return date.getUTCHours() + date.getUTCMinutes() / 60;
+  }
 
   // STEP 1: Group jobs by date and calculate daily metrics
   const jobsByDate = {};
@@ -491,9 +491,10 @@ function timeFromISO(isoStr) {
     const firstCommJob = dayJobs
       .filter(j => j.fields['Comm Start'] && j.fields['Comm End'])
       .sort((a, b) => {
-  const normalize = s => s.endsWith('Z') || s.includes('+') ? s : s + 'Z';
-  return new Date(normalize(a.fields['Comm Start'])) - new Date(normalize(b.fields['Comm Start']));
-})[0];
+        const normalize = s => s.endsWith('Z') || s.includes('+') ? s : s + 'Z';
+        return new Date(normalize(a.fields['Comm Start'])) - new Date(normalize(b.fields['Comm Start']));
+      })[0];
+
     let grossHours = 0;
     if (firstCommJob) {
       const commStart = timeFromISO(firstCommJob.fields['Comm Start']);
@@ -548,27 +549,29 @@ function timeFromISO(isoStr) {
 
   console.log(`DEBUG computePayroll: ${Object.keys(dailyMetrics).length} days, totalCommHours=${totalCommHours}, totalRevenue=${totalRevenue}`);
 
-  // STEP 3: Calculate daily OT (using net hours, which already has lunch deducted)
+  // STEP 3: Calculate daily OT
+  // Bill lumps commission hours (net) + hourly hours together for the 8h daily OT threshold
   let dailyOT = 0;
   Object.entries(dailyMetrics).forEach(([date, dm]) => {
-    const dayOT = dm.netHours > 8 ? dm.netHours - 8 : 0;
-    console.log(`DEBUG OT: date=${date}, grossHours=${dm.grossHours}, lunch=${dm.lunch}, netHours=${dm.netHours}, dayOT=${dayOT}`);
+    const totalDayHours = dm.netHours + dm.dayHrlyHours;
+    const dayOT = totalDayHours > 8 ? totalDayHours - 8 : 0;
+    console.log(`DEBUG OT: date=${date}, grossHours=${dm.grossHours}, lunch=${dm.lunch}, netHours=${dm.netHours}, hrlyHours=${dm.dayHrlyHours}, totalDayHours=${totalDayHours}, dayOT=${dayOT}`);
     dailyOT += dayOT;
   });
 
-  // STEP 4: Calculate weekly OT (using net hours per day, Monday start)
+  // STEP 4: Calculate weekly OT (using net comm hours + hourly hours per day, Monday start)
   const weekMap = {};
   Object.keys(dailyMetrics).forEach(dateStr => {
     const date = new Date(dateStr + 'T00:00:00');
     const monday = getMonday(date);
     const weekKey = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
     if (!weekMap[weekKey]) weekMap[weekKey] = 0;
-    weekMap[weekKey] += dailyMetrics[dateStr].netHours;
+    weekMap[weekKey] += dailyMetrics[dateStr].netHours + dailyMetrics[dateStr].dayHrlyHours;
   });
 
   let weeklyOT = 0;
-  Object.values(weekMap).forEach(weekNetHours => {
-    if (weekNetHours > 40) weeklyOT += weekNetHours - 40;
+  Object.values(weekMap).forEach(weekHours => {
+    if (weekHours > 40) weeklyOT += weekHours - 40;
   });
 
   // STEP 5: Total OT hours = max of daily and weekly
@@ -612,7 +615,10 @@ function timeFromISO(isoStr) {
   });
 
   // STEP 9: OT on commission
-  const otComm = totalCommHours > 0 && totalOTHours > 0 ? (regComm / totalCommHours) * 0.5 * totalOTHours : 0;
+  // Bill pays full 1.5x on OT hours (matches his spreadsheet).
+  // Note: this means OT hours are effectively paid at 2.5x total (1x already in regComm + 1.5x here).
+  // Bill has confirmed this is intentional — pending review to potentially switch to 0.5x premium only.
+  const otComm = totalCommHours > 0 && totalOTHours > 0 ? (regComm / totalCommHours) * 1.5 * totalOTHours : 0;
   const totalComm = regComm + otComm;
 
   // STEP 10: Average hourly commission
