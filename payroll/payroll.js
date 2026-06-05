@@ -383,16 +383,17 @@ function filterJobs(jobs, empId, ppId) {
 
 async function doCalculate() {
   const btn = document.getElementById('calc-btn');
-  btn.textContent = 'Calculating…';
-  btn.disabled = true;
+  const calcLoading = document.getElementById('calc-loading');
+
   hideError();
+  document.querySelector('#calculate-view .card').style.display = 'none';
+  document.querySelector('#calculate-view .actions').style.display = 'none';
+  calcLoading.style.display = 'block';
 
   try {
     const pp = payPeriods.find(p => p.id === selectedPpId);
     if (!pp) {
       showError('Pay period not found.');
-      btn.textContent = 'Calculate';
-      btn.disabled = false;
       return;
     }
 
@@ -412,8 +413,6 @@ async function doCalculate() {
 
     if (jobs.length === 0) {
       showError('No jobs found for this employee and period.');
-      btn.textContent = 'Calculate';
-      btn.disabled = false;
       return;
     }
 
@@ -458,8 +457,9 @@ async function doCalculate() {
   } catch (e) {
     showError('Calculation failed. Please try again.');
   } finally {
-    btn.textContent = 'Calculate';
-    btn.disabled = false;
+    calcLoading.style.display = 'none';
+    document.querySelector('#calculate-view .card').style.display = 'block';
+    document.querySelector('#calculate-view .actions').style.display = 'flex';
   }
 }
 
