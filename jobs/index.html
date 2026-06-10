@@ -290,11 +290,11 @@
       </div>
       <div class="form-row">
         <span class="row-label">Hourly Start <small>optional</small></span>
-        <input type="text" id="hrly-start" class="fp-time" placeholder="Set time…" readonly data-default="08:00">
+        <input type="text" id="hrly-start" class="fp-time" placeholder="Set time…" readonly>
       </div>
       <div class="form-row">
         <span class="row-label">Hourly End <small>optional</small></span>
-        <input type="text" id="hrly-end" class="fp-time" placeholder="Set time…" readonly data-default="17:00">
+        <input type="text" id="hrly-end" class="fp-time" placeholder="Set time…" readonly>
       </div>
       <div class="toggle-field">
         <div>
@@ -1347,6 +1347,10 @@ loadEmployees().then(() => {
   window.initCustomSelects(document.getElementById('employee-select').closest('.card'));
 });
 window.initTimePickers();
+
+// Set picker defaults for optional hourly fields (commission job) without displaying values
+document.getElementById('hrly-start').dataset.h24 = '08:00';
+document.getElementById('hrly-end').dataset.h24 = '17:00';
 </script>
 <script src="/custom-select.js"></script>
 </body>
