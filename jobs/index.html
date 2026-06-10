@@ -1175,7 +1175,7 @@ async function submitForm() {
     'Comm End':          commEnd   ? `${date}T${commEnd}:00`   : null,
     'Hrly Start':        hrlyStart ? `${date}T${hrlyStart}:00` : null,
     'Hrly End':          hrlyEnd   ? `${date}T${hrlyEnd}:00`   : null,
-    'Lunch':             document.getElementById('lunch').checked,
+    'Lunch':             document.getElementById('lunch').checked ? 0.5 : 0,
     'Ladder Secured':    document.getElementById('ladder-secured').checked,
     'PPE Worn':          document.getElementById('ppe-worn').checked,
     'Area Clear':        document.getElementById('area-clear').checked,
@@ -1323,7 +1323,6 @@ function hideError() {
   document.getElementById('error-msg').classList.remove('visible');
 }
 
-fetchJobsFieldIds();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="/custom-select.js"></script>
