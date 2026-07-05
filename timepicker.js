@@ -203,8 +203,8 @@
     const isHourlyField = currentInput && (currentInput.id === 'hrly-start' || currentInput.id === 'hrly-end');
 
     if (isHourlyField && !isModified) {
-      btn.textContent = '🗑';
-      btn.style.fontSize = '18px';
+      btn.textContent = 'Clear';
+      btn.style.fontSize = '16px';
     } else {
       btn.textContent = 'Cancel';
       btn.style.fontSize = '16px';
