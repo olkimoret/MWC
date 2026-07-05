@@ -615,10 +615,10 @@ function computePayroll(jobs, employeeHourlyRate) {
   });
 
   // STEP 9: OT on commission
-  // Bill pays full 1.5x on OT hours (matches his spreadsheet).
-  // Note: this means OT hours are effectively paid at 2.5x total (1x already in regComm + 1.5x here).
-  // Bill has confirmed this is intentional — pending review to potentially switch to 0.5x premium only.
-  const otComm = totalCommHours > 0 && totalOTHours > 0 ? (regComm / totalCommHours) * 1.5 * totalOTHours : 0;
+  // Note: Bill used to pay OT at 2.5x total (1x already in regComm + 1.5x here).
+  // Bill confirmed (per CA OT law): OT hours paid at 1.5x TOTAL, not 2.5x.
+  // regComm already includes 1x for OT hours, so we only add the 0.5x premium here.
+  const otComm = totalCommHours > 0 && totalOTHours > 0 ? (regComm / totalCommHours) * 0.5 * totalOTHours : 0;
   const totalComm = regComm + otComm;
 
   // STEP 10: Average hourly commission
