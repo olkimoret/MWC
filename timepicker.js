@@ -12,6 +12,7 @@
 
   let overlay, sheet, hourDrum, minDrum, ampmBtns;
   let currentInput = null;
+  let isModified = false;
 
   /* ── Build the sheet once ── */
   function build() {
@@ -142,14 +143,20 @@
       }, { passive: false });
     });
 
-    document.getElementById('tp-cancel-btn').addEventListener('click', close);
+    document.getElementById('tp-cancel-btn').addEventListener('click', handleCancel);
     document.getElementById('tp-set-btn').addEventListener('click', applyTime);
     overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
     ampmBtns.forEach(btn => {
       btn.addEventListener('click', function () {
         ampmBtns.forEach(b => b.classList.remove('active'));
         this.classList.add('active');
+        markModified();
       });
+    });
+
+    // Track changes on drums
+    [hourDrum, minDrum].forEach(drum => {
+      drum.addEventListener('scroll', markModified);
     });
   }
 
@@ -186,9 +193,48 @@
     return (items[idx] || items[0]).dataset.val;
   }
 
+  function markModified() {
+    isModified = true;
+    updateCancelButton();
+  }
+
+  function updateCancelButton() {
+    const btn = document.getElementById('tp-cancel-btn');
+    const isHourlyField = currentInput && (currentInput.id === 'hrly-start' || currentInput.id === 'hrly-end');
+
+    if (isHourlyField && !isModified) {
+      btn.textContent = '🗑';
+      btn.style.fontSize = '18px';
+    } else {
+      btn.textContent = 'Cancel';
+      btn.style.fontSize = '16px';
+    }
+  }
+
+  function handleCancel() {
+    const isHourlyField = currentInput && (currentInput.id === 'hrly-start' || currentInput.id === 'hrly-end');
+
+    if (isHourlyField && !isModified) {
+      // Clear both hourly start and end
+      const hrlyStart = document.getElementById('hrly-start');
+      const hrlyEnd = document.getElementById('hrly-end');
+
+      hrlyStart.value = '';
+      hrlyStart.dataset.h24 = '';
+      hrlyEnd.value = '';
+      hrlyEnd.dataset.h24 = '';
+
+      hrlyStart.dispatchEvent(new Event('change', { bubbles: true }));
+      hrlyEnd.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    close();
+  }
+
   function open(input) {
     if (!overlay) build();
     currentInput = input;
+    isModified = false;
 
     // Parse existing value
     const h24 = input.dataset.h24 || '';
@@ -207,6 +253,7 @@
     scrollTo(minDrum, pad(m));
     ampmBtns.forEach(b => b.classList.toggle('active', b.dataset.val === ampm));
 
+    updateCancelButton();
     overlay.classList.add('tp-visible');
     document.body.style.overflow = 'hidden';
   }
