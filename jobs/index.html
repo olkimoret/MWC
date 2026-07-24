@@ -51,6 +51,78 @@
   cursor: pointer; min-width: 0;
 }
 .fp-time::placeholder { color: var(--text-3, #9CA3AF); font-weight: 400; }
+
+.dont-see-btn { margin-bottom: 12px; }
+
+.selected-other-day {
+  background: rgba(217,119,6,0.08);
+  border: 1px solid rgba(217,119,6,0.3);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--text-2, #4B5563);
+}
+.selected-other-day strong { color: var(--text, #111827); }
+
+.confirm-prompt {
+  font-size: 13px;
+  color: var(--text-2, #4B5563);
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+
+.confirm-tech-list { display: flex; flex-direction: column; gap: 2px; }
+.confirm-tech-list .toggle-field { padding: 10px 0; }
+
+.wide-picker-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(17,24,39,0.45);
+  z-index: 10000;
+  align-items: flex-end;
+  justify-content: center;
+}
+.wide-picker-overlay.visible { display: flex; }
+.wide-picker-panel {
+  background: #fff;
+  width: 100%;
+  max-width: 480px;
+  max-height: 82vh;
+  border-radius: 20px 20px 0 0;
+  padding: 16px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.2);
+}
+.wide-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.wide-picker-close {
+  background: none;
+  border: none;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--text-3, #9CA3AF);
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.wide-picker-search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #E5E7EB;
+  font-family: inherit;
+  font-size: 15px;
+  margin-bottom: 10px;
+  outline: none;
+}
+.wide-picker-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 6px; }
 </style>
 </head>
 <body>
@@ -143,13 +215,53 @@
       <div class="client-list-card">
         <div class="client-list" id="client-list"></div>
       </div>
+      <div class="selected-other-day" id="selected-other-day" style="display:none"></div>
+      <button class="btn btn-secondary dont-see-btn" id="dont-see-btn" onclick="openWidePicker()">Don't see your job?</button>
       <div class="actions">
-        <button class="btn btn-primary" onclick="goToStep2()">Continue to Checklist</button>
+        <button class="btn btn-primary" id="continue-btn" onclick="goToStep2()" disabled>Continue to Checklist</button>
         <button class="btn btn-secondary" onclick="goToSplash()">Back</button>
       </div>
     </div>
 
   </div><!-- /step-1 -->
+
+  <!-- STEP CONFIRM: CORRECT TECH/DATE MISMATCH -->
+  <div class="step" id="step-confirm">
+
+    <div class="job-banner visible" id="confirm-banner"></div>
+
+    <p class="section-label">Confirm Changes</p>
+    <p class="confirm-prompt">Confirm you were the only tech on this job — add anyone else who worked it with you.</p>
+
+    <div class="card">
+      <div class="field-block">
+        <label>Tech(s)</label>
+        <div id="confirm-tech-list" class="confirm-tech-list"></div>
+      </div>
+      <div class="form-row" style="flex-wrap:wrap;gap:6px;border-bottom:none;">
+        <span class="row-label">Job Date</span>
+        <input type="text" id="confirm-date" placeholder="Select date" readonly style="cursor:pointer;flex:1;text-align:right;font-family:inherit;font-size:15px;font-weight:500;color:var(--amber);border:none;background:transparent;outline:none;">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="saveConfirmChanges()">Save &amp; Continue</button>
+      <button class="btn btn-secondary" onclick="goToStep(1)">Back</button>
+    </div>
+
+  </div><!-- /step-confirm -->
+
+  <!-- WIDE JOB PICKER OVERLAY -->
+  <div class="wide-picker-overlay" id="wide-picker-overlay">
+    <div class="wide-picker-panel">
+      <div class="wide-picker-header">
+        <p class="section-label" style="margin:0;">Find your job</p>
+        <button class="wide-picker-close" onclick="closeWidePicker()" aria-label="Close">&times;</button>
+      </div>
+      <input type="text" id="wide-picker-search" class="wide-picker-search" placeholder="Search client name…">
+      <div class="wide-picker-list" id="wide-picker-list"></div>
+    </div>
+  </div>
 
   <!-- STEP 2: JOB CHECKLIST (new) -->
   <div class="step" id="step-2">
@@ -451,6 +563,9 @@ let allJobs = [];
 let oshaRequired = false;
 let currentMode = 'job'; // 'job' or 'non-commission'
 let ncSelectedEmployee = null;
+let employeesList = []; // [{ id, name }] loaded once for multi-select + log names
+let selectedFromWidePicker = false;
+let widePickerJobs = []; // flat list of { clientName, dateStr, jobs } for the current search session
 
 // ── CHECKLIST DATA ──────────────────────────────────────────
 const CHECKLIST_DATA = {
@@ -708,10 +823,11 @@ async function loadEmployees() {
     const data = await res.json();
     const select = document.getElementById('employee-select');
     select.innerHTML = '<option value="">— Select your name —</option>';
-    data.records.forEach(r => {
+    employeesList = data.records.map(r => ({ id: r.id, name: r.fields.Name }));
+    employeesList.forEach(emp => {
       const opt = document.createElement('option');
-      opt.value = r.id;
-      opt.textContent = r.fields.Name;
+      opt.value = emp.id;
+      opt.textContent = emp.name;
       select.appendChild(opt);
     });
   } catch(e) {
@@ -730,6 +846,9 @@ async function tryLoadJobs() {
 
   selectedEmployee = { id: empId, name: empName };
   selectedClient = null;
+  selectedFromWidePicker = false;
+  document.getElementById('selected-other-day').style.display = 'none';
+  updateContinueButtonState();
 
   const section = document.getElementById('client-list-section');
   const list = document.getElementById('client-list');
@@ -742,10 +861,7 @@ async function tryLoadJobs() {
     const res = await fetch(url, { headers });
     const data = await res.json();
 
-    allJobs = data.records.filter(r => {
-      const emps = r.fields['Employee'] || [];
-      return emps.includes(empId);
-    });
+    allJobs = data.records;
 
     if (allJobs.length === 0) {
       list.innerHTML = '<div class="no-jobs">No jobs found for this date.</div>';
@@ -790,6 +906,9 @@ function selectClient(clientName, jobs, el) {
   document.querySelectorAll('.client-item').forEach(i => i.classList.remove('selected'));
   el.classList.add('selected');
   selectedClient = { name: clientName, jobs };
+  selectedFromWidePicker = false;
+  document.getElementById('selected-other-day').style.display = 'none';
+  updateContinueButtonState();
 
   const jobTypes = jobs
     .map(j => j.fields['Job Type'] || '')
@@ -799,6 +918,126 @@ function selectClient(clientName, jobs, el) {
   document.getElementById('banner-job-type').textContent = jobTypes;
   document.getElementById('banner-job-number').textContent = '';
   document.getElementById('banner-address').textContent = '';
+}
+
+// ── CONTINUE BUTTON GATING ───────────────────────────────────
+function updateContinueButtonState() {
+  const btn = document.getElementById('continue-btn');
+  const date = document.getElementById('job-date').value;
+  btn.disabled = !(selectedEmployee && date && selectedClient);
+}
+
+// ── WIDE JOB PICKER (current + previous pay period) ──────────
+const PAY_PERIODS_TABLE = 'Pay Periods';
+
+function openWidePicker() {
+  document.getElementById('wide-picker-overlay').classList.add('visible');
+  document.getElementById('wide-picker-search').value = '';
+  loadWidePickerJobs();
+}
+
+function closeWidePicker() {
+  document.getElementById('wide-picker-overlay').classList.remove('visible');
+}
+
+function shiftDate(dateStr, days) {
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + days);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+async function loadWidePickerJobs() {
+  const list = document.getElementById('wide-picker-list');
+  list.innerHTML = '<div class="loading"><div class="spinner"></div>Loading jobs...</div>';
+
+  try {
+    const ppUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(PAY_PERIODS_TABLE)}?sort[0][field]=Start%20Date&sort[0][direction]=asc`;
+    const ppRes = await fetch(ppUrl, { headers });
+    const ppData = await ppRes.json();
+    const periods = ppData.records
+      .map(r => ({ start: r.fields['Start Date'] || '', end: r.fields['End Date'] || '' }))
+      .filter(p => p.start && p.end)
+      .sort((a, b) => a.start < b.start ? -1 : 1);
+
+    const currentIdx = periods.findIndex(p => p.start <= todayStr && todayStr <= p.end);
+    if (currentIdx === -1) {
+      list.innerHTML = '<div class="no-jobs">No pay period found for today.</div>';
+      return;
+    }
+    const current = periods[currentIdx];
+    const previous = periods[currentIdx - 1] || current;
+
+    const beforeStart = shiftDate(previous.start, -1);
+    const afterEnd = shiftDate(current.end, 1);
+    const formula = encodeURIComponent(`AND(IS_AFTER({Job Date}, '${beforeStart}'), IS_BEFORE({Job Date}, '${afterEnd}'))`);
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}?filterByFormula=${formula}`;
+    const res = await fetch(url, { headers });
+    const data = await res.json();
+
+    // Group by client name + date so recurring visits stay distinguishable
+    const groups = {};
+    data.records.forEach(job => {
+      const customer = job.fields['Customer Name'] || 'Unknown Customer';
+      const dateStr = (job.fields['Job Date'] || '').slice(0, 10);
+      const key = customer + '|' + dateStr;
+      if (!groups[key]) groups[key] = { clientName: customer, dateStr, jobs: [] };
+      groups[key].jobs.push(job);
+    });
+    widePickerJobs = Object.values(groups).sort((a, b) => a.dateStr < b.dateStr ? -1 : 1);
+
+    renderWidePickerList('');
+  } catch (e) {
+    list.innerHTML = '<div class="no-jobs">Error loading jobs. Check connection.</div>';
+  }
+}
+
+function renderWidePickerList(filterText) {
+  const list = document.getElementById('wide-picker-list');
+  const q = filterText.trim().toLowerCase();
+  const matches = widePickerJobs.filter(g => !q || g.clientName.toLowerCase().includes(q));
+
+  if (matches.length === 0) {
+    list.innerHTML = '<div class="no-jobs">No matching jobs found.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  matches.forEach(group => {
+    const jobTypes = group.jobs
+      .map(j => j.fields['Job Type'] || '')
+      .filter(t => t.toLowerCase() !== 'discount' && t)
+      .join(' · ');
+    const d = new Date(group.dateStr + 'T00:00:00');
+    const dateLabel = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+    const item = document.createElement('div');
+    item.className = 'client-item';
+    item.innerHTML = `
+      <div class="client-item-info">
+        <div class="client-item-name">${esc(group.clientName)}</div>
+        <div class="client-item-jobs">${esc(dateLabel)} · ${esc(jobTypes || 'No job type')}</div>
+      </div>
+      <div class="client-item-check">✓</div>
+    `;
+    item.onclick = () => selectWideJob(group);
+    list.appendChild(item);
+  });
+}
+
+function selectWideJob(group) {
+  selectedClient = { name: group.clientName, jobs: group.jobs };
+  selectedFromWidePicker = true;
+  updateContinueButtonState();
+
+  document.querySelectorAll('#client-list .client-item').forEach(i => i.classList.remove('selected'));
+
+  const d = new Date(group.dateStr + 'T00:00:00');
+  const dateLabel = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  const indicator = document.getElementById('selected-other-day');
+  indicator.innerHTML = `Selected: <strong>${esc(group.clientName)}</strong> · ${esc(dateLabel)}`;
+  indicator.style.display = 'block';
+
+  closeWidePicker();
 }
 
 // ── CHECKLIST BUILD ──────────────────────────────────────────
@@ -1061,13 +1300,134 @@ async function submitNonCommission() {
 }
 
 // ── NAVIGATION ───────────────────────────────────────────────
-function goToStep2() {
-  if (!selectedClient) { showError('Please select a client first.'); return; }
-  hideError();
+function jobsMismatch(jobs, empId, dateStr) {
+  return jobs.some(j => {
+    const emps = j.fields['Employee'] || [];
+    const jobDate = (j.fields['Job Date'] || '').slice(0, 10);
+    return !emps.includes(empId) || jobDate !== dateStr;
+  });
+}
+
+function proceedToChecklist() {
   buildChecklist();
   oshaRequired = isOshaRequired(selectedClient.jobs);
   updateProgressBar();
   goToStep(2);
+}
+
+function goToStep2() {
+  if (!selectedClient) { showError('Please select a client first.'); return; }
+  hideError();
+
+  const date = document.getElementById('job-date').value;
+  if (jobsMismatch(selectedClient.jobs, selectedEmployee.id, date)) {
+    populateConfirmStep(date);
+    goToStep('step-confirm');
+    return;
+  }
+
+  proceedToChecklist();
+}
+
+// ── CONFIRM CHANGES (tech/date correction) ───────────────────
+function populateConfirmStep(pickedDate) {
+  const banner = document.getElementById('confirm-banner');
+  banner.innerHTML = `<div class="job-name">${esc(selectedClient.name)}</div>`;
+
+  const currentIds = new Set();
+  selectedClient.jobs.forEach(j => (j.fields['Employee'] || []).forEach(id => currentIds.add(id)));
+
+  const list = document.getElementById('confirm-tech-list');
+  list.innerHTML = '';
+  employeesList.forEach(emp => {
+    const field = document.createElement('div');
+    field.className = 'toggle-field';
+    const id = `confirm-tech-${emp.id}`;
+    field.innerHTML = `
+      <div class="toggle-label">${esc(emp.name)}</div>
+      <label class="toggle">
+        <input type="checkbox" id="${id}" data-emp-id="${escAttr(emp.id)}" ${currentIds.has(emp.id) ? 'checked' : ''}>
+        <span class="toggle-slider"></span>
+      </label>
+    `;
+    list.appendChild(field);
+  });
+
+  const jobDate = (selectedClient.jobs[0].fields['Job Date'] || '').slice(0, 10) || pickedDate;
+  const dateInput = document.getElementById('confirm-date');
+  dateInput.value = jobDate;
+  if (dateInput._flatpickr) dateInput._flatpickr.setDate(jobDate, true);
+}
+
+function sameIdSet(a, b) {
+  if (a.length !== b.length) return false;
+  const sa = new Set(a);
+  return b.every(id => sa.has(id));
+}
+
+function formatLogTimestamp(d) {
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+async function saveConfirmChanges() {
+  const btn = document.querySelector('#step-confirm .btn-primary');
+  const checkedBoxes = document.querySelectorAll('#confirm-tech-list input[type="checkbox"]:checked');
+  const newEmpIds = Array.from(checkedBoxes).map(cb => cb.dataset.empId);
+  const newDate = document.getElementById('confirm-date').value;
+
+  if (newEmpIds.length === 0) {
+    showError('Select at least one tech.');
+    return;
+  }
+  hideError();
+
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  const empNameById = id => (employeesList.find(e => e.id === id) || {}).name || id;
+  const timestamp = formatLogTimestamp(new Date());
+
+  try {
+    for (const job of selectedClient.jobs) {
+      const oldEmpIds = job.fields['Employee'] || [];
+      const oldDate = (job.fields['Job Date'] || '').slice(0, 10);
+
+      const empChanged = !sameIdSet(oldEmpIds, newEmpIds);
+      const dateChanged = oldDate !== newDate;
+      if (!empChanged && !dateChanged) continue;
+
+      const fields = {};
+      const logLines = [];
+      if (empChanged) {
+        fields['Employee'] = newEmpIds;
+        logLines.push(`[${timestamp}] Employee: ${oldEmpIds.map(empNameById).join(', ') || '(none)'} → ${newEmpIds.map(empNameById).join(', ')}`);
+      }
+      if (dateChanged) {
+        fields['Job Date'] = newDate;
+        logLines.push(`[${timestamp}] Job Date: ${oldDate || '(none)'} → ${newDate}`);
+      }
+      const existingLog = job.fields['Correction Log'] || '';
+      fields['Correction Log'] = existingLog ? existingLog + '\n' + logLines.join('\n') : logLines.join('\n');
+
+      const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}/${job.id}`;
+      const res = await fetch(url, { method: 'PATCH', headers, body: JSON.stringify({ fields }) });
+      if (!res.ok) throw new Error('Correction save failed');
+
+      job.fields['Employee'] = fields['Employee'] || job.fields['Employee'];
+      job.fields['Job Date'] = fields['Job Date'] || job.fields['Job Date'];
+      job.fields['Correction Log'] = fields['Correction Log'];
+    }
+  } catch (e) {
+    showError('Could not save the correction. Please try again.');
+    btn.disabled = false;
+    btn.textContent = 'Save & Continue';
+    return;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Save & Continue';
+  proceedToChecklist();
 }
 
 function continueFromStep2() {
@@ -1255,6 +1615,7 @@ async function submitForm() {
 function resetForm() {
   selectedEmployee = null;
   selectedClient = null;
+  selectedFromWidePicker = false;
   oshaRequired = false;
   ncSelectedEmployee = null;
   currentMode = 'job';
@@ -1263,6 +1624,9 @@ function resetForm() {
   document.getElementById('job-date').value = todayStr;
   updateDateDisplay();
   document.getElementById('client-list-section').style.display = 'none';
+  document.getElementById('selected-other-day').style.display = 'none';
+  document.getElementById('continue-btn').disabled = true;
+  closeWidePicker();
 
   // Reset non-commission fields
   document.getElementById('nc-employee-select').value = '';
@@ -1346,6 +1710,12 @@ flatpickr('#nc-date', {
 });
 updateDateDisplay();
 updateNCDateDisplay();
+
+document.getElementById('wide-picker-search').addEventListener('input', e => renderWidePickerList(e.target.value));
+document.getElementById('wide-picker-overlay').addEventListener('click', e => {
+  if (e.target.id === 'wide-picker-overlay') closeWidePicker();
+});
+flatpickr('#confirm-date', { dateFormat: 'Y-m-d' });
 
 // Init after all scripts loaded
 loadEmployees().then(() => {
