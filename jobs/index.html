@@ -54,16 +54,20 @@
 
 .dont-see-btn { margin-bottom: 12px; }
 
-.selected-other-day {
-  background: rgba(217,119,6,0.08);
-  border: 1px solid rgba(217,119,6,0.3);
-  border-radius: 12px;
-  padding: 10px 14px;
-  margin-bottom: 12px;
-  font-size: 13px;
-  color: var(--text-2, #4B5563);
+.btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+.client-item-date {
+  flex-shrink: 0;
+  width: 42px;
+  text-align: center;
+  border-radius: 10px;
+  background: var(--bg, #F3F4F6);
+  border: 1px solid var(--border, #E5E7EB);
+  padding: 6px 2px;
+  line-height: 1.15;
 }
-.selected-other-day strong { color: var(--text, #111827); }
+.client-item-date .date-month { font-size: 10px; font-weight: 700; letter-spacing: 0.02em; color: var(--text-3, #9CA3AF); }
+.client-item-date .date-day { font-size: 16px; font-weight: 700; color: var(--text, #111827); }
 
 .confirm-prompt {
   font-size: 13px;
@@ -206,16 +210,11 @@
       </div>
     </div>
 
-    <div class="actions">
-      <button class="btn btn-secondary" onclick="goToSplash()">Back</button>
-    </div>
-
     <div id="client-list-section" style="display:none">
       <p class="section-label">Select Client</p>
       <div class="client-list-card">
         <div class="client-list" id="client-list"></div>
       </div>
-      <div class="selected-other-day" id="selected-other-day" style="display:none"></div>
       <button class="btn btn-secondary dont-see-btn" id="dont-see-btn" onclick="openWidePicker()">Don't see your job?</button>
       <div class="actions">
         <button class="btn btn-primary" id="continue-btn" onclick="goToStep2()" disabled>Continue to Checklist</button>
@@ -564,7 +563,6 @@ let oshaRequired = false;
 let currentMode = 'job'; // 'job' or 'non-commission'
 let ncSelectedEmployee = null;
 let employeesList = []; // [{ id, name }] loaded once for multi-select + log names
-let selectedFromWidePicker = false;
 let widePickerJobs = []; // flat list of { clientName, dateStr, jobs } for the current search session
 
 // ── CHECKLIST DATA ──────────────────────────────────────────
@@ -846,8 +844,6 @@ async function tryLoadJobs() {
 
   selectedEmployee = { id: empId, name: empName };
   selectedClient = null;
-  selectedFromWidePicker = false;
-  document.getElementById('selected-other-day').style.display = 'none';
   updateContinueButtonState();
 
   const section = document.getElementById('client-list-section');
@@ -878,22 +874,7 @@ async function tryLoadJobs() {
 
     list.innerHTML = '';
     Object.entries(clientMap).forEach(([clientName, jobs]) => {
-      const jobTypes = jobs
-        .map(j => j.fields['Job Type'] || '')
-        .filter(t => t.toLowerCase() !== 'discount' && t)
-        .join(' · ');
-
-      const item = document.createElement('div');
-      item.className = 'client-item';
-      item.innerHTML = `
-        <div class="client-item-info">
-          <div class="client-item-name">${esc(clientName)}</div>
-          <div class="client-item-jobs">${esc(jobTypes || 'No job type')}</div>
-        </div>
-        <div class="client-item-check">✓</div>
-      `;
-      item.onclick = () => selectClient(clientName, jobs, item);
-      list.appendChild(item);
+      list.appendChild(buildClientItemEl(clientName, jobs, date));
     });
     requestAnimationFrame(() => window.initCustomSelects(list));
 
@@ -902,12 +883,38 @@ async function tryLoadJobs() {
   }
 }
 
+// ── CLIENT CARD BUILDER (shared by main list + wide picker) ──
+function dateBadgeHtml(dateStr) {
+  if (!dateStr) return '<div class="client-item-date"></div>';
+  const d = new Date(dateStr + 'T00:00:00');
+  const month = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+  return `<div class="client-item-date"><div class="date-month">${esc(month)}</div><div class="date-day">${d.getDate()}</div></div>`;
+}
+
+function buildClientItemEl(clientName, jobs, dateStr) {
+  const jobTypes = jobs
+    .map(j => j.fields['Job Type'] || '')
+    .filter(t => t.toLowerCase() !== 'discount' && t)
+    .join(' · ');
+
+  const item = document.createElement('div');
+  item.className = 'client-item';
+  item.innerHTML = `
+    ${dateBadgeHtml(dateStr)}
+    <div class="client-item-info">
+      <div class="client-item-name">${esc(clientName)}</div>
+      <div class="client-item-jobs">${esc(jobTypes || 'No job type')}</div>
+    </div>
+    <div class="client-item-check">✓</div>
+  `;
+  item.onclick = () => selectClient(clientName, jobs, item);
+  return item;
+}
+
 function selectClient(clientName, jobs, el) {
   document.querySelectorAll('.client-item').forEach(i => i.classList.remove('selected'));
   el.classList.add('selected');
   selectedClient = { name: clientName, jobs };
-  selectedFromWidePicker = false;
-  document.getElementById('selected-other-day').style.display = 'none';
   updateContinueButtonState();
 
   const jobTypes = jobs
@@ -1025,19 +1032,24 @@ function renderWidePickerList(filterText) {
 }
 
 function selectWideJob(group) {
-  selectedClient = { name: group.clientName, jobs: group.jobs };
-  selectedFromWidePicker = true;
-  updateContinueButtonState();
+  closeWidePicker();
 
+  const list = document.getElementById('client-list');
   document.querySelectorAll('#client-list .client-item').forEach(i => i.classList.remove('selected'));
 
-  const d = new Date(group.dateStr + 'T00:00:00');
-  const dateLabel = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-  const indicator = document.getElementById('selected-other-day');
-  indicator.innerHTML = `Selected: <strong>${esc(group.clientName)}</strong> · ${esc(dateLabel)}`;
-  indicator.style.display = 'block';
+  const existing = list.querySelector('.client-item[data-wide-pick="true"]');
+  if (existing) existing.remove();
+  const noJobsMsg = list.querySelector('.no-jobs');
+  if (noJobsMsg) noJobsMsg.remove();
 
-  closeWidePicker();
+  const item = buildClientItemEl(group.clientName, group.jobs, group.dateStr);
+  item.dataset.widePick = 'true';
+  item.classList.add('selected');
+  list.prepend(item);
+  item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  selectedClient = { name: group.clientName, jobs: group.jobs };
+  updateContinueButtonState();
 }
 
 // ── CHECKLIST BUILD ──────────────────────────────────────────
@@ -1615,7 +1627,6 @@ async function submitForm() {
 function resetForm() {
   selectedEmployee = null;
   selectedClient = null;
-  selectedFromWidePicker = false;
   oshaRequired = false;
   ncSelectedEmployee = null;
   currentMode = 'job';
@@ -1624,7 +1635,6 @@ function resetForm() {
   document.getElementById('job-date').value = todayStr;
   updateDateDisplay();
   document.getElementById('client-list-section').style.display = 'none';
-  document.getElementById('selected-other-day').style.display = 'none';
   document.getElementById('continue-btn').disabled = true;
   closeWidePicker();
 
