@@ -227,16 +227,21 @@
   <!-- STEP CONFIRM: CORRECT TECH/DATE MISMATCH -->
   <div class="step" id="step-confirm">
 
-    <div class="job-banner visible" id="confirm-banner"></div>
+    <div class="job-banner visible" id="confirm-banner">
+      <div class="job-name">Confirm Changes</div>
+    </div>
 
-    <p class="section-label">Confirm Changes</p>
+    <p class="section-label">Confirm Tech(s)</p>
     <p class="confirm-prompt">Confirm you were the only tech on this job — add anyone else who worked it with you.</p>
 
     <div class="card">
-      <div class="field-block">
-        <label>Tech(s)</label>
+      <div class="field-block" style="border-bottom:none;">
         <div id="confirm-tech-list" class="confirm-tech-list"></div>
       </div>
+    </div>
+
+    <p class="section-label">Confirm Job Date</p>
+    <div class="card">
       <div class="form-row" style="flex-wrap:wrap;gap:6px;border-bottom:none;">
         <span class="row-label">Job Date</span>
         <input type="text" id="confirm-date" placeholder="Select date" readonly style="cursor:pointer;flex:1;text-align:right;font-family:inherit;font-size:15px;font-weight:500;color:var(--amber);border:none;background:transparent;outline:none;">
@@ -932,6 +937,10 @@ function updateContinueButtonState() {
   const btn = document.getElementById('continue-btn');
   const date = document.getElementById('job-date').value;
   btn.disabled = !(selectedEmployee && date && selectedClient);
+
+  const needsConfirm = selectedEmployee && date && selectedClient &&
+    jobsMismatch(selectedClient.jobs, selectedEmployee.id, date);
+  btn.textContent = needsConfirm ? 'Confirm Changes' : 'Continue to Checklist';
 }
 
 // ── WIDE JOB PICKER (± 1 week from today) ────────────────────
@@ -1325,9 +1334,6 @@ function goToStep2() {
 
 // ── CONFIRM CHANGES (tech/date correction) ───────────────────
 function populateConfirmStep(pickedDate) {
-  const banner = document.getElementById('confirm-banner');
-  banner.innerHTML = `<div class="job-name">${esc(selectedClient.name)}</div>`;
-
   const currentIds = new Set();
   selectedClient.jobs.forEach(j => (j.fields['Employee'] || []).forEach(id => currentIds.add(id)));
 
@@ -1618,6 +1624,7 @@ function resetForm() {
   updateDateDisplay();
   document.getElementById('client-list-section').style.display = 'none';
   document.getElementById('continue-btn').disabled = true;
+  document.getElementById('continue-btn').textContent = 'Continue to Checklist';
   closeWidePicker();
 
   // Reset non-commission fields
