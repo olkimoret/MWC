@@ -69,13 +69,6 @@
 .client-item-date .date-month { font-size: 10px; font-weight: 700; letter-spacing: 0.02em; color: var(--text-3, #9CA3AF); }
 .client-item-date .date-day { font-size: 16px; font-weight: 700; color: var(--text, #111827); }
 
-.confirm-prompt {
-  font-size: 13px;
-  color: var(--text-2, #4B5563);
-  line-height: 1.5;
-  margin: 0 0 12px;
-}
-
 .confirm-tech-list { display: flex; flex-direction: column; gap: 2px; }
 .confirm-tech-list .toggle-field { padding: 10px 0; }
 
@@ -229,10 +222,10 @@
 
     <div class="job-banner visible" id="confirm-banner">
       <div class="job-name">Confirm Changes</div>
+      <div class="job-meta"><span id="confirm-job-info"></span></div>
     </div>
 
     <p class="section-label">Confirm Tech(s)</p>
-    <p class="confirm-prompt">Confirm you were the only tech on this job — add anyone else who worked it with you.</p>
 
     <div class="card">
       <div class="field-block" style="border-bottom:none;">
@@ -1334,6 +1327,13 @@ function goToStep2() {
 
 // ── CONFIRM CHANGES (tech/date correction) ───────────────────
 function populateConfirmStep(pickedDate) {
+  const jobTypes = selectedClient.jobs
+    .map(j => j.fields['Job Type'] || '')
+    .filter(t => t.toLowerCase() !== 'discount' && t)
+    .join(' · ');
+  document.getElementById('confirm-job-info').textContent =
+    jobTypes ? `${selectedClient.name} · ${jobTypes}` : selectedClient.name;
+
   const currentIds = new Set();
   selectedClient.jobs.forEach(j => (j.fields['Employee'] || []).forEach(id => currentIds.add(id)));
 
