@@ -914,12 +914,17 @@ function selectClient(clientName, jobs, el) {
   el.classList.add('selected');
   selectedClient = { name: clientName, jobs };
   updateContinueButtonState();
+}
 
-  const jobTypes = jobs
+// Populates the step-4 job banner from selectedClient. Called right before
+// step 4 so it's correct regardless of which path (normal list, wide picker,
+// Confirm Changes) set selectedClient.
+function updateJobDetailBanner() {
+  const jobTypes = selectedClient.jobs
     .map(j => j.fields['Job Type'] || '')
     .filter(t => t.toLowerCase() !== 'discount' && t)
     .join(' · ');
-  document.getElementById('banner-customer').textContent = clientName;
+  document.getElementById('banner-customer').textContent = selectedClient.name;
   document.getElementById('banner-job-type').textContent = jobTypes;
   document.getElementById('banner-job-number').textContent = '';
   document.getElementById('banner-address').textContent = '';
@@ -1306,6 +1311,7 @@ function jobsMismatch(jobs, empId, dateStr) {
 
 function proceedToChecklist() {
   buildChecklist();
+  updateJobDetailBanner();
   oshaRequired = isOshaRequired(selectedClient.jobs);
   updateProgressBar();
   goToStep(2);
