@@ -934,9 +934,7 @@ function updateContinueButtonState() {
   btn.disabled = !(selectedEmployee && date && selectedClient);
 }
 
-// ── WIDE JOB PICKER (current + previous pay period) ──────────
-const PAY_PERIODS_TABLE = 'Pay Periods';
-
+// ── WIDE JOB PICKER (± 1 week from today) ────────────────────
 function openWidePicker() {
   document.getElementById('wide-picker-overlay').classList.add('visible');
   document.getElementById('wide-picker-search').value = '';
@@ -958,24 +956,8 @@ async function loadWidePickerJobs() {
   list.innerHTML = '<div class="loading"><div class="spinner"></div>Loading jobs...</div>';
 
   try {
-    const ppUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(PAY_PERIODS_TABLE)}?sort[0][field]=Start%20Date&sort[0][direction]=asc`;
-    const ppRes = await fetch(ppUrl, { headers });
-    const ppData = await ppRes.json();
-    const periods = ppData.records
-      .map(r => ({ start: r.fields['Start Date'] || '', end: r.fields['End Date'] || '' }))
-      .filter(p => p.start && p.end)
-      .sort((a, b) => a.start < b.start ? -1 : 1);
-
-    const currentIdx = periods.findIndex(p => p.start <= todayStr && todayStr <= p.end);
-    if (currentIdx === -1) {
-      list.innerHTML = '<div class="no-jobs">No pay period found for today.</div>';
-      return;
-    }
-    const current = periods[currentIdx];
-    const previous = periods[currentIdx - 1] || current;
-
-    const beforeStart = shiftDate(previous.start, -1);
-    const afterEnd = shiftDate(current.end, 1);
+    const beforeStart = shiftDate(todayStr, -8);
+    const afterEnd = shiftDate(todayStr, 8);
     const formula = encodeURIComponent(`AND(IS_AFTER({Job Date}, '${beforeStart}'), IS_BEFORE({Job Date}, '${afterEnd}'))`);
     const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}?filterByFormula=${formula}`;
     const res = await fetch(url, { headers });
