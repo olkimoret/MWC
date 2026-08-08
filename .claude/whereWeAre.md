@@ -73,3 +73,7 @@ Recurring Jobs records (would reduce Confirm Changes friction for techs).
   other page under this repo) — fine for how this app already works, but worth flagging
   explicitly rather than discovering it mid-task, since it means the Meta API is reachable
   with zero setup any time schema questions come up.
+
+## 2026-08-07 — Job form bug fixes: phantom hourly hours, stuck Submit, CTA gating (jobs/index.html)
+
+Fixed: hidden hrly-start/end defaults that silently submitted 8am–5pm even when untouched (cause of unrequested hours on recurring jobs); `Submit Job`/other Airtable calls hanging forever with no error on a dropped connection (all 9 `fetch()` calls now go through a 20s `fetchWithTimeout()`); "Submit Another Job" losing the job list; tech-confirm screen defaulting to the wrong tech; missing disabled-states on the step-4 and confirm-screen CTAs. Committed & pushed (612c6c1 + follow-up).

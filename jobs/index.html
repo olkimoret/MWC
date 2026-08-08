@@ -567,6 +567,17 @@ const headers = {
   'Content-Type': 'application/json'
 };
 
+// Airtable calls have no built-in timeout, so a dropped/slow connection
+// leaves fetch() pending forever with no error — which freezes the UI on
+// whatever "Loading…"/"Submitting…" state triggered the call. Give every
+// call a hard ceiling so a bad connection always surfaces as a normal,
+// recoverable error instead of a stuck screen.
+function fetchWithTimeout(url, options = {}, timeoutMs = 20000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+}
+
 let selectedEmployee = null;
 let selectedClient = null; // { name, jobs: [...records] }
 let currentStep = 1;
@@ -829,7 +840,7 @@ function updateDateDisplay() {
 async function loadEmployees() {
   try {
     const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${EMPLOYEES_TABLE}?sort[0][field]=Name&sort[0][direction]=asc`;
-    const res = await fetch(url, { headers });
+    const res = await fetchWithTimeout(url, { headers });
     const data = await res.json();
     const select = document.getElementById('employee-select');
     select.innerHTML = '<option value="">— Select your name —</option>';
@@ -866,7 +877,7 @@ async function tryLoadJobs() {
   try {
     const formula = encodeURIComponent(`IS_SAME({Job Date}, '${date}', 'day')`);
     const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}?filterByFormula=${formula}`;
-    const res = await fetch(url, { headers });
+    const res = await fetchWithTimeout(url, { headers });
     const data = await res.json();
 
     allJobs = data.records;
@@ -1004,7 +1015,7 @@ async function loadWidePickerJobs() {
     const afterEnd = shiftDate(todayStr, 8);
     const formula = encodeURIComponent(`AND(IS_AFTER({Job Date}, '${beforeStart}'), IS_BEFORE({Job Date}, '${afterEnd}'))`);
     const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}?filterByFormula=${formula}`;
-    const res = await fetch(url, { headers });
+    const res = await fetchWithTimeout(url, { headers });
     const data = await res.json();
 
     // Group by client name + date so recurring visits stay distinguishable
@@ -1098,7 +1109,7 @@ async function loadRecurringPickerRows() {
   try {
     const formula = encodeURIComponent('{Active}=TRUE()');
     const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${RECURRING_TABLE}?filterByFormula=${formula}&sort[0][field]=Customer Name&sort[0][direction]=asc`;
-    const res = await fetch(url, { headers });
+    const res = await fetchWithTimeout(url, { headers });
     const data = await res.json();
 
     recurringPickerRows = data.records.map(r => ({
@@ -1155,7 +1166,7 @@ async function findExistingJobForRecurring(row, dateStr) {
   ];
   const formula = encodeURIComponent(`AND(${parts.join(',')})`);
   const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}?filterByFormula=${formula}`;
-  const res = await fetch(url, { headers });
+  const res = await fetchWithTimeout(url, { headers });
   const data = await res.json();
   return (data.records && data.records[0]) || null;
 }
@@ -1447,7 +1458,7 @@ async function submitNonCommission() {
 
   try {
     const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}`;
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       method: 'POST',
       headers,
       body: JSON.stringify({ fields })
@@ -1601,7 +1612,7 @@ async function saveConfirmChanges() {
       fields['Correction Log'] = existingLog ? existingLog + '\n' + logLines.join('\n') : logLines.join('\n');
 
       const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}/${job.id}`;
-      const res = await fetch(url, { method: 'PATCH', headers, body: JSON.stringify({ fields }) });
+      const res = await fetchWithTimeout(url, { method: 'PATCH', headers, body: JSON.stringify({ fields }) });
       if (!res.ok) throw new Error('Correction save failed');
 
       job.fields['Employee'] = fields['Employee'] || job.fields['Employee'];
@@ -1793,7 +1804,7 @@ async function submitForm() {
         const createFields = { ...job.fields, ...fields };
         Object.keys(createFields).forEach(k => (createFields[k] === null || createFields[k] === undefined) && delete createFields[k]);
         const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}`;
-        const res = await fetch(url, {
+        const res = await fetchWithTimeout(url, {
           method: 'POST',
           headers,
           body: JSON.stringify({ fields: createFields })
@@ -1801,7 +1812,7 @@ async function submitForm() {
         if (!res.ok) throw new Error('Submit failed');
       } else {
         const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}/${job.id}`;
-        const res = await fetch(url, {
+        const res = await fetchWithTimeout(url, {
           method: 'PATCH',
           headers,
           body: JSON.stringify({ fields })
