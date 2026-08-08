@@ -208,7 +208,8 @@
       <div class="client-list-card">
         <div class="client-list" id="client-list"></div>
       </div>
-      <button class="btn btn-secondary dont-see-btn" id="dont-see-btn" onclick="openWidePicker()">Don't see your job?</button>
+      <button class="btn btn-secondary dont-see-btn" id="dont-see-btn" onclick="openWidePicker()">Show More Jobs</button>
+      <button class="btn btn-secondary dont-see-btn" id="show-recurring-btn" onclick="openRecurringPicker()">Show Recurring Jobs</button>
       <div class="actions">
         <button class="btn btn-primary" id="continue-btn" onclick="goToStep2()" disabled>Continue to Checklist</button>
         <button class="btn btn-secondary" onclick="goToSplash()">Back</button>
@@ -257,6 +258,18 @@
       </div>
       <input type="text" id="wide-picker-search" class="wide-picker-search" placeholder="Search client name…">
       <div class="wide-picker-list" id="wide-picker-list"></div>
+    </div>
+  </div>
+
+  <!-- RECURRING JOB PICKER OVERLAY -->
+  <div class="wide-picker-overlay" id="recurring-picker-overlay">
+    <div class="wide-picker-panel">
+      <div class="wide-picker-header">
+        <p class="section-label" style="margin:0;">Find a recurring client</p>
+        <button class="wide-picker-close" onclick="closeRecurringPicker()" aria-label="Close">&times;</button>
+      </div>
+      <input type="text" id="recurring-picker-search" class="wide-picker-search" placeholder="Search client name…">
+      <div class="wide-picker-list" id="recurring-picker-list"></div>
     </div>
   </div>
 
@@ -546,6 +559,7 @@ const AIRTABLE_BASE_ID = 'appVXuyAYj47nZwyz';
 const AIRTABLE_PAT = 'pat51Bpz1DmsTICb1.4cc6011c585d7167d45c6214905f55c09fe042e18742b3fdd53f09646cfb00a0';
 const EMPLOYEES_TABLE = 'Employees';
 const JOBS_TABLE = 'Jobs';
+const RECURRING_TABLE = 'Recurring Jobs';
 // ============================================================
 
 const headers = {
@@ -870,10 +884,33 @@ async function tryLoadJobs() {
       clientMap[customer].push(job);
     });
 
+    // Sort alphabetically, then split into "assigned to me" vs the rest
+    const entries = Object.entries(clientMap).sort((a, b) => a[0].localeCompare(b[0]));
+    const mine = entries.filter(([, jobs]) => jobs.some(j => (j.fields['Employee'] || []).includes(empId)));
+    const others = entries.filter(([, jobs]) => !jobs.some(j => (j.fields['Employee'] || []).includes(empId)));
+
     list.innerHTML = '';
-    Object.entries(clientMap).forEach(([clientName, jobs]) => {
-      list.appendChild(buildClientItemEl(clientName, jobs, date));
-    });
+    const showLabels = mine.length > 0 && others.length > 0;
+    if (mine.length) {
+      if (showLabels) {
+        const label = document.createElement('p');
+        label.className = 'section-label';
+        label.style.margin = '4px 2px 8px';
+        label.textContent = 'Your Jobs';
+        list.appendChild(label);
+      }
+      mine.forEach(([clientName, jobs]) => list.appendChild(buildClientItemEl(clientName, jobs, date)));
+    }
+    if (others.length) {
+      if (showLabels) {
+        const label = document.createElement('p');
+        label.className = 'section-label';
+        label.style.margin = '20px 2px 8px';
+        label.textContent = 'Other Jobs Today';
+        list.appendChild(label);
+      }
+      others.forEach(([clientName, jobs]) => list.appendChild(buildClientItemEl(clientName, jobs, date)));
+    }
     requestAnimationFrame(() => window.initCustomSelects(list));
 
   } catch(e) {
@@ -1038,6 +1075,137 @@ function selectWideJob(group) {
   item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
   selectedClient = { name: group.clientName, jobs: group.jobs };
+  updateContinueButtonState();
+}
+
+// ── RECURRING JOB PICKER (Recurring Jobs table, Active only) ─
+let recurringPickerRows = []; // [{ id, clientName, jobType, address, city, defaultTechIds, jobRevenue }]
+
+function openRecurringPicker() {
+  document.getElementById('recurring-picker-overlay').classList.add('visible');
+  document.getElementById('recurring-picker-search').value = '';
+  loadRecurringPickerRows();
+}
+
+function closeRecurringPicker() {
+  document.getElementById('recurring-picker-overlay').classList.remove('visible');
+}
+
+async function loadRecurringPickerRows() {
+  const list = document.getElementById('recurring-picker-list');
+  list.innerHTML = '<div class="loading"><div class="spinner"></div>Loading recurring clients...</div>';
+
+  try {
+    const formula = encodeURIComponent('{Active}=TRUE()');
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${RECURRING_TABLE}?filterByFormula=${formula}&sort[0][field]=Customer Name&sort[0][direction]=asc`;
+    const res = await fetch(url, { headers });
+    const data = await res.json();
+
+    recurringPickerRows = data.records.map(r => ({
+      id: r.id,
+      clientName: r.fields['Customer Name'] || 'Unknown Customer',
+      jobType: r.fields['Job Type'] || '',
+      address: r.fields['Address'] || '',
+      city: r.fields['City'] || '',
+      defaultTechIds: r.fields['Default Tech(s)'] || [],
+      jobRevenue: typeof r.fields['Job Revenue'] === 'number' ? r.fields['Job Revenue'] : null
+    }));
+
+    renderRecurringPickerList('');
+  } catch (e) {
+    list.innerHTML = '<div class="no-jobs">Error loading recurring clients. Check connection.</div>';
+  }
+}
+
+function renderRecurringPickerList(filterText) {
+  const list = document.getElementById('recurring-picker-list');
+  const q = filterText.trim().toLowerCase();
+  const matches = recurringPickerRows.filter(r => !q || r.clientName.toLowerCase().includes(q));
+
+  if (matches.length === 0) {
+    list.innerHTML = '<div class="no-jobs">No matching recurring clients.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  matches.forEach(row => {
+    const sub = [row.jobType, [row.address, row.city].filter(Boolean).join(', ')].filter(Boolean).join(' · ');
+    const item = document.createElement('div');
+    item.className = 'client-item';
+    item.innerHTML = `
+      <div class="client-item-info">
+        <div class="client-item-name">${esc(row.clientName)}</div>
+        <div class="client-item-jobs">${esc(sub || 'No details on file')}</div>
+      </div>
+      <div class="client-item-check">✓</div>
+    `;
+    item.onclick = () => selectRecurringClient(row);
+    list.appendChild(item);
+  });
+}
+
+// Find an existing Jobs row for this client + date + job type before creating
+// a new one, so re-picking the same recurring client never makes a duplicate.
+async function findExistingJobForRecurring(row, dateStr) {
+  const escFormula = s => String(s).replace(/'/g, "\\'");
+  const parts = [
+    `{Customer Name}='${escFormula(row.clientName)}'`,
+    `IS_SAME({Job Date}, '${dateStr}', 'day')`,
+    `{Job Type}='${escFormula(row.jobType)}'`
+  ];
+  const formula = encodeURIComponent(`AND(${parts.join(',')})`);
+  const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}?filterByFormula=${formula}`;
+  const res = await fetch(url, { headers });
+  const data = await res.json();
+  return (data.records && data.records[0]) || null;
+}
+
+async function selectRecurringClient(row) {
+  closeRecurringPicker();
+
+  const list = document.getElementById('client-list');
+  document.querySelectorAll('#client-list .client-item').forEach(i => i.classList.remove('selected'));
+  const existing = list.querySelector('.client-item[data-wide-pick="true"]');
+  if (existing) existing.remove();
+  const noJobsMsg = list.querySelector('.no-jobs');
+  if (noJobsMsg) noJobsMsg.remove();
+
+  const loadingItem = document.createElement('div');
+  loadingItem.className = 'loading';
+  loadingItem.dataset.widePick = 'true';
+  loadingItem.innerHTML = '<div class="spinner"></div>Checking for an existing job...';
+  list.prepend(loadingItem);
+
+  const date = document.getElementById('job-date').value;
+  let jobRecord = null;
+  try {
+    jobRecord = await findExistingJobForRecurring(row, date);
+  } catch (e) {
+    // If the lookup fails, fall through to creating a fresh draft at submit time.
+  }
+
+  loadingItem.remove();
+
+  const job = jobRecord || {
+    id: null,
+    isDraft: true,
+    recurringId: row.id,
+    fields: {
+      'Customer Name': row.clientName,
+      'Job Type': row.jobType,
+      'Job Date': date,
+      'Employee': row.defaultTechIds.slice(),
+      'Job Revenue': row.jobRevenue
+    }
+  };
+
+  const item = buildClientItemEl(row.clientName, [job], date);
+  item.dataset.widePick = 'true';
+  item.classList.add('selected');
+  list.prepend(item);
+  item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  selectedClient = { name: row.clientName, jobs: [job] };
   updateContinueButtonState();
 }
 
@@ -1403,6 +1571,14 @@ async function saveConfirmChanges() {
       const dateChanged = oldDate !== newDate;
       if (!empChanged && !dateChanged) continue;
 
+      if (job.isDraft) {
+        // Not created in Airtable yet — just update the in-memory draft.
+        // It'll be written with these final values when submitForm() creates it.
+        if (empChanged) job.fields['Employee'] = newEmpIds;
+        if (dateChanged) job.fields['Job Date'] = newDate;
+        continue;
+      }
+
       const fields = {};
       const logLines = [];
       if (empChanged) {
@@ -1592,18 +1768,30 @@ async function submitForm() {
   // Remove null fields
   Object.keys(fields).forEach(k => fields[k] === null && delete fields[k]);
 
-  // PATCH all records — fatal if this fails
-  let jobIds;
+  // Write all records — fatal if this fails. Draft jobs (picked from the
+  // Recurring Jobs list, no existing Jobs row) get created here; everything
+  // else gets patched as before.
   try {
-    jobIds = selectedClient.jobs.map(j => j.id);
-    for (const recordId of jobIds) {
-      const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}/${recordId}`;
-      const res = await fetch(url, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({ fields })
-      });
-      if (!res.ok) throw new Error('Submit failed');
+    for (const job of selectedClient.jobs) {
+      if (job.isDraft) {
+        const createFields = { ...job.fields, ...fields };
+        Object.keys(createFields).forEach(k => (createFields[k] === null || createFields[k] === undefined) && delete createFields[k]);
+        const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}`;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ fields: createFields })
+        });
+        if (!res.ok) throw new Error('Submit failed');
+      } else {
+        const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}/${job.id}`;
+        const res = await fetch(url, {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify({ fields })
+        });
+        if (!res.ok) throw new Error('Submit failed');
+      }
     }
   } catch(e) {
     showError('Submission failed. Please try again.');
@@ -1632,6 +1820,7 @@ function resetForm() {
   document.getElementById('continue-btn').disabled = true;
   document.getElementById('continue-btn').textContent = 'Continue to Checklist';
   closeWidePicker();
+  closeRecurringPicker();
 
   // Reset non-commission fields
   document.getElementById('nc-employee-select').value = '';
@@ -1719,6 +1908,10 @@ updateNCDateDisplay();
 document.getElementById('wide-picker-search').addEventListener('input', e => renderWidePickerList(e.target.value));
 document.getElementById('wide-picker-overlay').addEventListener('click', e => {
   if (e.target.id === 'wide-picker-overlay') closeWidePicker();
+});
+document.getElementById('recurring-picker-search').addEventListener('input', e => renderRecurringPickerList(e.target.value));
+document.getElementById('recurring-picker-overlay').addEventListener('click', e => {
+  if (e.target.id === 'recurring-picker-overlay') closeRecurringPicker();
 });
 flatpickr('#confirm-date', { dateFormat: 'Y-m-d' });
 
