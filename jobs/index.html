@@ -437,7 +437,7 @@
 
 
     <div class="actions">
-      <button class="btn btn-primary" onclick="goToStep5()">Safety Check</button>
+      <button class="btn btn-primary" id="step4-continue-btn" onclick="goToStep5()" disabled>Safety Check</button>
       <button class="btn btn-secondary" onclick="goBackFromStep4()">Back</button>
     </div>
 
@@ -975,7 +975,7 @@ function updateContinueButtonState() {
 
   const needsConfirm = selectedEmployee && date && selectedClient &&
     jobsMismatch(selectedClient.jobs, selectedEmployee.id, date);
-  btn.textContent = needsConfirm ? 'Confirm Changes' : 'Continue to Checklist';
+  btn.textContent = needsConfirm ? 'Continue' : 'Continue to Checklist';
 }
 
 // ── WIDE JOB PICKER (± 1 week from today) ────────────────────
@@ -1508,8 +1508,9 @@ function populateConfirmStep(pickedDate) {
   document.getElementById('confirm-job-info').textContent =
     jobTypes ? `${selectedClient.name} · ${jobTypes}` : selectedClient.name;
 
-  const currentIds = new Set();
-  selectedClient.jobs.forEach(j => (j.fields['Employee'] || []).forEach(id => currentIds.add(id)));
+  // Default-check the tech currently using the app, not whoever the job
+  // (or the Recurring Jobs row's Default Tech(s)) happens to be assigned to.
+  const currentIds = new Set([selectedEmployee.id]);
 
   const list = document.getElementById('confirm-tech-list');
   list.innerHTML = '';
@@ -1526,11 +1527,18 @@ function populateConfirmStep(pickedDate) {
     `;
     list.appendChild(field);
   });
+  list.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.addEventListener('change', updateConfirmButtonState));
+  updateConfirmButtonState();
 
   const jobDate = (selectedClient.jobs[0].fields['Job Date'] || '').slice(0, 10) || pickedDate;
   const dateInput = document.getElementById('confirm-date');
   dateInput.value = jobDate;
   if (dateInput._flatpickr) dateInput._flatpickr.setDate(jobDate, true);
+}
+
+function updateConfirmButtonState() {
+  const anyChecked = document.querySelectorAll('#confirm-tech-list input[type="checkbox"]:checked').length > 0;
+  document.querySelector('#step-confirm .btn-primary').disabled = !anyChecked;
 }
 
 function sameIdSet(a, b) {
@@ -1629,13 +1637,21 @@ function goBackFromStep4() {
   }
 }
 
+function hasValidHours() {
+  const commStart = document.getElementById('comm-start').dataset.h24 || '';
+  const commEnd   = document.getElementById('comm-end').dataset.h24 || '';
+  const hrlyStart = document.getElementById('hrly-start').dataset.h24 || '';
+  const hrlyEnd   = document.getElementById('hrly-end').dataset.h24 || '';
+  return !!(commStart && commEnd) || !!(hrlyStart && hrlyEnd);
+}
+
+function updateStep4ButtonState() {
+  document.getElementById('step4-continue-btn').disabled = !hasValidHours();
+}
+
 function goToStep5() {
-  if (!document.getElementById('comm-start').dataset.h24) {
-    showError('Please enter your Commission Start time.');
-    return;
-  }
-  if (!document.getElementById('comm-end').dataset.h24) {
-    showError('Please enter your Commission End time.');
+  if (!hasValidHours()) {
+    showError('Please enter Commission Start/End or Hourly Start/End.');
     return;
   }
   hideError();
@@ -1807,16 +1823,24 @@ async function submitForm() {
 
 // ── RESET ────────────────────────────────────────────────────
 function resetForm() {
+  // Keep the same tech selected across "Submit Another Job" so step 1 comes
+  // back up with today's job list already loaded instead of an empty picker.
+  const keepEmpId = selectedEmployee ? selectedEmployee.id : '';
+
   selectedEmployee = null;
   selectedClient = null;
   oshaRequired = false;
   ncSelectedEmployee = null;
   currentMode = 'job';
 
-  document.getElementById('employee-select').value = '';
-  document.getElementById('job-date').value = todayStr;
+  const empSelect = document.getElementById('employee-select');
+  empSelect.value = keepEmpId;
+  window.refreshCustomSelect(empSelect);
+
+  const dateInput = document.getElementById('job-date');
+  dateInput.value = todayStr;
+  if (dateInput._flatpickr) dateInput._flatpickr.setDate(todayStr, true);
   updateDateDisplay();
-  document.getElementById('client-list-section').style.display = 'none';
   document.getElementById('continue-btn').disabled = true;
   document.getElementById('continue-btn').textContent = 'Continue to Checklist';
   closeWidePicker();
@@ -1840,6 +1864,7 @@ function resetForm() {
   document.getElementById('hrly-start').dataset.h24 = '';
   document.getElementById('hrly-end').value = '';
   document.getElementById('hrly-end').dataset.h24 = '';
+  updateStep4ButtonState();
   document.getElementById('lunch').checked = false;
   document.getElementById('incident').checked = false;
   document.getElementById('incident-notes-field').classList.remove('visible');
@@ -1871,6 +1896,13 @@ function resetForm() {
   document.getElementById('success-screen').classList.remove('visible');
   document.getElementById('progress').style.display = 'none';
   updateProgressBar();
+
+  if (keepEmpId) {
+    tryLoadJobs();
+  } else {
+    document.getElementById('client-list-section').style.display = 'none';
+  }
+
   goToSplash();
 }
 
@@ -1915,15 +1947,18 @@ document.getElementById('recurring-picker-overlay').addEventListener('click', e 
 });
 flatpickr('#confirm-date', { dateFormat: 'Y-m-d' });
 
+['comm-start', 'comm-end', 'hrly-start', 'hrly-end'].forEach(id => {
+  document.getElementById(id).addEventListener('change', updateStep4ButtonState);
+});
+
 // Init after all scripts loaded
 loadEmployees().then(() => {
   window.initCustomSelects(document.getElementById('employee-select').closest('.card'));
 });
 window.initTimePickers();
-
-// Set picker defaults for optional hourly fields (commission job) without displaying values
-document.getElementById('hrly-start').dataset.h24 = '08:00';
-document.getElementById('hrly-end').dataset.h24 = '17:00';
+// Runs after initTimePickers() applies the Commission Start/End data-default
+// values, since that init doesn't dispatch a change event on its own.
+updateStep4ButtonState();
 </script>
 <script src="/custom-select.js"></script>
 </body>
