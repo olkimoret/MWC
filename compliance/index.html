@@ -240,6 +240,7 @@
   </div>
 </div>
 
+<script src="/job-types.js"></script>
 <script>
 const AIRTABLE_BASE_ID = 'appVXuyAYj47nZwyz';
 const AIRTABLE_PAT = 'pat51Bpz1DmsTICb1.4cc6011c585d7167d45c6214905f55c09fe042e18742b3fdd53f09646cfb00a0';
@@ -260,13 +261,10 @@ function esc(str) {
   return d.innerHTML;
 }
 
-const OSHA_REQUIRED_JOB_TYPES = new Set([
-  'Residential Gutter Cleaning',
-  'Commercial Gutter Cleaning',
-  'Roof Cleaning',
-  'Partial Roof Cleaning',
-  'Skylight Cleaning'
-]);
+// OSHA-required job types live in /job-types.js so this report, the job form and
+// the repair scripts share one definition. MWCJobTypes.requiresOsha() also copes
+// with CF spelling variants and with legacy rows whose Job Type is a comma-joined
+// list of every service on the visit.
 
 async function init() {
   try {
@@ -311,17 +309,16 @@ async function init() {
       (empData.records || []).map(r => [r.id, r.fields.Name])
     );
 
-    // Filter jobs by type (exclude Discount and Non-Commission)
-    const relevantJobs = allJobs.filter(j => {
-      const jobType = j.fields['Job Type'] || '';
-      return jobType !== 'Discount' && jobType !== 'Non-Commission';
-    });
+    // Keep any row with at least one billable service (drops pure Discount,
+    // Disclaimer and Non-Commission rows, including ones spelled unusually).
+    const relevantJobs = allJobs.filter(j =>
+      MWCJobTypes.billableJobTypes(j.fields['Job Type']).length > 0
+    );
 
-    // OSHA Assessment Completion: filter for OSHA-required job types
-    const oshaJobs = relevantJobs.filter(j => {
-      const jobType = j.fields['Job Type'] || '';
-      return OSHA_REQUIRED_JOB_TYPES.has(jobType);
-    }).sort((a, b) => {
+    // OSHA Assessment Completion: any visit involving roof/gutter/skylight work
+    const oshaJobs = relevantJobs.filter(j =>
+      MWCJobTypes.requiresOsha(j.fields['Job Type'])
+    ).sort((a, b) => {
       const dateA = new Date(a.fields['Job Date'] || '');
       const dateB = new Date(b.fields['Job Date'] || '');
       return dateB - dateA;
@@ -349,7 +346,7 @@ async function init() {
         const date = j.fields['Job Date'] || '';
         const empName = employees[(j.fields['Employee'] || [])[0]] || 'Unknown';
         const customer = j.fields['Customer Name'] || 'Unknown';
-        const jobType = j.fields['Job Type'] || '';
+        const jobType = MWCJobTypes.describeJobTypes(j.fields['Job Type']) || (j.fields['Job Type'] || '');
         const precautions = j.fields['OSHA Precautions'] || '';
         const status = precautions ? '<span class="status-check">✓</span>' : '<span class="status-cross">✗</span>';
         html += `<tr><td>${esc(date)}</td><td>${esc(empName)}</td><td>${esc(customer)}</td><td>${esc(jobType)}</td><td>${status}</td></tr>`;
@@ -370,7 +367,7 @@ async function init() {
         const date = j.fields['Job Date'] || '';
         const empName = employees[(j.fields['Employee'] || [])[0]] || 'Unknown';
         const customer = j.fields['Customer Name'] || 'Unknown';
-        const jobType = j.fields['Job Type'] || '';
+        const jobType = MWCJobTypes.describeJobTypes(j.fields['Job Type']) || (j.fields['Job Type'] || '');
         const completed = j.fields['Checklist Completed'] || '';
         const missing = j.fields['Checklist Missing'] || '';
         const badgeClass = completed === 'Partial' ? 'badge-partial' : 'badge-no';

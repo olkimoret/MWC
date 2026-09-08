@@ -551,6 +551,7 @@
 
 </div><!-- /container -->
 
+<script src="/job-types.js"></script>
 <script>
 // ============================================================
 // CONFIGURATION
@@ -803,18 +804,22 @@ const JOB_TYPE_MAP = {
   'Commercial WC - Exterior Only':   ['Storefront Window Cleaning']
 };
 
-// OSHA assessment required for these job types (exact case-sensitive match)
-const OSHA_REQUIRED_JOB_TYPES = new Set([
-  'Residential Gutter Cleaning',
-  'Commercial Gutter Cleaning',
-  'Roof Cleaning',
-  'Partial Roof Cleaning',
-  'Skylight Cleaning'
-]);
-
+// OSHA-required job types now live in /job-types.js (MWCJobTypes.OSHA_EXACT) so
+// this page, the compliance report and the repair scripts can't drift apart.
+// requiresOsha() also handles CF spelling variants ("Skylights : Exterior Only")
+// and comma-joined legacy combo rows, and errs toward flagging roof/gutter/
+// skylight work it doesn't recognise rather than silently skipping the step.
 function isOshaRequired(jobs) {
-  const billableJobs = jobs.filter(j => (j.fields['Job Type'] || '').toLowerCase() !== 'discount');
-  return billableJobs.some(j => OSHA_REQUIRED_JOB_TYPES.has(j.fields['Job Type']));
+  return jobs.some(j => MWCJobTypes.requiresOsha(j.fields['Job Type']));
+}
+
+// Every service on this visit, normalized, de-duplicated, discounts/disclaimers
+// dropped, joined for display. Job Type cells may hold several comma-joined
+// services on rows created by the old sync, so join then re-split.
+function jobTypesLabel(jobs) {
+  return MWCJobTypes.describeJobTypes(
+    jobs.map(j => j.fields['Job Type'] || '').filter(Boolean).join(',')
+  );
 }
 
 // ── HELPERS ─────────────────────────────────────────────────
@@ -938,10 +943,7 @@ function dateBadgeHtml(dateStr) {
 }
 
 function buildClientItemEl(clientName, jobs, dateStr) {
-  const jobTypes = jobs
-    .map(j => j.fields['Job Type'] || '')
-    .filter(t => t.toLowerCase() !== 'discount' && t)
-    .join(' · ');
+  const jobTypes = jobTypesLabel(jobs);
 
   const item = document.createElement('div');
   item.className = 'client-item';
@@ -968,10 +970,7 @@ function selectClient(clientName, jobs, el) {
 // step 4 so it's correct regardless of which path (normal list, wide picker,
 // Confirm Changes) set selectedClient.
 function updateJobDetailBanner() {
-  const jobTypes = selectedClient.jobs
-    .map(j => j.fields['Job Type'] || '')
-    .filter(t => t.toLowerCase() !== 'discount' && t)
-    .join(' · ');
+  const jobTypes = jobTypesLabel(selectedClient.jobs);
   document.getElementById('banner-customer').textContent = selectedClient.name;
   document.getElementById('banner-job-type').textContent = jobTypes;
   document.getElementById('banner-job-number').textContent = '';
@@ -1047,10 +1046,7 @@ function renderWidePickerList(filterText) {
 
   list.innerHTML = '';
   matches.forEach(group => {
-    const jobTypes = group.jobs
-      .map(j => j.fields['Job Type'] || '')
-      .filter(t => t.toLowerCase() !== 'discount' && t)
-      .join(' · ');
+    const jobTypes = jobTypesLabel(group.jobs);
     const d = new Date(group.dateStr + 'T00:00:00');
     const dateLabel = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
@@ -1225,16 +1221,17 @@ function buildChecklist() {
   const container = document.getElementById('checklist-container');
   container.innerHTML = '';
 
-  // Collect job-specific checklists from all selected (non-discount) jobs
-  const billableJobs = selectedClient.jobs.filter(j =>
-    (j.fields['Job Type'] || '').toLowerCase() !== 'discount'
-  );
+  // Collect job-specific checklists from every billable service on this visit.
+  // A single Job Type cell can hold several comma-joined services (rows created
+  // by the old sync), and CF spellings vary — billableJobTypes() splits and
+  // normalizes both, so a visit no longer silently falls back to Arrival-only.
   const jobSpecificSections = [];
   const seen = new Set();
-  billableJobs.forEach(job => {
-    const jobType = (job.fields['Job Type'] || '').trim();
-    const sections = JOB_TYPE_MAP[jobType] || [];
-    sections.forEach(s => { if (!seen.has(s)) { seen.add(s); jobSpecificSections.push(s); } });
+  selectedClient.jobs.forEach(job => {
+    MWCJobTypes.billableJobTypes(job.fields['Job Type']).forEach(jobType => {
+      const sections = JOB_TYPE_MAP[jobType] || [];
+      sections.forEach(s => { if (!seen.has(s)) { seen.add(s); jobSpecificSections.push(s); } });
+    });
   });
 
   const allSections = ['Arrival', ...jobSpecificSections];
@@ -1292,10 +1289,7 @@ function buildChecklist() {
   // Populate the checklist banner with client name + job types
   const banner = document.getElementById('checklist-banner');
   const customer = selectedClient.name;
-  const jt = selectedClient.jobs
-    .map(j => j.fields['Job Type'] || '')
-    .filter(t => t.toLowerCase() !== 'discount' && t)
-    .join(' · ');
+  const jt = jobTypesLabel(selectedClient.jobs);
   banner.innerHTML = `
     <div class="job-name">${esc(customer)}</div>
     <div class="job-meta"><span>${esc(jt)}</span></div>
@@ -1307,10 +1301,7 @@ function buildChecklist() {
 function buildOshaForm() {
   const banner = document.getElementById('osha-banner');
   const customer = selectedClient.name;
-  const jt = selectedClient.jobs
-    .map(j => j.fields['Job Type'] || '')
-    .filter(t => t.toLowerCase() !== 'discount' && t)
-    .join(' · ');
+  const jt = jobTypesLabel(selectedClient.jobs);
   banner.innerHTML = `
     <div class="job-name">${esc(customer)}</div>
     <div class="job-meta"><span>${esc(jt)}</span></div>
@@ -1511,10 +1502,7 @@ function goToStep2() {
 
 // ── CONFIRM CHANGES (tech/date correction) ───────────────────
 function populateConfirmStep(pickedDate) {
-  const jobTypes = selectedClient.jobs
-    .map(j => j.fields['Job Type'] || '')
-    .filter(t => t.toLowerCase() !== 'discount' && t)
-    .join(' · ');
+  const jobTypes = jobTypesLabel(selectedClient.jobs);
   document.getElementById('confirm-job-info').textContent =
     jobTypes ? `${selectedClient.name} · ${jobTypes}` : selectedClient.name;
 
