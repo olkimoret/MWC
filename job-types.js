@@ -214,15 +214,40 @@
     return billableJobTypes(raw).join(' · ');
   }
 
+  /**
+   * True when a single job type is something the app knows: a canonical service,
+   * or a discount / disclaimer / non-commission line. Anything else is a spelling
+   * or service CF has invented that the normalization map hasn't caught up with.
+   * Empty is treated as recognized (nothing to flag).
+   */
+  function isRecognized(type) {
+    var t = normalizeJobType(type);
+    if (!t) return true;
+    if (isDiscountLine(t) || isDisclaimerLine(t) || isNonCommissionLine(t)) return true;
+    return Object.prototype.hasOwnProperty.call(canonicalByLower, t.toLowerCase());
+  }
+
+  /**
+   * The services in a Job Type cell that the app does NOT recognise, normalized
+   * and de-duplicated. Feeds the compliance report's "Unrecognised Job Types"
+   * section so the map in this file can be maintained from real data.
+   */
+  function unrecognizedTypes(raw) {
+    return parseJobTypes(raw).filter(function (t) { return !isRecognized(t); });
+  }
+
   global.MWCJobTypes = {
     normalizeJobType: normalizeJobType,
     parseJobTypes: parseJobTypes,
     billableJobTypes: billableJobTypes,
     requiresOsha: requiresOsha,
     describeJobTypes: describeJobTypes,
+    isRecognized: isRecognized,
+    unrecognizedTypes: unrecognizedTypes,
     isDiscountLine: isDiscountLine,
     isDisclaimerLine: isDisclaimerLine,
     isNonCommissionLine: isNonCommissionLine,
+    CANONICAL: CANONICAL.slice(),
     OSHA_EXACT: OSHA_EXACT
   };
 

@@ -237,6 +237,16 @@
       <h2 class="section-card-title">Checklist Issues</h2>
       <div id="checklist-table"></div>
     </div>
+
+    <!-- Unrecognised Job Types -->
+    <div class="section-card">
+      <h2 class="section-card-title">Unrecognised Job Types</h2>
+      <p class="compliance-subtitle" style="margin:-12px 0 16px;">
+        Job types Customer Factor sent that the app doesn't map to a known service —
+        these get no checklist and no OSHA prompt. Add them to <code>job-types.js</code>.
+      </p>
+      <div id="unknown-table"></div>
+    </div>
   </div>
 </div>
 
@@ -377,6 +387,40 @@ async function init() {
       });
       html += '</tbody></table>';
       checklistDiv.innerHTML = html;
+    }
+
+    // Unrecognised Job Types — aggregate across every job in the window
+    const unknownMap = {};
+    allJobs.forEach(j => {
+      const raw = j.fields['Job Type'] || '';
+      MWCJobTypes.unrecognizedTypes(raw).forEach(t => {
+        if (!unknownMap[t]) unknownMap[t] = { count: 0, example: null };
+        unknownMap[t].count++;
+        if (!unknownMap[t].example) {
+          unknownMap[t].example = {
+            date: j.fields['Job Date'] || '',
+            customer: j.fields['Customer Name'] || 'Unknown',
+            raw: raw
+          };
+        }
+      });
+    });
+    const unknownRows = Object.entries(unknownMap).sort((a, b) => b[1].count - a[1].count);
+
+    const unknownDiv = document.getElementById('unknown-table');
+    if (unknownRows.length === 0) {
+      unknownDiv.innerHTML = '<div class="all-clear">✅ Every job type this period is recognised</div>';
+    } else {
+      let html = '<table class="compliance-table"><thead><tr>';
+      html += '<th>Job Type (as sent)</th><th>Count</th><th>First seen</th>';
+      html += '</tr></thead><tbody>';
+      unknownRows.forEach(([type, info]) => {
+        const ex = info.example;
+        const seen = `${esc(ex.date)} · ${esc(ex.customer)}`;
+        html += `<tr><td>${esc(type)}</td><td>${info.count}</td><td class="missing-items">${seen}</td></tr>`;
+      });
+      html += '</tbody></table>';
+      unknownDiv.innerHTML = html;
     }
 
     document.getElementById('loading').style.display = 'none';

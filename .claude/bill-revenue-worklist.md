@@ -1,0 +1,677 @@
+# Worklist — collapsed rows needing revenue correction (161 rows / 160 visits)
+
+Generated 2026-09-08.
+
+## What these are
+
+Each row below is a Customer Factor visit that synced as ONE Airtable row instead
+of one row per service. The Job Type cell lists every service; the Job Revenue
+cell holds only the FIRST service's price (or is blank), and any discount line was
+dropped. The per-service breakdown was never stored and CF has no API, so this
+cannot be fixed by script — it needs the CF invoice.
+
+## Impact / urgency
+
+- The job form and compliance report already handle these correctly (services are
+  split on read), so **checklists and OSHA are not affected**.
+- Only **Job Revenue** is wrong, which only matters for **commission payroll**.
+- None of these rows sit in a pay period that has been run. Only 3 have a tech
+  submission so far.
+
+## Recommended handling
+
+Leave the rows in place. As each visit's job is completed and payroll approaches,
+Bill opens the CF invoice and corrects **Job Revenue** on the Airtable row to that
+visit's true total (services minus discounts). Rows for visits that never get
+worked can be ignored.
+
+The 3 rows with a tech submission already are flagged **(TECH DATA)** — do those first.
+
+---
+
+## 160 visits (161 rows)
+
+- **2026-07-10  Patricia Sadler**  (C12964)
+  - services: BRONZE Window Cleaning
+  - HAS a discount line — stored Job Revenue: $199
+  - Airtable record id: recgLWMVLisoTXMn3
+- **2026-07-13  John Runyan**  (C19021)
+  - services: BRONZE Window Cleaning, GOLD Window Cleaning
+  - stored Job Revenue: $66.00162
+  - Airtable record id: rec3e2GBvQdEEMRMK
+- **2026-07-13  Scott Johnson**  (C19024)
+  - services: Residential Gutter Cleaning
+  - stored Job Revenue: $199
+  - Airtable record id: recl9T4PDLPCXSSw6
+- **2026-07-14  Alpina Ghosh**  (C19023)
+  - services: Residential Gutter Cleaning
+  - stored Job Revenue: $219
+  - Airtable record id: recrsahBQnbI45YsT
+- **2026-07-15  Kim Wang**  (C19027)
+  - services: BRONZE/GOLD Window Cleaning
+  - stored Job Revenue: $199
+  - Airtable record id: recATyYAXjEE3xXRN
+- **2026-07-15  Robin Pleau**  (C19016)
+  - services: BRONZE Window Cleaning
+  - HAS a discount line — stored Job Revenue: $199
+  - Airtable record id: recu7IuCECuZzPkRR
+- **2026-07-16  Jeremy Mattice**  (C19018)
+  - services: Residential Gutter Cleaning, Solar Panel Cleaning
+  - HAS a discount line — stored Job Revenue: $209.0011
+  - Airtable record id: rec6XxaO2NZNiQP4K
+- **2026-07-16  Albert Deets**  (C14395)
+  - services: GOLD Window Cleaning, Mirror Cleaning
+  - HAS a discount line — stored Job Revenue: $-37.00319
+  - Airtable record id: recIkrzYVp0JZpIGy
+- **2026-07-16  Jackie Escajeda**  (C19022)
+  - services: GOLD Window Cleaning, Skylight Cleaning
+  - stored Job Revenue: $423.0075
+  - Airtable record id: recuewdyQ3mCPmeR2
+- **2026-07-17  Ophelia Rabanal**  (C19026)
+  - services: Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $199
+  - Airtable record id: recCQQFBTqSOCurvo
+- **2026-07-17  Nancy Barbachano**  (C16946)
+  - services: GOLD Window Cleaning, Skylight Cleaning
+  - stored Job Revenue: $710.006
+  - Airtable record id: recD5ka3mtDoVjw9t
+- **2026-07-17  Stella Bivens**  (C15413)
+  - services: BRONZE Window Cleaning, Residential Pressure Washing
+  - stored Job Revenue: $212.005
+  - Airtable record id: recSLVA4xOdJomM2l
+- **2026-07-21  Matt Regan**  (C19029)
+  - services: GOLD Window Cleaning, Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $385.00275
+  - Airtable record id: recRHqLLltkdwHYa2
+- **2026-07-21  Marla Taylor**  (C11147)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $296
+  - Airtable record id: reckbEEOVyGM7UOKS
+- **2026-07-22  Karin Wells**  (C19035)
+  - services: BRONZE Window Cleaning, Patio Cover Windows (2)
+  - stored Job Revenue: $276.005
+  - Airtable record id: recGAl5wg05UC0ZOD
+- **2026-07-23  Cookie Whalen**  (C12092)
+  - services: Residential Gutter Cleaning
+  - stored Job Revenue: $249
+  - Airtable record id: recgRYe0uqkmhe8uP
+- **2026-07-27  Kristen Cashmore**  (C19039)
+  - services: Residential Gutter Cleaning
+  - stored Job Revenue: $199
+  - Airtable record id: rec8RvwtZdRq0cqjS
+- **2026-07-27  Suzanne Sanders**  (C19037)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $378
+  - Airtable record id: recukdA9WjcEeioR9
+- **2026-07-27  Rachel & Corrin Homer**  (C19036)
+  - services: Residential Gutter Cleaning
+  - stored Job Revenue: $250
+  - Airtable record id: recxnHY7fdwkTT88R
+- **2026-07-28  Josh Pollack**  (C13299)
+  - services: Residential Gutter Cleaning, Gutter Sticks
+  - stored Job Revenue: $230
+  - Airtable record id: recRTkN1p0B6yshNS
+- **2026-07-29  Jerry & Eunice Ockerman**  (C8886)
+  - services: BRONZE Window Cleaning, Cobwebbing
+  - HAS a discount line — stored Job Revenue: $659.0025
+  - Airtable record id: recARwx2myDjYFjqM
+- **2026-07-29  Penny Nichols**  (C19033)  **(TECH DATA)**
+  - services: Partial Roof Cleaning, GOLD Window Cleaning
+  - stored Job Revenue: $999.00288
+  - Airtable record id: recN7Hz8Dn2nPY3mV
+- **2026-07-29  Jackie DeSimone**  (C19032)
+  - services: BRONZE Window Cleaning, Concrete Cleaning
+  - stored Job Revenue: $100.0015
+  - Airtable record id: recoVcQFbxvXqRTXJ
+- **2026-07-30  Shari Perkins**  (C17533)  **(TECH DATA)**
+  - services: GOLD Window Cleaning, Hard Water Removal
+  - stored Job Revenue: $381
+  - Airtable record id: recBDbtTdKNLbXdOe
+- **2026-07-30  Dave Seman**  (C19038)
+  - services: GOLD Window Cleaning, House Wash, Solar Panel Cleaning, Concrete Cleaning
+  - HAS a discount line — stored Job Revenue: (blank)
+  - Airtable record id: recqkiWhw9vPpkZXE
+- **2026-07-31  Karen McComb**  (C17640)
+  - services: Solar Panel Cleaning, GOLD Window Cleaning
+  - stored Job Revenue: $368.00614
+  - Airtable record id: rec0le0W8eTNNd68h
+- **2026-07-31  Toni Nagatoishi**  (C16588)
+  - services: BRONZE Window Cleaning, Concrete Cleaning
+  - HAS a discount line — stored Job Revenue: $199
+  - Airtable record id: recF7SUsbje4XJbXF
+- **2026-07-31  Lidiya Badalyan**  (C19030)
+  - services: Residential Gutter Cleaning
+  - stored Job Revenue: $199
+  - Airtable record id: recM5Pz8mYT4ukqZn
+- **2026-08-03  Jim McFetridge**  (C17609)
+  - services: Residential Gutter Cleaning, Roof Blow Off
+  - HAS a discount line — stored Job Revenue: $229.005
+  - Airtable record id: recWLAAi9H7PrC1TR
+- **2026-08-03  Floyd Goodstal**  (C16825)
+  - services: Residential Gutter Cleaning, Solar Panel Cleaning
+  - stored Job Revenue: $250.001
+  - Airtable record id: recyi3W7TdRIIXFEN
+- **2026-08-04  Danielle Sivalingam**  (C17292)
+  - services: BRONZE Window Cleaning, Patio Pressure Cleaning, Driveway Pressure Cleaning, 2nd Story Patio
+  - HAS a discount line — stored Job Revenue: (blank)
+  - Airtable record id: recQTw91zDnSbSwQ2
+- **2026-08-04  Donna Carey**  (C9313)
+  - services: GOLD Window Cleaning, Ceiling Fan Cleaning
+  - stored Job Revenue: $250.002
+  - Airtable record id: recZR0HP20OGJM6ex
+- **2026-08-04  Bill Edgar**  (C16529)
+  - services: Residential Gutter Cleaning, GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $240.0025
+  - Airtable record id: rechJlZ5NSHWddZAh
+- **2026-08-05  Javier Soria**  (C19051)
+  - services: GOLD Window Cleaning
+  - stored Job Revenue: $472
+  - Airtable record id: recAbBcfuVPmdK0oG
+- **2026-08-05  Jack Gorzeman**  (C19042)
+  - services: GOLD Window Cleaning
+  - stored Job Revenue: $225
+  - Airtable record id: recRo13uPlh1nhyIz
+- **2026-08-05  APT Flight School**  (C19049)
+  - services: Commercial Gutter Cleaning
+  - stored Job Revenue: $199
+  - Airtable record id: reclApqUq7F1O9DpP
+- **2026-08-05  Debbie Lee Baptista**  (C11325)
+  - services: GOLD Window Cleaning, Shower Door
+  - stored Job Revenue: $398
+  - Airtable record id: recwX0GdSZNVxCqmf
+- **2026-08-06  David Tran**  (C19050)
+  - services: Residential Gutter Cleaning, GOLD Window Cleaning
+  - stored Job Revenue: $309.00589
+  - Airtable record id: rec4ovrsn6QOoaFFE
+- **2026-08-06  Paul & Shell Shantic**  (C7109)
+  - services: GOLD Window Cleaning, Residential Gutter Cleaning
+  - stored Job Revenue: $436.00427
+  - Airtable record id: recTUtD1miR2mIxTu
+- **2026-08-08  Healthy Living Primary Care**  (C19045)
+  - services: Commercial Pressure Cleaning, Commercial WC - Exterior Only
+  - stored Job Revenue: $489.0025
+  - Airtable record id: recbTKahtjIT6dgvD
+- **2026-08-10  Kathryn Meola**  (C19047)
+  - services: GOLD Window Cleaning, Concrete Cleaning
+  - stored Job Revenue: $511.00225
+  - Airtable record id: rec7b1pSmvxjvWr1x
+- **2026-08-10  Jack Gorzeman**  (C19042)
+  - services: Solar Panel Cleaning
+  - stored Job Revenue: $100
+  - Airtable record id: recIEhyGPLZ5yFMFe
+- **2026-08-10  Gordon Gage**  (C19044)
+  - services: BRONZE Window Cleaning, Cobwebbing
+  - stored Job Revenue: $288.005
+  - Airtable record id: recsaqS54aYdwvWa4
+- **2026-08-11  Dana Howard**  (C14295)
+  - services: BRONZE Window Cleaning
+  - HAS a discount line — stored Job Revenue: $468
+  - Airtable record id: recpRCtptvbOtqQvz
+- **2026-08-12  Karen Martin**  (C17582)  **(TECH DATA)**
+  - services: BRONZE Window Cleaning
+  - HAS a discount line — stored Job Revenue: $199
+  - Airtable record id: rec4PRBGHqY6mv13Z
+- **2026-08-13  Clare Genetos**  (C17599)
+  - services: Residential Gutter Cleaning, BRONZE Window Cleaning, Solar Panel Cleaning
+  - stored Job Revenue: $270.00336
+  - Airtable record id: rec6Yoya11aZWBL6r
+- **2026-08-13  Daniel Flamm**  (C19060)
+  - services: GOLD Window Cleaning, BRONZE Window Cleaning, Skylight Cleaning
+  - HAS a discount line — stored Job Revenue: $459.00222
+  - Airtable record id: recCmRlmBh0Z0hvVv
+- **2026-08-14  Christe Mounkes**  (C18041)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $472
+  - Airtable record id: rec5j2Uh3k9oKwCUX
+- **2026-08-17  Cheryl Reichner**  (C16861)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $225
+  - Airtable record id: recFbI6famlcz9OQN
+- **2026-08-17  Alexander Asterlin**  (C9916)
+  - services: Solar Panel Cleaning
+  - HAS a discount line — stored Job Revenue: $231
+  - Airtable record id: recOAdf2VKqkqxWWY
+- **2026-08-17  Frank Loge**  (C14003)
+  - services: BRONZE Window Cleaning
+  - HAS a discount line — stored Job Revenue: $199
+  - Airtable record id: recP6G1Y6Bx9jR1cx
+- **2026-08-17  Rene Taylor**  (C13105)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $199
+  - Airtable record id: recSMYI9BDSqxYUxY
+- **2026-08-17  Caren Tambert**  (C5418)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $270
+  - Airtable record id: recbKtiJ73LUUm9Qn
+- **2026-08-17  Steve Menconi**  (C13569)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $529
+  - Airtable record id: reck3fnl7jshz7GhK
+- **2026-08-18  Brian Peardon**  (C15126)
+  - services: BRONZE Window Cleaning
+  - HAS a discount line — stored Job Revenue: $246
+  - Airtable record id: rec5IBj1J3IdhWN9z
+- **2026-08-18  Pattie Devine**  (C19061)
+  - services: GOLD Window Cleaning, Solar Panel Cleaning
+  - HAS a discount line — stored Job Revenue: $234.0016
+  - Airtable record id: rec7wRrBuaHaindrs
+- **2026-08-18  Lani Foster**  (C11018)
+  - services: Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $219
+  - Airtable record id: recB5x7GAa6Yq3vp9
+- **2026-08-18  Lee Baker**  (C13959)
+  - services: Residential Gutter Cleaning, Roof Blow Off, BRONZE Window Cleaning
+  - stored Job Revenue: $199.001
+  - Airtable record id: recGZKVL0PkgmyTvu
+- **2026-08-18  James & Sarah Voros**  (C12702)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $297
+  - Airtable record id: recNMuFYoyktzvsSi
+- **2026-08-18  Adriel Cruz**  (C19054)
+  - services: Partial Roof Cleaning, Concrete Cleaning, House Wash
+  - HAS a discount line — stored Job Revenue: (blank)
+  - Airtable record id: recyeIehySF3LinXl
+- **2026-08-19  Qingzhu Yin**  (C14589)
+  - services: Solar Panel Cleaning
+  - HAS a discount line — stored Job Revenue: $199
+  - Airtable record id: recCjImK9fgPZo1PS
+- **2026-08-19  Dan & Cathleen Vierria**  (C17101)
+  - services: BRONZE Window Cleaning, Residential Pressure Washing
+  - HAS a discount line — stored Job Revenue: $199.00299
+  - Airtable record id: recrGKM3x848iG1Ot
+- **2026-08-20  Craig Kelley**  (C17568)
+  - services: BRONZE Window Cleaning
+  - HAS a discount line — stored Job Revenue: $429
+  - Airtable record id: recFJqhie9MPwegsc
+- **2026-08-20  Jane Perino**  (C19066)
+  - services: GOLD Window Cleaning, House Wash
+  - HAS a discount line — stored Job Revenue: $199.00199
+  - Airtable record id: recTmSwgZJn9Qq5m5
+- **2026-08-20  Deb Manley**  (C18332)
+  - services: GOLD Window Cleaning, Skylight Cleaning, Travel Fee
+  - HAS a discount line — stored Job Revenue: $346.003
+  - Airtable record id: rece7LZedEvYl5UCC
+- **2026-08-20  Steve Joesten**  (C16753)
+  - services: GOLD Window Cleaning, Solar Panel Cleaning
+  - HAS a discount line — stored Job Revenue: $860.0022
+  - Airtable record id: recjbDa4cO7CoUZzm
+- **2026-08-20  Vicky Contreras Sala**  (C15311)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $495
+  - Airtable record id: reclkUs5QerXKF3gW
+- **2026-08-21  Roderick Jett**  (C13141)
+  - services: Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $219
+  - Airtable record id: recICovoP8QAikCty
+- **2026-08-21  Melinda Mesbah**  (C19068)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $280
+  - Airtable record id: recJjSvVnAWDq19ke
+- **2026-08-21  Patricia Nichols**  (C15857)
+  - services: Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $226
+  - Airtable record id: recLZQhi2GrGh3b7M
+- **2026-08-21  Danny Benvenuti**  (C16404)
+  - services: GOLD Window Cleaning, BRONZE Window Cleaning
+  - stored Job Revenue: $488.006
+  - Airtable record id: recQmtjOuGSOJqfED
+- **2026-08-21  Darlene Schoppman**  (C16197)
+  - services: BRONZE Window Cleaning
+  - HAS a discount line — stored Job Revenue: $199
+  - Airtable record id: recQxRSo7wyqbsn5r
+- **2026-08-21  RICHARD BURKE**  (C19069)
+  - services: Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $279
+  - Airtable record id: recRPmL3zyWFBSVso
+- **2026-08-21  Paul & Sandra Hale**  (C14244)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $422
+  - Airtable record id: recegB7U0F2XiO4gb
+- **2026-08-21  Steve O'Sullivan**  (C18590)
+  - services: Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $201
+  - Airtable record id: recmFjwnjv0FYze06
+- **2026-08-24  Kerry Blessing**  (C15390)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $257
+  - Airtable record id: rec2mddqEJfIn10YN
+- **2026-08-24  Jeff White**  (C14599)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $522
+  - Airtable record id: rec3mW6pboO5aDtWB
+- **2026-08-24  Jim Vasser**  (C10836)
+  - services: Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $199
+  - Airtable record id: recehrDEiXyDyj7YE
+- **2026-08-24  Kim Kauffman**  (C16659)
+  - services: Residential Gutter Cleaning, GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $199.0034
+  - Airtable record id: recmFCBCmpMk4lP54
+- **2026-08-25  Sarah Peters**  (C19081)
+  - services: Residential Gutter Cleaning
+  - stored Job Revenue: $199
+  - Airtable record id: rec6qW8tGFsePANya
+- **2026-08-25  Tom & Susan Poirier**  (C19040)
+  - services: Residential Gutter Cleaning, GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: (blank)
+  - Airtable record id: recCKZjjcaiabmRPh
+- **2026-08-25  Manila May's Laundromat**  (C19082)
+  - services: Commercial WC - Interior & Exterior
+  - HAS a discount line — stored Job Revenue: $200
+  - Airtable record id: recOTWe7OGtWSfZIQ
+- **2026-08-25  Manila May's Laundromat**  (C19082)
+  - services: Commercial WC - Interior & Exterior
+  - HAS a discount line — stored Job Revenue: $99
+  - Airtable record id: recTnl1OQCjmdM79S
+- **2026-08-26  Edward Johnson**  (C19072)
+  - services: House Wash, GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $199.00249
+  - Airtable record id: recBZZZWLj2BSdUC3
+- **2026-08-26  Dee McDougal**  (C15486)
+  - services: Concrete Cleaning
+  - HAS a discount line — stored Job Revenue: $25.00225
+  - Airtable record id: recHIu1RG5G1PSx5y
+- **2026-08-26  Neil Gimenes**  (C19087)
+  - services: Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $249
+  - Airtable record id: reck2jOyBCuIgPAxz
+- **2026-08-26  David Silva**  (C13006)
+  - services: Residential Gutter Cleaning, Repair/Replace Slimguards
+  - stored Job Revenue: $414.005
+  - Airtable record id: reck4Wq30zidQLOmr
+- **2026-08-26  Gretchen Steinberg**  (C6040)
+  - services: Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $245
+  - Airtable record id: recwoQI2xU7IXX00D
+- **2026-08-27  Paul Wilhelmsen**  (C19077)
+  - services: BRONZE Window Cleaning, House Wash
+  - HAS a discount line — stored Job Revenue: $264.0045
+  - Airtable record id: recXzlHeZjPDsgn7r
+- **2026-08-27  Lillian Henderson**  (C13867)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $515
+  - Airtable record id: recl0ByJoH146CLqS
+- **2026-08-27  Jessica Devine**  (C19089)
+  - services: House Wash & Exterior Window Cleaning
+  - HAS a discount line — stored Job Revenue: $879
+  - Airtable record id: recvQoGBi9QqZAlLe
+- **2026-08-27  Alan Poppe**  (C5138)
+  - services: BRONZE Window Cleaning
+  - HAS a discount line — stored Job Revenue: $441
+  - Airtable record id: recvnRx5J9EeSPGb3
+- **2026-08-28  Dwayne Zajic**  (C15050)
+  - services: BRONZE Window Cleaning, Roof Blow Off, Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $587.0099
+  - Airtable record id: recBLy0XPaGwvxXVp
+- **2026-08-28  Tiffany Fairbanks**  (C17434)
+  - services: BRONZE Window Cleaning
+  - HAS a discount line — stored Job Revenue: $199
+  - Airtable record id: receHGiRc3M2DvbsX
+- **2026-08-28  Maghann & Jose Farnsworth**  (C18082)
+  - services: Residential Gutter Cleaning, Roof Blow Off, BRONZE Window Cleaning, Residential Pressure Washing
+  - HAS a discount line — stored Job Revenue: (blank)
+  - Airtable record id: recoW8MbfaiOy97fr
+- **2026-08-31  Debra & Philip Lenser**  (C16641)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $-32.004
+  - Airtable record id: recGfS4g8pSzqwkAc
+- **2026-08-31  Steve Joesten**  (C16753)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $860
+  - Airtable record id: recIoA5bM3ojH2vRs
+- **2026-08-31  Jim Steiger**  (C17271)
+  - services: Skylight Cleaning, GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $75.00288
+  - Airtable record id: recUReU7RzUr3bLlb
+- **2026-09-01  Paul & Shell Shantic**  (C7109)
+  - services: Xmas 1st Floor Roof Line, Xmas 2nd Story Roof Line
+  - HAS a discount line — stored Job Revenue: $951.00852
+  - Airtable record id: recColalNSC6UsP9U
+- **2026-09-01  Ian Texeira**  (C19090)
+  - services: House Wash & Exterior Window Cleaning, Residential Pressure Washing
+  - stored Job Revenue: $459.0015
+  - Airtable record id: recMQ0Od6vnq2RjvB
+- **2026-09-01  Mike Roof**  (C16669)
+  - services: Residential Gutter Cleaning, BRONZE Window Cleaning, GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $219.00249
+  - Airtable record id: recUw9GuVHqgEDVUo
+- **2026-09-01  Pat Park**  (C8957)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $250
+  - Airtable record id: recu79r1nbXrc6n2c
+- **2026-09-02  Ron Radenz**  (C14416)
+  - services: Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $241
+  - Airtable record id: rec2qFFLYssV2ZFdx
+- **2026-09-02  Cathleen Gardella**  (C16658)
+  - services: Xmas 1st Floor Roof Line
+  - HAS a discount line — stored Job Revenue: $-419.001048
+  - Airtable record id: rec9KqqX4UpM75Lla
+- **2026-09-02  Cristian Borlovan**  (C18374)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $855
+  - Airtable record id: recAYqvMVmBzhR5JV
+- **2026-09-02  Frank Miranda**  (C13242)
+  - services: GOLD Window Cleaning
+  - stored Job Revenue: $392
+  - Airtable record id: recEwf61NPGfjs1Hv
+- **2026-09-02  Joe & Janice Lawrence**  (C6312)
+  - services: Residential Gutter Cleaning, BRONZE Window Cleaning
+  - stored Job Revenue: $199.00199
+  - Airtable record id: recdcGSzdLDIRMMTT
+- **2026-09-03  Veronica Cervantes**  (C15744)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $1499.0039
+  - Airtable record id: recGXFEUc64AEoMfH
+- **2026-09-03  Manoj Manoharan**  (C19098)
+  - services: Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $199
+  - Airtable record id: recPT7tQvmaEiJOVk
+- **2026-09-03  Mary Hyatt**  (C19102)
+  - services: Residential Gutter Cleaning
+  - stored Job Revenue: $199.00199
+  - Airtable record id: recxkMVL2FQgPQB0Y
+- **2026-09-04  Christine Christian**  (C19107)
+  - services: Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $199
+  - Airtable record id: recCecSWtMbDXm0Ce
+- **2026-09-04  Victor Galande**  (C18010)
+  - services: Residential Gutter Cleaning
+  - stored Job Revenue: $312
+  - Airtable record id: recE9PyiusAdV5yR3
+- **2026-09-04  Peggy & Phil Reif**  (C15224)
+  - services: Roof Blow Off, GOLD Window Cleaning
+  - stored Job Revenue: $199.00308
+  - Airtable record id: recoA0vRUPhDeOFLY
+- **2026-09-07  Leon Slohlo**  (C19106)
+  - services: Residential Gutter Cleaning, Roof Blow Off
+  - stored Job Revenue: $279.001
+  - Airtable record id: reciPPonql1tmJf6h
+- **2026-09-08  Steve Joesten**  (C16753)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $860
+  - Airtable record id: recLu1aQS1ciY0jrs
+- **2026-09-08  Northgate Asset Management**  (C12046)
+  - services: Commercial Pressure Cleaning, Commercial WC - Exterior Only
+  - stored Job Revenue: $1000.003
+  - Airtable record id: recUseVJD6x9CAOQ3
+- **2026-09-08  Northgate Asset Management (Bond Rd)**  (C19108)
+  - services: Commercial Pressure Cleaning, Commercial WC - Exterior Only
+  - stored Job Revenue: $1000.003
+  - Airtable record id: reccbuDnPHgblmJfX
+- **2026-09-09  Roland Davis**  (C19112)
+  - services: Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $233
+  - Airtable record id: reciamfryJoHrXtQK
+- **2026-09-09  Megan Lyons**  (C19113)
+  - services: GOLD Window Cleaning, Residential Gutter Cleaning
+  - stored Job Revenue: $396.00299
+  - Airtable record id: recn803GthbS6xTOM
+- **2026-09-09  Gary Redmann**  (C19111)
+  - services: Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $213
+  - Airtable record id: recq8DSrVafRfnH0y
+- **2026-09-09  Devon Brown**  (C11880)
+  - services: Residential Gutter Cleaning, Cobwebbing
+  - HAS a discount line — stored Job Revenue: $379.005
+  - Airtable record id: recxMUKLZy7MtdFsD
+- **2026-09-10  American River Montessori**  (C5691)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $370
+  - Airtable record id: rec13zsfPVBS6b0Pp
+- **2026-09-10  Maryel Olson**  (C16805)
+  - services: Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $228
+  - Airtable record id: rec3fcqR5HeTWQlk6
+- **2026-09-10  Joan & Marci Freedman**  (C13009)
+  - services: BRONZE Window Cleaning
+  - HAS a discount line — stored Job Revenue: $199
+  - Airtable record id: recQ7nqXxXJgrpCm6
+- **2026-09-10  Leo Abucayan**  (C19115)
+  - services: Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $242
+  - Airtable record id: recYRySv5a2JpHVGI
+- **2026-09-11  Doug & Cheryl Jensen**  (C15210)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $629.0036
+  - Airtable record id: rec8m9FWtCFQlTHUu
+- **2026-09-11  Linda Mitchell**  (C19086)
+  - services: GOLD Window Cleaning
+  - HAS a discount line — stored Job Revenue: $199
+  - Airtable record id: recKaXMAk2qAP0MOq
+- **2026-09-11  Alaina Niebuhr**  (C12156)
+  - services: BRONZE Window Cleaning, Residential Gutter Cleaning
+  - stored Job Revenue: $199.00206
+  - Airtable record id: reciCpvtnQDYavWQb
+- **2026-09-14  Jane San Juan**  (C19094)
+  - services: Residential Gutter Cleaning, House Wash, BRONZE Window Cleaning
+  - HAS a discount line — stored Job Revenue: $229.00336
+  - Airtable record id: recIMgxbszzjSljnH
+- **2026-09-14  Susan Boice**  (C13663)
+  - services: BRONZE Window Cleaning, GOLD Window Cleaning
+  - stored Job Revenue: $0
+  - Airtable record id: recPitzFjNPd5XQGd
+- **2026-09-15  Erin Zuccaro**  (C19095)
+  - services: Residential Gutter Cleaning, Skylight Cleaning, Concrete Cleaning, BRONZE Window Cleaning
+  - HAS a discount line — stored Job Revenue: (blank)
+  - Airtable record id: rec8mHmALtKpqhyRE
+- **2026-09-15  Susan Ishimaru**  (C19083)
+  - services: GOLD Window Cleaning
+  - stored Job Revenue: $243
+  - Airtable record id: recTieruHsyFePsVC
+- **2026-09-16  Shemsa Morkoch**  (C14559)
+  - services: Roof Blow Off, Residential Gutter Cleaning, Skylight Cleaning, House Wash, BRONZE Window Cleaning
+  - stored Job Revenue: (blank)
+  - Airtable record id: recXi6uzwf7vEl2bb
+- **2026-09-16  Lora Gallegos**  (C8479)
+  - services: Partial Roof Cleaning
+  - HAS a discount line — stored Job Revenue: $965
+  - Airtable record id: recuPEpKhFT4YtcMr
+- **2026-09-17  DFS Flooring**  (C16747)
+  - services: Commercial WC - Exterior Only, Hard Water Removal
+  - stored Job Revenue: $420.0013
+  - Airtable record id: rec9E0LCHdg7rUVjT
+- **2026-09-21  Christine Fore-Pemstein**  (C10018)
+  - services: Residential Gutter Cleaning, Solar Panel Cleaning
+  - stored Job Revenue: $250.0015
+  - Airtable record id: reckXa2qTYMmqreRd
+- **2026-09-22  Linda Ade**  (C18460)
+  - services: GOLD Window Cleaning, Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $360.00229
+  - Airtable record id: recXgigYOrg0wfBJx
+- **2026-09-22  Jennifer Nichols**  (C19097)
+  - services: Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $199
+  - Airtable record id: recvm36JOs3Zz0O7N
+- **2026-09-23  Wendy Ziegler**  (C7798)
+  - services: Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $199
+  - Airtable record id: rec8raVq1pIG8XZRf
+- **2026-09-25  Ashley Moore**  (C19059)
+  - services: Residential Gutter Cleaning, House Wash, Residential Pressure Washing
+  - HAS a discount line — stored Job Revenue: $199.00409
+  - Airtable record id: recb2ME7UnoAA9P4J
+- **2026-09-25  Alan Wackman**  (C13941)
+  - services: GOLD Window Cleaning, House Wash
+  - HAS a discount line — stored Job Revenue: $-100.00549
+  - Airtable record id: recmFMQNvqLMuqNgo
+- **2026-09-30  Daniel & Yesenia Emerson**  (C17661)
+  - services: Xmas 1st Floor Roof Line, Xmas 2nd Story Roof Line, Xmas light color change
+  - HAS a discount line — stored Job Revenue: (blank)
+  - Airtable record id: rec7YG01rRrVpEPVH
+- **2026-10-01  Lura Franzella**  (C15470)
+  - services: Xmas 1st Floor Roof Line
+  - HAS a discount line — stored Job Revenue: $1096
+  - Airtable record id: recB23mv0YdobVa5E
+- **2026-10-01  Allison Smith**  (C17430)
+  - services: Xmas 1st Floor Roof Line, Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $664
+  - Airtable record id: recLDoJuk6p0xJMGL
+- **2026-10-12  Elena Varela**  (C17272)
+  - services: Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $-28.00279
+  - Airtable record id: rec34AzT92oYhl2Q3
+- **2026-10-12  Jill Vanden Heuvel**  (C15422)
+  - services: Xmas 1st Floor Roof Line, Xmas Inside Tree Wrap (2)
+  - HAS a discount line — stored Job Revenue: $680.003
+  - Airtable record id: recmy5xr10eI5h1Nk
+- **2026-10-13  Nancy Hughart**  (C12405)
+  - services: GOLD Window Cleaning, Patio Pressure Cleaning, Roof Blow Off
+  - HAS a discount line — stored Job Revenue: $500.0015
+  - Airtable record id: recgD6mmGLoq4tNq6
+- **2026-10-13  Marjorie & Roger Dickinson**  (C6778)
+  - services: Xmas 1st Floor Roof Line, Xmas Window Lighting
+  - HAS a discount line — stored Job Revenue: $700.00203
+  - Airtable record id: recnK4HXsIdR0tTsx
+- **2026-10-15  Roger Fujita**  (C11988)
+  - services: Residential Gutter Cleaning
+  - HAS a discount line — stored Job Revenue: $307
+  - Airtable record id: recDhBRx8v0E1edoE
+- **2026-10-23  Kelley Cowan**  (C11319)
+  - services: BRONZE Window Cleaning, Residential Gutter Cleaning, Xmas 1st Floor Roof Line, Xmas Inside Tree Wrap
+  - HAS a discount line — stored Job Revenue: (blank)
+  - Airtable record id: rec27MZMTlvHxkZPv
+- **2026-10-26  Wendy Ziegler**  (C7798)
+  - services: Residential Gutter Cleaning, Membership Annual Fee
+  - HAS a discount line — stored Job Revenue: $499
+  - Airtable record id: recRmdlzUqoPDbMCv
+- **2026-10-26  Schyler Eto**  (C16897)
+  - services: Residential Gutter Cleaning, Roof Blow Off, Xmas 1st Floor Roof Line, Xmas 2nd Story Roof Line
+  - HAS a discount line — stored Job Revenue: (blank)
+  - Airtable record id: recfByLtl0LRDkxaV
+- **2026-10-30  Kacey Lizon**  (C17410)
+  - services: Residential Gutter Cleaning
+  - stored Job Revenue: $229
+  - Airtable record id: recb2WZM81KkEVsSq
+- **2026-11-02  Gabby & Helen Curtis**  (C17275)
+  - services: Xmas 1st Floor Roof Line, Xmas 2nd Story Roof Line
+  - HAS a discount line — stored Job Revenue: $520.0044
+  - Airtable record id: recsUje5YUFY48enT
+- **2026-11-03  Kim & James Larsen**  (C17593)
+  - services: Xmas 1st Floor Roof Line - Front and East Side, Xmas 36 Inch Wreath
+  - HAS a discount line — stored Job Revenue: $1064.004
+  - Airtable record id: recfPGoQ69EHTKzVo
+- **2026-11-16  Carolynn Puccioni**  (C16663)
+  - services: Xmas 1st Floor Roof Line
+  - HAS a discount line — stored Job Revenue: $599
+  - Airtable record id: rec9wfQaZP23Um7e0
+- **2026-11-16  Jarrod Burch**  (C17671)
+  - services: Residential Gutter Cleaning, Xmas 1st Floor Roof Line, Xmas Light Stakes, Xmas Inside Tree Wrap (2)
+  - HAS a discount line — stored Job Revenue: (blank)
+  - Airtable record id: recJK3YznFCFje5CF
+- **2026-11-20  Corinne & Kurt Slapnik**  (C5573)
+  - services: Xmas 1st Floor Roof Line
+  - HAS a discount line — stored Job Revenue: $800
+  - Airtable record id: rec646mhqIiuGSsLK
+- **2026-11-20  Gina Holmes**  (C17801)
+  - services: Xmas Light Stakes, Xmas Window Lighting, Xmas 1st Floor Roof Line, Xmas 2nd Story Roof Line
+  - HAS a discount line — stored Job Revenue: (blank)
+  - Airtable record id: recUfbYOdFEAQZVLa
+- **2026-11-24  Jay & Debbie Hunter**  (C15698)
+  - services: xmas 2nd story peak, Xmas 1st Floor Roof Line, Xmas 2nd Story Roof Line, Xmas Inside Tree Wrap
+  - HAS a discount line — stored Job Revenue: (blank)
+  - Airtable record id: recxEq9dhL2Jb2JgQ
+- **2027-05-17  Floyd Goodstal**  (C16825)
+  - services: Residential Gutter Cleaning, Solar Panel Cleaning, House Wash & Exterior Window Cleaning, Membership Annual Fee
+  - HAS a discount line — stored Job Revenue: (blank)
+  - Airtable record id: recLrBlqLylzOk93u

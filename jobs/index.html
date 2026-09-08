@@ -1227,10 +1227,16 @@ function buildChecklist() {
   // normalizes both, so a visit no longer silently falls back to Arrival-only.
   const jobSpecificSections = [];
   const seen = new Set();
+  const noChecklistFor = [];   // billable services with no section in JOB_TYPE_MAP
+  const noChecklistSeen = new Set();
   selectedClient.jobs.forEach(job => {
     MWCJobTypes.billableJobTypes(job.fields['Job Type']).forEach(jobType => {
       const sections = JOB_TYPE_MAP[jobType] || [];
       sections.forEach(s => { if (!seen.has(s)) { seen.add(s); jobSpecificSections.push(s); } });
+      if (sections.length === 0 && !noChecklistSeen.has(jobType)) {
+        noChecklistSeen.add(jobType);
+        noChecklistFor.push(jobType);
+      }
     });
   });
 
@@ -1285,6 +1291,22 @@ function buildChecklist() {
 
     container.appendChild(card);
   });
+
+  // If a service on this visit has no checklist on file, tell the tech explicitly
+  // rather than letting them assume the shorter list is the whole job. This is
+  // also the signal that /job-types.js needs a new entry.
+  if (noChecklistFor.length) {
+    const note = document.createElement('div');
+    note.className = 'card';
+    note.style.cssText = 'border-left:3px solid var(--amber,#D97706);background:rgba(217,119,6,0.06);';
+    note.innerHTML = `
+      <div style="font-weight:700;font-size:13px;color:var(--amber,#D97706);margin-bottom:4px;">No checklist on file</div>
+      <div style="font-size:13px;color:var(--text-2,#4B5563);line-height:1.5;">
+        ${esc(noChecklistFor.join(', '))} — do your standard process for ${noChecklistFor.length > 1 ? 'these' : 'this'}.
+        Arrival and Departure steps still apply.
+      </div>`;
+    container.insertBefore(note, container.firstChild);
+  }
 
   // Populate the checklist banner with client name + job types
   const banner = document.getElementById('checklist-banner');
