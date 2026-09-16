@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Master's Window Cleaning — Time Off</title>
+<link rel="stylesheet" href="/mwc-new.css">
+<link rel="stylesheet" href="/custom-select.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+.flatpickr-input { cursor: pointer; }
+.flatpickr-calendar {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+  border: 1px solid #E5E7EB;
+}
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover { background: #111827; border-color: #111827; }
+.flatpickr-day:hover { background: #F3F4F6; }
+.flatpickr-months { background: #111827; border-radius: 14px 14px 0 0; }
+.flatpickr-months .flatpickr-month { background: transparent; }
+.flatpickr-current-month { padding: 10px 0; font-size: 14px; }
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+  background: transparent;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.flatpickr-current-month .flatpickr-monthDropdown-months option {
+  background: #1F2937;
+  color: #fff;
+}
+.flatpickr-current-month input.cur-year { color: #fff; font-weight: 700; font-size: 14px; }
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month { color: #fff; fill: #fff; padding: 10px; }
+.flatpickr-weekday { color: #9CA3AF; font-weight: 600; font-size: 11px; }
+.numInputWrapper span { border-color: rgba(255,255,255,0.2); }
+.numInputWrapper span svg { fill: #fff; }
+
+.btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+.pto-entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.pto-entry:last-child { border-bottom: none; }
+.pto-entry-date {
+  flex-shrink: 0;
+  width: 42px;
+  text-align: center;
+  border-radius: 10px;
+  background: var(--bg, #F3F4F6);
+  border: 1px solid var(--border, #E5E7EB);
+  padding: 6px 2px;
+  line-height: 1.15;
+}
+.pto-entry-date .date-month { font-size: 10px; font-weight: 700; letter-spacing: 0.02em; color: var(--text-3, #9CA3AF); }
+.pto-entry-date .date-day { font-size: 16px; font-weight: 700; color: var(--text, #111827); }
+.pto-entry-info { flex: 1; min-width: 0; }
+.pto-entry-type { font-size: 15px; font-weight: 600; color: var(--text); }
+.pto-entry-sub { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+.pto-entry-delete {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pto-entry-delete:hover { color: var(--error, #c0392b); }
+
+#pto-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+#pto-confirm-overlay.visible { display: flex; }
+#pto-confirm-dialog {
+  background: var(--surface, #fff);
+  border-radius: var(--radius, 16px);
+  padding: 28px 24px;
+  max-width: 360px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+#pto-confirm-msg { font-size: 15px; color: var(--text); margin: 0 0 20px 0; line-height: 1.5; }
+#pto-confirm-dialog .actions { gap: 12px; }
+</style>
+</head>
+<body>
+
+<header>
+  <img class="header-lion" src="/assets/lion.png" alt="Lion">
+  <div class="header-text">
+    <h1>Master's Window Cleaning</h1>
+    <p>Time Off</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="error-msg" id="error-msg"></div>
+
+  <!-- ENTRY FORM -->
+  <div id="pto-form-screen">
+    <p class="section-label">Log Time Off</p>
+    <div class="card">
+      <div class="field-block">
+        <label>Your Name</label>
+        <div class="select-wrapper">
+          <select id="pto-employee-select" onchange="onEmployeeChange()">
+            <option value="">Select your name</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row" style="flex-wrap:wrap;gap:6px;">
+        <span class="row-label">Date</span>
+        <input type="text" id="pto-date" placeholder="Select date" readonly style="cursor:pointer;flex:1;text-align:right;font-family:inherit;font-size:15px;font-weight:500;color:var(--amber);border:none;background:transparent;outline:none;">
+        <div class="date-sub" id="pto-date-display" style="width:100%;"></div>
+      </div>
+
+      <div class="field-block" style="border-bottom:none;">
+        <label>Type</label>
+        <div class="select-wrapper">
+          <select id="pto-type-select" onchange="updateSubmitState()">
+            <option value="">Select type</option>
+            <option value="PTO">PTO</option>
+            <option value="Sick">Sick</option>
+            <option value="Holiday">Holiday</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <p class="section-label">Notes <small style="font-weight:400;color:var(--text-3);">optional</small></p>
+    <div class="card">
+      <div class="field-block" style="border-bottom:none;">
+        <textarea id="pto-notes" placeholder="Anything Bill should know…"></textarea>
+      </div>
+    </div>
+
+    <p style="font-size: 13px; color: var(--text-2); line-height: 1.5; margin: 12px 4px;">
+      Time off is logged in full days (8 hours). For more than one day, submit one entry per day.
+    </p>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="pto-submit-btn" onclick="submitPto()" disabled>Submit</button>
+    </div>
+
+    <div id="pto-entries-section" style="display:none;">
+      <p class="section-label" style="margin-top:28px;">Your Time Off</p>
+      <div class="card" id="pto-entries-card">
+        <div id="pto-entries-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success-screen" id="success-screen">
+    <div class="success-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+    </div>
+    <h2>Time Off Logged</h2>
+    <p id="success-msg">Your day off has been recorded.</p>
+    <button class="btn btn-primary" style="max-width:240px;margin:0 auto;" onclick="resetForm()">Log Another Day</button>
+  </div>
+
+</div><!-- /container -->
+
+<!-- DOUBLE-BOOKING CONFIRM -->
+<div id="pto-confirm-overlay">
+  <div id="pto-confirm-dialog">
+    <p id="pto-confirm-msg"></p>
+    <div class="actions">
+      <button class="btn btn-primary" id="pto-confirm-yes">Save Anyway</button>
+      <button class="btn btn-secondary" id="pto-confirm-no">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="/employees.js"></script>
+<script>
+// ============================================================
+// CONFIGURATION
+// ============================================================
+const AIRTABLE_BASE_ID = 'appVXuyAYj47nZwyz';
+const AIRTABLE_PAT = 'pat51Bpz1DmsTICb1.4cc6011c585d7167d45c6214905f55c09fe042e18742b3fdd53f09646cfb00a0';
+const PTO_TABLE = 'PTO';
+const JOBS_TABLE = 'Jobs';
+const PAY_PERIODS_TABLE = 'Pay Periods';
+// ============================================================
+
+const headers = {
+  'Authorization': `Bearer ${AIRTABLE_PAT}`,
+  'Content-Type': 'application/json'
+};
+
+// Same reasoning as jobs/index.html: Airtable calls have no built-in timeout,
+// so a dropped connection would otherwise leave the UI stuck on "Submitting…".
+function fetchWithTimeout(url, options = {}, timeoutMs = 20000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+}
+
+let selectedEmployee = null; // { id, name }
+let payPeriods = []; // [{ id, startDate, endDate }]
+let myEntries = []; // PTO records for the selected employee
+let pendingConfirmCallback = null;
+
+const today = new Date();
+const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ── DATE DISPLAY ─────────────────────────────────────────────
+function updateDateDisplay() {
+  const dateStr = document.getElementById('pto-date').value || todayStr;
+  const d = new Date(dateStr + 'T00:00:00');
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById('pto-date-display').textContent = d.toLocaleDateString('en-US', options);
+}
+
+function dateBadgeHtml(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const month = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+  return `<div class="pto-entry-date"><div class="date-month">${esc(month)}</div><div class="date-day">${d.getDate()}</div></div>`;
+}
+
+// ── LOAD EMPLOYEES (shared filter — see employees.js) ────────
+async function loadEmployees() {
+  try {
+    const list = await MWCEmployees.loadFieldEmployees(AIRTABLE_BASE_ID, headers, fetchWithTimeout);
+    const select = document.getElementById('pto-employee-select');
+    select.innerHTML = '<option value="">— Select your name —</option>';
+    list.forEach(emp => {
+      const opt = document.createElement('option');
+      opt.value = emp.id;
+      opt.textContent = emp.name;
+      select.appendChild(opt);
+    });
+  } catch (e) {
+    showError('Could not load employees. Check your connection.');
+  }
+}
+
+// ── LOAD PAY PERIODS (for client-side date → period resolution) ──
+// No Zap resolves this for PTO the way Zap 1 does for Jobs (no new Zaps —
+// the Zapier task budget is already tight), so the app finds the period
+// whose Start/End Date bracket the submitted date itself.
+async function loadPayPeriods() {
+  try {
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${PAY_PERIODS_TABLE}?fields[]=Start%20Date&fields[]=End%20Date`;
+    const res = await fetchWithTimeout(url, { headers });
+    const data = await res.json();
+    payPeriods = data.records.map(r => ({
+      id: r.id,
+      startDate: r.fields['Start Date'] || '',
+      endDate: r.fields['End Date'] || ''
+    }));
+  } catch (e) {
+    payPeriods = []; // Non-fatal — PTO can still be saved without a Pay Period link.
+  }
+}
+
+function resolvePayPeriodId(dateStr) {
+  const pp = payPeriods.find(p => p.startDate && p.endDate && p.startDate <= dateStr && dateStr <= p.endDate);
+  return pp ? pp.id : null;
+}
+
+// ── EMPLOYEE CHANGE ──────────────────────────────────────────
+function onEmployeeChange() {
+  const sel = document.getElementById('pto-employee-select');
+  const empId = sel.value;
+  selectedEmployee = empId ? { id: empId, name: sel.options[sel.selectedIndex].text } : null;
+  updateSubmitState();
+  if (selectedEmployee) {
+    loadMyEntries();
+  } else {
+    document.getElementById('pto-entries-section').style.display = 'none';
+  }
+}
+
+// ── MY ENTRIES LIST ──────────────────────────────────────────
+async function loadMyEntries() {
+  const section = document.getElementById('pto-entries-section');
+  const list = document.getElementById('pto-entries-list');
+  section.style.display = 'block';
+  list.innerHTML = '<div class="loading"><div class="spinner"></div>Loading your time off...</div>';
+
+  try {
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${PTO_TABLE}?sort[0][field]=Date&sort[0][direction]=desc`;
+    const res = await fetchWithTimeout(url, { headers });
+    const data = await res.json();
+    myEntries = (data.records || []).filter(r => (r.fields['Employee'] || []).includes(selectedEmployee.id));
+    renderMyEntries();
+  } catch (e) {
+    list.innerHTML = '<div class="no-jobs">Error loading your time off. Check connection.</div>';
+  }
+}
+
+function renderMyEntries() {
+  const list = document.getElementById('pto-entries-list');
+  if (myEntries.length === 0) {
+    list.innerHTML = '<div class="no-jobs">No time off logged yet.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  myEntries.forEach(rec => {
+    const dateStr = rec.fields['Date'] || '';
+    const type = rec.fields['Type'] || '';
+    const hours = typeof rec.fields['Hours'] === 'number' ? rec.fields['Hours'] : 8;
+    const days = hours / 8;
+    const daysLabel = days === 1 ? '1 day' : `${days} days`;
+
+    const row = document.createElement('div');
+    row.className = 'pto-entry';
+    row.innerHTML = `
+      ${dateBadgeHtml(dateStr)}
+      <div class="pto-entry-info">
+        <div class="pto-entry-type">${esc(type)}</div>
+        <div class="pto-entry-sub">${daysLabel}${rec.fields['Notes'] ? ' · ' + esc(rec.fields['Notes']) : ''}</div>
+      </div>
+      <button class="pto-entry-delete" title="Delete" aria-label="Delete">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" width="18" height="18">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+        </svg>
+      </button>
+    `;
+    row.querySelector('.pto-entry-delete').onclick = () => confirmDeleteEntry(rec.id, dateStr, type);
+    list.appendChild(row);
+  });
+}
+
+function confirmDeleteEntry(recordId, dateStr, type) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const label = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  showConfirm(`Delete ${esc(type)} on ${esc(label)}?`, () => deleteEntry(recordId));
+}
+
+async function deleteEntry(recordId) {
+  try {
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${PTO_TABLE}/${recordId}`;
+    const res = await fetchWithTimeout(url, { method: 'DELETE', headers });
+    if (!res.ok) throw new Error('Delete failed');
+    myEntries = myEntries.filter(r => r.id !== recordId);
+    renderMyEntries();
+  } catch (e) {
+    showError('Could not delete that entry. Please try again.');
+  }
+}
+
+// ── CONFIRM DIALOG (double-booking guard + delete) ───────────
+function showConfirm(msg, callback) {
+  document.getElementById('pto-confirm-msg').textContent = msg;
+  pendingConfirmCallback = callback;
+  document.getElementById('pto-confirm-overlay').classList.add('visible');
+}
+
+function hideConfirm() {
+  document.getElementById('pto-confirm-overlay').classList.remove('visible');
+  pendingConfirmCallback = null;
+}
+
+document.getElementById('pto-confirm-yes').addEventListener('click', () => {
+  const cb = pendingConfirmCallback;
+  hideConfirm();
+  if (cb) cb();
+});
+document.getElementById('pto-confirm-no').addEventListener('click', hideConfirm);
+
+// ── SUBMIT GATING ────────────────────────────────────────────
+function updateSubmitState() {
+  const date = document.getElementById('pto-date').value;
+  const type = document.getElementById('pto-type-select').value;
+  document.getElementById('pto-submit-btn').disabled = !(selectedEmployee && date && type);
+}
+
+// ── DOUBLE-BOOKING GUARD ─────────────────────────────────────
+// If this tech already has job hours (commission or hourly) logged for the
+// same date, warn and require explicit confirm — don't block, don't
+// auto-correct. Logging both PTO and job hours for one day would otherwise
+// double-pay the tech, invisibly, until it reaches a paycheck.
+async function hasJobHoursOnDate(empId, dateStr) {
+  const formula = encodeURIComponent(`IS_SAME({Job Date}, '${dateStr}', 'day')`);
+  const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}?filterByFormula=${formula}`;
+  const res = await fetchWithTimeout(url, { headers });
+  const data = await res.json();
+  return (data.records || []).some(j => {
+    const emps = j.fields['Employee'] || [];
+    return emps.includes(empId) && (j.fields['Comm Start'] || j.fields['Hrly Start']);
+  });
+}
+
+// ── SUBMIT ───────────────────────────────────────────────────
+async function submitPto() {
+  hideError();
+  const date = document.getElementById('pto-date').value;
+  const type = document.getElementById('pto-type-select').value;
+  const notes = document.getElementById('pto-notes').value.trim();
+
+  const btn = document.getElementById('pto-submit-btn');
+  btn.textContent = 'Checking...';
+  btn.disabled = true;
+
+  let alreadyHasJobHours = false;
+  try {
+    alreadyHasJobHours = await hasJobHoursOnDate(selectedEmployee.id, date);
+  } catch (e) {
+    // If the check itself fails, fail open — don't block a legitimate submit
+    // over a network hiccup on a read-only lookup.
+  }
+
+  if (alreadyHasJobHours) {
+    btn.textContent = 'Submit';
+    btn.disabled = false;
+    showConfirm(
+      `${selectedEmployee.name} already has job hours logged on this date. Save this time off anyway?`,
+      () => doSubmitPto(date, type, notes)
+    );
+    return;
+  }
+
+  doSubmitPto(date, type, notes);
+}
+
+async function doSubmitPto(date, type, notes) {
+  const btn = document.getElementById('pto-submit-btn');
+  btn.textContent = 'Submitting...';
+  btn.disabled = true;
+
+  const ppId = resolvePayPeriodId(date);
+  const fields = {
+    'Employee': [selectedEmployee.id],
+    'Date': date,
+    'Hours': 8,
+    'Type': type,
+    'Paid': true
+  };
+  if (ppId) fields['Pay Period'] = [ppId];
+  if (notes) fields['Notes'] = notes;
+
+  try {
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${PTO_TABLE}`;
+    const res = await fetchWithTimeout(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ fields })
+    });
+    if (!res.ok) throw new Error('Submit failed');
+
+    document.getElementById('success-msg').textContent = `${selectedEmployee.name}'s ${type.toLowerCase()} day off has been recorded.`;
+    document.getElementById('pto-form-screen').style.display = 'none';
+    document.getElementById('success-screen').classList.add('visible');
+  } catch (e) {
+    showError('Submission failed. Please try again.');
+    btn.textContent = 'Submit';
+    btn.disabled = false;
+  }
+}
+
+// ── RESET ────────────────────────────────────────────────────
+function resetForm() {
+  document.getElementById('success-screen').classList.remove('visible');
+  document.getElementById('pto-form-screen').style.display = 'block';
+
+  document.getElementById('pto-date').value = todayStr;
+  if (document.getElementById('pto-date')._flatpickr) {
+    document.getElementById('pto-date')._flatpickr.setDate(todayStr, true);
+  }
+  updateDateDisplay();
+
+  document.getElementById('pto-type-select').value = '';
+  window.refreshCustomSelect(document.getElementById('pto-type-select'));
+  document.getElementById('pto-notes').value = '';
+
+  document.getElementById('pto-submit-btn').textContent = 'Submit';
+  updateSubmitState();
+
+  if (selectedEmployee) loadMyEntries();
+}
+
+// ── ERROR HELPERS ────────────────────────────────────────────
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.classList.add('visible');
+  window.scrollTo(0, 0);
+}
+function hideError() {
+  document.getElementById('error-msg').classList.remove('visible');
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="/custom-select.js"></script>
+<script>
+// Date picker deliberately has no minDate/maxDate: future dating is the main
+// workflow (booking time off ahead), and past dating covers a sick day
+// entered after the fact. See project-state.md for the back-dating finding
+// on the job form this was matched to.
+flatpickr('#pto-date', {
+  dateFormat: 'Y-m-d',
+  defaultDate: todayStr,
+  onChange: () => { updateDateDisplay(); updateSubmitState(); }
+});
+updateDateDisplay();
+
+loadEmployees().then(() => {
+  window.initCustomSelects(document.getElementById('pto-employee-select').closest('.card'));
+});
+loadPayPeriods();
+</script>
+</body>
+</html>

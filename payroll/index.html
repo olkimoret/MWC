@@ -308,6 +308,46 @@
 .actions .btn {
   width: 100%;
 }
+
+/* Upcoming Time Off */
+.upcoming-pto-section {
+  margin-top: 24px;
+}
+
+.upcoming-pto-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.upcoming-pto-row:last-child { border-bottom: none; }
+
+.upcoming-pto-date {
+  flex-shrink: 0;
+  width: 84px;
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.upcoming-pto-name {
+  flex: 1;
+  min-width: 0;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.upcoming-pto-type {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-weight: 700;
+}
 </style>
 </head>
 <body>
@@ -361,6 +401,8 @@
             <th>Gross Wages</th>
             <th>Regular</th>
             <th>OT</th>
+            <th>PTO Days</th>
+            <th>YTD PTO</th>
             <th></th>
             <th>Status</th>
           </tr>
@@ -371,6 +413,13 @@
 
     <div class="team-total">
       Total: <span id="total-wages">$0.00</span>
+    </div>
+
+    <div class="upcoming-pto-section">
+      <p class="section-title" style="margin-top:0;">Upcoming Time Off</p>
+      <div class="team-table-wrap">
+        <div id="upcoming-pto-list"></div>
+      </div>
     </div>
   </div>
 

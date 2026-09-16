@@ -10,6 +10,7 @@ let employees = [];
 let employeeHourlyRates = {};
 let payPeriods = [];
 let payrollRecords = [];
+let ptoRecords = [];
 let currentPayPeriod = null;
 let selectedEmpId = null;
 let selectedEmpName = null;
@@ -71,13 +72,42 @@ async function init() {
       return;
     }
 
+    // Separate, non-fatal fetch: PTO is capture-only and must never take the
+    // payroll page down (e.g. before the PTO table exists, or on a rename).
+    try {
+      const ptoData = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/PTO`, { headers }).then(r => r.json());
+      ptoRecords = ptoData.records || [];
+    } catch (e) {
+      ptoRecords = [];
+    }
+
     document.getElementById('loading-screen').style.display = 'none';
     renderTeamView();
+    renderUpcomingPto();
 
   } catch (e) {
     document.getElementById('loading-screen').style.display = 'none';
     showError('Could not load payroll data. Check your connection.');
   }
+}
+
+// Sum of PTO Hours for one employee whose Date falls within [startDate, endDate]
+// (inclusive, 'YYYY-MM-DD' string compare — same convention as the rest of this
+// file). PTO hours never enter net/gross/OT hours anywhere in this file — CA
+// overtime is based on hours actually worked, so PTO stays in its own variable
+// end to end.
+function ptoHoursInRange(empId, startDate, endDate) {
+  return ptoRecords
+    .filter(r => {
+      const empIds = r.fields['Employee'] || [];
+      const date = r.fields['Date'] || '';
+      return empIds.includes(empId) && date >= startDate && date <= endDate;
+    })
+    .reduce((sum, r) => sum + (typeof r.fields['Hours'] === 'number' ? r.fields['Hours'] : 0), 0);
+}
+
+function fmtDays(n) {
+  return (Math.round(n * 10) / 10).toString();
 }
 
 function renderTeamView() {
@@ -101,6 +131,11 @@ function renderTeamView() {
     const otHours = payroll ? (payroll.fields['OT Hours'] || 0) : 0;
     const safetyNet = payroll ? (payroll.fields['Safety Net Triggered'] || false) : false;
 
+    // Days, not hours — that's the unit Bill works in on his own sheet.
+    const periodPtoDays = ptoHoursInRange(emp.id, currentPayPeriod.startDate, currentPayPeriod.endDate) / 8;
+    const yearStart = `${new Date().getFullYear()}-01-01`;
+    const ytdPtoDays = ptoHoursInRange(emp.id, yearStart, todayLocal()) / 8;
+
     totalWages += grossWages;
 
     const tr = document.createElement('tr');
@@ -110,6 +145,8 @@ function renderTeamView() {
       <td class="col-amount">${payroll ? fmt(grossWages) : '—'}</td>
       <td class="col-hours">${payroll ? fmtH(regHours) : '—'}</td>
       <td class="col-hours">${payroll ? fmtH(otHours) : '—'}</td>
+      <td class="col-hours">${periodPtoDays > 0 ? fmtDays(periodPtoDays) : '—'}</td>
+      <td class="col-hours">${ytdPtoDays > 0 ? fmtDays(ytdPtoDays) : '—'}</td>
       <td>${safetyNet ? '<span class="badge-safety">Safety Net</span>' : ''}</td>
       <td class="col-status">${payroll ? '<span class="status-ok">✓</span>' : '<span class="status-missing">Not calculated</span>'}</td>
     `;
@@ -117,6 +154,44 @@ function renderTeamView() {
   });
 
   document.getElementById('total-wages').textContent = fmt(totalWages);
+}
+
+// Plain list, sorted ascending — every PTO entry dated today or later, across
+// all employees. No calendar UI, no filters; that's explicitly out of scope.
+function renderUpcomingPto() {
+  const today = todayLocal();
+  const container = document.getElementById('upcoming-pto-list');
+  if (!container) return;
+
+  const upcoming = ptoRecords
+    .filter(r => (r.fields['Date'] || '') >= today)
+    .map(r => ({
+      date: r.fields['Date'],
+      type: r.fields['Type'] || '',
+      empId: (r.fields['Employee'] || [])[0]
+    }))
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+
+  if (upcoming.length === 0) {
+    container.innerHTML = '<div class="no-jobs">No upcoming time off.</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  upcoming.forEach(u => {
+    const emp = employees.find(e => e.id === u.empId);
+    const d = new Date(u.date + 'T00:00:00');
+    const dateLabel = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+    const row = document.createElement('div');
+    row.className = 'upcoming-pto-row';
+    row.innerHTML = `
+      <span class="upcoming-pto-date">${esc(dateLabel)}</span>
+      <span class="upcoming-pto-name">${esc(emp ? emp.name : 'Unknown')}</span>
+      <span class="upcoming-pto-type">${esc(u.type)}</span>
+    `;
+    container.appendChild(row);
+  });
 }
 
 function selectEmployee(empId, empName) {
