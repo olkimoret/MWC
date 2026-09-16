@@ -842,9 +842,15 @@ function updateDateDisplay() {
 }
 
 // ── LOAD EMPLOYEES ───────────────────────────────────────────
+// Only techs/field supervisors who are still active show up in the time-entry
+// picker — Admin/Manager roles and deactivated employees are excluded.
+const TIME_ENTRY_ROLES = ['Field Supervisor', 'Tech 1', 'Tech 2', 'Tech 3', 'Tech 4'];
+
 async function loadEmployees() {
   try {
-    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${EMPLOYEES_TABLE}?sort[0][field]=Name&sort[0][direction]=asc`;
+    const roleFormula = TIME_ENTRY_ROLES.map(r => `{Role}='${r}'`).join(',');
+    const formula = encodeURIComponent(`AND({Active Employee}=TRUE(), OR(${roleFormula}))`);
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${EMPLOYEES_TABLE}?filterByFormula=${formula}&sort[0][field]=Name&sort[0][direction]=asc`;
     const res = await fetchWithTimeout(url, { headers });
     const data = await res.json();
     const select = document.getElementById('employee-select');
