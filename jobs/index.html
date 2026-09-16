@@ -1863,6 +1863,8 @@ function resetForm() {
   updateDateDisplay();
   document.getElementById('continue-btn').disabled = true;
   document.getElementById('continue-btn').textContent = 'Continue to Checklist';
+  document.getElementById('submit-btn').disabled = false;
+  document.getElementById('submit-btn').textContent = 'Submit Job';
   closeWidePicker();
   closeRecurringPicker();
 
