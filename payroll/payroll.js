@@ -6,8 +6,27 @@ const headers = {
   'Content-Type': 'application/json'
 };
 
+// Driver/Helper revenue-split weights (2026-09-24, Bill-confirmed "Option A").
+// Revenue is split by these weights, then each tech's own commission rate is
+// applied to their share — the rate is never split. If Bill revises the
+// two-driver rule again, this is the only place that should need to change;
+// see revenueShare() below.
+const CREW_ROLE_WEIGHTS = { Driver: 1.5, Helper: 1.0 };
+
+// Job types that carry a commission multiplier, keyed by normalized Job Type
+// (see multiplierFor). All four confirmed by Bill 2026-09-24, including the
+// lowercase "gutter guards" string as CF actually stores it.
+const JOB_TYPE_MULTIPLIERS = {
+  'Partial Roof Cleaning': 0.90,
+  'Gutter Sticks': 0.50,
+  'Slimguard Gutter Protection': 0.50,
+  'gutter guards': 0.50
+};
+
 let employees = [];
 let employeeHourlyRates = {};
+let employeeCrewRole = {}; // id -> raw Crew Role ('Driver'/'Helper'/'' if unset)
+let crewRoleWarnings = new Set(); // names seen with no Crew Role during a calculation
 let payPeriods = [];
 let payrollRecords = [];
 let ptoRecords = [];
@@ -54,6 +73,7 @@ async function init() {
     employees = empData.records.map(r => ({ id: r.id, name: r.fields.Name }));
     empData.records.forEach(r => {
       employeeHourlyRates[r.id] = r.fields['Hourly Rate'] || 17;
+      employeeCrewRole[r.id] = r.fields['Crew Role'] || '';
     });
     payPeriods = ppData.records.map(r => ({
       id: r.id,
@@ -422,7 +442,7 @@ async function fetchJobsForPeriod(startDate, endDate) {
   const fields = [
     'Job%20Date','Job%20Revenue','Commission%20Rate','Job%20Type',
     'Comm%20Start','Comm%20End','Hrly%20Start','Hrly%20End',
-    'Employee','Pay%20Period','Number%20of%20Techs','Lunch'
+    'Employee','Pay%20Period','Number%20of%20Techs','Lunch','Customer%20Name'
   ].join('&fields[]=');
 
   let allRecords = [];
@@ -493,8 +513,9 @@ async function doCalculate() {
     }
 
     const employeeHourlyRate = employeeHourlyRates[selectedEmpId] || 17;
-    const payrollFields = computePayroll(jobs, employeeHourlyRate);
+    const payrollFields = computePayroll(jobs, employeeHourlyRate, selectedEmpId);
     console.log('Payroll fields to write:', payrollFields);
+    renderCrewRoleWarning();
 
     // Check fresh for existing record before write
     const existingPayroll = payrollRecords.find(pr => {
@@ -538,7 +559,83 @@ async function doCalculate() {
   }
 }
 
-function computePayroll(jobs, employeeHourlyRate) {
+// Single source of truth for how a multi-tech job's REVENUE (not commission)
+// is split among the techs who worked it. Each tech's own commission rate
+// is applied to their share afterward, in computePayroll — the rate itself
+// is never split. Swap CREW_ROLE_WEIGHTS above if the two-driver rule
+// changes; this function's shape (and its callers) should not need to.
+// roleMap is the raw id -> Crew Role map (employeeCrewRole) — an employee
+// with no role set falls back to Helper here, matching Bill's fallback rule.
+function revenueShare(employeeIds, employeeId, roleMap) {
+  if (!employeeIds || employeeIds.length === 0) return 1; // unchanged fallback
+  let totalWeight = 0;
+  let myWeight = 0;
+  employeeIds.forEach(id => {
+    const role = roleMap[id] === 'Driver' ? 'Driver' : 'Helper';
+    const weight = CREW_ROLE_WEIGHTS[role];
+    totalWeight += weight;
+    if (id === employeeId) myWeight = weight;
+  });
+  return totalWeight > 0 ? myWeight / totalWeight : 1 / employeeIds.length;
+}
+
+// Commission Rate comes back as a single number on a solo job, or an array
+// aligned to the Employee link field's order on a multi-tech job. Index into
+// it by this employee's own position — grabbing the first positive value in
+// the array (the old behavior) silently paid every non-first tech at the
+// first tech's rate on any shared job.
+function rateForEmployee(job, employeeId) {
+  const rateRaw = job.fields['Commission Rate'];
+  if (typeof rateRaw === 'number') return rateRaw;
+  if (Array.isArray(rateRaw)) {
+    const empIds = job.fields['Employee'] || [];
+    const idx = empIds.indexOf(employeeId);
+    if (idx >= 0 && typeof rateRaw[idx] === 'number') return rateRaw[idx];
+    for (const r of rateRaw) {
+      if (typeof r === 'number' && r > 0) return r;
+    }
+  }
+  return 0;
+}
+
+// Normalized Job Type -> multiplier, or null if this job type doesn't carry
+// one. Routed through job-types.js's normalizer (loaded on this page) so
+// casing/trailing-punctuation variants still match; falls back to the raw
+// string if that script isn't present.
+function multiplierFor(rawJobType) {
+  const type = (typeof normalizeJobType === 'function') ? normalizeJobType(rawJobType) : (rawJobType || '');
+  return Object.prototype.hasOwnProperty.call(JOB_TYPE_MULTIPLIERS, type) ? JOB_TYPE_MULTIPLIERS[type] : null;
+}
+
+// Visit grouping key for discount netting: same Job Date + same Customer Name.
+function visitKey(job) {
+  return (job.fields['Job Date'] || '') + '||' + (job.fields['Customer Name'] || '');
+}
+
+// Commission span for one tech's day: latest valid Comm End minus earliest
+// valid Comm Start (UTC time-of-day, same reading as before). Rows are skipped
+// and reported via onExclude(job, reason) if End is not after Start, or the
+// times fall outside 05:00-21:00 (likely an AM/PM typo). Overlaps and
+// duplicate line items collapse naturally. Returns { grossHours, used }.
+function commSpanForDay(dayJobs, onExclude) {
+  const tod = iso => { const d = new Date(iso); return d.getUTCHours() + d.getUTCMinutes() / 60; };
+  let minStart = Infinity, maxEnd = -Infinity, used = 0;
+  dayJobs.forEach(j => {
+    const s = j.fields['Comm Start'], e = j.fields['Comm End'];
+    if (!s || !e) return;
+    const start = tod(s), end = tod(e);
+    let why = null;
+    if (!(end > start)) why = 'Comm End is not after Comm Start';
+    else if (start < 5 || end > 21) why = 'outside 05:00-21:00, possible AM/PM typo';
+    if (why) { if (onExclude) onExclude(j, why); return; }
+    if (start < minStart) minStart = start;
+    if (end > maxEnd) maxEnd = end;
+    used++;
+  });
+  return { grossHours: used > 0 ? maxEnd - minStart : 0, used };
+}
+
+function computePayroll(jobs, employeeHourlyRate, employeeId) {
   // Helper: parse ISO datetime string to decimal hours (UTC to avoid timezone shift)
   function timeFromISO(isoStr) {
     if (!isoStr) return 0;
@@ -562,40 +659,40 @@ function computePayroll(jobs, employeeHourlyRate) {
   Object.keys(jobsByDate).sort().forEach(date => {
     const dayJobs = jobsByDate[date].jobs;
 
-    // Use ONLY the first job with Comm Start filled - one time block per day
-    const firstCommJob = dayJobs
-      .filter(j => j.fields['Comm Start'] && j.fields['Comm End'])
-      .sort((a, b) => {
-        const normalize = s => s.endsWith('Z') || s.includes('+') ? s : s + 'Z';
-        return new Date(normalize(a.fields['Comm Start'])) - new Date(normalize(b.fields['Comm Start']));
-      })[0];
-
-    let grossHours = 0;
-    if (firstCommJob) {
-      const commStart = timeFromISO(firstCommJob.fields['Comm Start']);
-      const commEnd = timeFromISO(firstCommJob.fields['Comm End']);
-      grossHours = Math.max(0, commEnd - commStart);
-      console.log(`DEBUG daily hours: date=${date}, commStartRaw=${firstCommJob.fields['Comm Start']}, commStart=${commStart}, commEnd=${commEnd}, grossHours=${grossHours}`);
+    // One commission span per day: earliest valid Comm Start to latest valid
+    // Comm End across all of the day's jobs (gaps between jobs count as paid
+    // drive time). See commSpanForDay.
+    const empName = (employees.find(e => e.id === employeeId) || {}).name || employeeId;
+    const span = commSpanForDay(dayJobs, (j, why) => {
+      console.warn(`Comm time excluded: ${empName}, ${date}, ${j.fields['Customer Name'] || '(no customer)'}, ${j.fields['Comm Start']} -> ${j.fields['Comm End']}: ${why}`);
+    });
+    const grossHours = span.grossHours;
+    if (span.used > 0) {
+      console.log(`DEBUG daily hours: date=${date}, rowsUsed=${span.used}, grossHours=${grossHours}`);
     }
 
-    // Lunch comes from the job record, not auto-calculated
-    const lunchRaw = firstCommJob?.fields['Lunch'];
+    // Lunch comes from the job record, not auto-calculated: the largest
+    // positive Lunch among the day's jobs, subtracted once.
     let lunch = 0;
-    if (typeof lunchRaw === 'number' && lunchRaw > 0) {
-      lunch = lunchRaw;
-    } else {
+    dayJobs.forEach(j => {
+      const l = j.fields['Lunch'];
+      if (typeof l === 'number' && l > lunch) lunch = l;
+    });
+    if (lunch === 0) {
       lunch = grossHours >= 9 ? 0.5 : 0;
     }
     const netHours = grossHours - lunch;
 
     // Calculate effective revenue for the day (including discounts, excluding Non-Commission)
+    // Not currently fed into Gross Wages (see totalRevenue below) — kept in
+    // step with revenueShare anyway since it's still "revenue divided among
+    // techs," per the 2026-09-24 GOAL brief's "every place" instruction.
     let dayRevenue = 0;
     dayJobs.forEach(j => {
       const jobType = j.fields['Job Type'];
       if (jobType !== 'Non-Commission') {
-        const numTechs = (j.fields['Employee'] || []).length || 1;
         const revenue = j.fields['Job Revenue'] || 0;
-        dayRevenue += revenue / numTechs;
+        dayRevenue += revenue * revenueShare(j.fields['Employee'] || [], employeeId, employeeCrewRole);
       }
     });
 
@@ -662,30 +759,69 @@ function computePayroll(jobs, employeeHourlyRate) {
   const regularHours = totalCommHours - totalOTHours;
 
   // STEP 8: Commission earnings (sum across all commission jobs)
+  //
+  // Visit = same Job Date + same Customer Name (2026-09-24 GOAL brief).
+  // Built from `jobs`, which is already filtered to this one employee — so
+  // if a visit's discount line were recorded against different employees
+  // than its multiplier job, this employee wouldn't see that discount row
+  // and netting would silently skip it. Known limitation, not solved here.
+  //
+  // Interpretation note: "count the visit's non-discount job lines" (the
+  // divisor for splitting a visit's discount) is read here as counting only
+  // the visit's MULTIPLIER-type lines, not every billable line — so a
+  // non-multiplier line sharing a visit with a multiplier line is left
+  // untouched, matching "for every other job type, a discount stays its own
+  // independent line, exactly as today." In every visit seen in the real
+  // 9/9–9/23 data this divisor is 1, so the distinction doesn't move any
+  // number this period; flag to Bill/Mikael if a visit ever mixes multiplier
+  // and non-multiplier lines with a discount.
+  const visitMultiplierCount = {};
+  const visitDiscountTotal = {};
+  jobs.forEach(j => {
+    if (j.fields['Job Type'] === 'Non-Commission') return;
+    const key = visitKey(j);
+    const revenue = j.fields['Job Revenue'] || 0;
+    if (revenue < 0) {
+      // Discounts are identified by negative revenue, not job type name.
+      visitDiscountTotal[key] = (visitDiscountTotal[key] || 0) + revenue;
+    } else if (multiplierFor(j.fields['Job Type']) !== null) {
+      visitMultiplierCount[key] = (visitMultiplierCount[key] || 0) + 1;
+    }
+  });
+
   let regComm = 0;
   Object.values(dailyMetrics).forEach(dm => {
     dm.dayJobs.forEach(j => {
-      if (j.fields['Job Type'] !== 'Non-Commission') {
-        const numTechs = (j.fields['Employee'] || []).length || 1;
-        const revenue = j.fields['Job Revenue'] || 0;
-        const rateRaw = j.fields['Commission Rate'];
+      if (j.fields['Job Type'] === 'Non-Commission') return;
 
-        // Extract commission rate
-        let rate = 0;
-        if (typeof rateRaw === 'number') {
-          rate = rateRaw;
-        } else if (Array.isArray(rateRaw)) {
-          for (const r of rateRaw) {
-            if (typeof r === 'number' && r > 0) {
-              rate = r;
-              break;
-            }
-          }
+      const revenue = j.fields['Job Revenue'] || 0;
+      const key = visitKey(j);
+      const empIds = j.fields['Employee'] || [];
+
+      // Flag any teammate on this job with no Crew Role, whoever ends up
+      // selected — the warning banner names them so Bill can fix the data.
+      empIds.forEach(id => {
+        if (!employeeCrewRole[id]) {
+          const emp = employees.find(e => e.id === id);
+          if (emp) crewRoleWarnings.add(emp.name);
         }
+      });
 
-        const effectiveRevenue = revenue / numTechs;
-        regComm += effectiveRevenue * rate;
+      // A discount already netted into a multiplier job at this visit must
+      // not also be counted as its own line — skip it here.
+      if (revenue < 0 && (visitMultiplierCount[key] || 0) > 0) return;
+
+      const multiplier = multiplierFor(j.fields['Job Type']);
+      let effectiveRevenue = revenue;
+      if (multiplier !== null) {
+        const count = visitMultiplierCount[key] || 1;
+        const discountShare = (visitDiscountTotal[key] || 0) / count;
+        effectiveRevenue = (revenue + discountShare) * multiplier;
       }
+
+      const myShare = revenueShare(empIds, employeeId, employeeCrewRole);
+      const rate = rateForEmployee(j, employeeId);
+      regComm += effectiveRevenue * myShare * rate;
     });
   });
 
@@ -739,6 +875,24 @@ function showError(msg) {
 
 function hideError() {
   document.getElementById('error-msg').classList.remove('visible');
+}
+
+// Data-quality warning, not a blocking error: names every employee seen so
+// far (across calculations this session) with no Crew Role set, so Bill can
+// fix the Employees table rather than silently getting a Helper-defaulted
+// split. Accumulates rather than resetting per-calculation, since it's a
+// standing data problem, not a per-run one.
+function renderCrewRoleWarning() {
+  const el = document.getElementById('crew-role-warning');
+  if (!el) return;
+  if (crewRoleWarnings.size === 0) {
+    el.classList.remove('visible');
+    el.textContent = '';
+    return;
+  }
+  const names = Array.from(crewRoleWarnings).sort().join(', ');
+  el.textContent = `No Crew Role set for: ${names}. Treated as Helper in the revenue split — fix in the Employees table.`;
+  el.classList.add('visible');
 }
 
 function editPayroll(ppId) {
