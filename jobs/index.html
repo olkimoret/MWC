@@ -71,6 +71,22 @@
 
 .confirm-tech-list { display: flex; flex-direction: column; gap: 2px; }
 .confirm-tech-list .toggle-field { padding: 10px 0; }
+.crew-name { display: flex; flex-direction: column; gap: 2px; }
+.crew-role { font-size: 12px; font-weight: 600; color: var(--text-3, #6B7280); }
+.crew-role.crew-role-unset { color: #B45309; }
+.crew-note { font-size: 13px; color: var(--text-2, #4B5563); margin: 0 2px 12px; line-height: 1.4; }
+.crew-warning { display: none; font-size: 13px; font-weight: 600; color: #B91C1C; background: #FEF2F2; border: 1px solid #FECACA;
+  border-radius: 12px; padding: 10px 12px; margin: 0 0 12px; line-height: 1.4; }
+.crew-warning.visible { display: block; }
+.mwc-dialog-overlay { display: none; position: fixed; inset: 0; background: rgba(17,24,39,0.5); z-index: 10002;
+  align-items: center; justify-content: center; padding: 20px; }
+.mwc-dialog-overlay.visible { display: flex; }
+.mwc-dialog { background: #fff; border-radius: 18px; padding: 20px; width: 100%; max-width: 420px; max-height: 85vh; overflow-y: auto;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25); }
+.mwc-dialog h3 { margin: 0 0 10px; font-size: 17px; }
+.mwc-dialog .mwc-dialog-body { font-size: 14px; line-height: 1.5; color: var(--text-2, #374151); margin-bottom: 16px; }
+.mwc-dialog .mwc-dialog-body p { margin: 0 0 8px; }
+.mwc-dialog .actions { margin-top: 0; }
 
 .wide-picker-overlay {
   display: none;
@@ -211,7 +227,7 @@
       <button class="btn btn-secondary dont-see-btn" id="dont-see-btn" onclick="openWidePicker()">Show More Jobs</button>
       <button class="btn btn-secondary dont-see-btn" id="show-recurring-btn" onclick="openRecurringPicker()">Show Recurring Jobs</button>
       <div class="actions">
-        <button class="btn btn-primary" id="continue-btn" onclick="goToStep2()" disabled>Continue to Checklist</button>
+        <button class="btn btn-primary" id="continue-btn" onclick="goToStep2()" disabled>Continue</button>
         <button class="btn btn-secondary" onclick="goToSplash()">Back</button>
       </div>
     </div>
@@ -222,11 +238,13 @@
   <div class="step" id="step-confirm">
 
     <div class="job-banner visible" id="confirm-banner">
-      <div class="job-name">Confirm Changes</div>
+      <div class="job-name">Who was on this job?</div>
       <div class="job-meta"><span id="confirm-job-info"></span></div>
     </div>
 
-    <p class="section-label">Confirm Tech(s)</p>
+    <p class="section-label">Crew</p>
+    <p class="crew-note" id="crew-note"></p>
+    <div class="crew-warning" id="crew-removal-warning"></div>
 
     <div class="card">
       <div class="field-block" style="border-bottom:none;">
@@ -243,11 +261,20 @@
     </div>
 
     <div class="actions">
-      <button class="btn btn-primary" onclick="saveConfirmChanges()">Save &amp; Continue</button>
+      <button class="btn btn-primary" id="crew-continue-btn" onclick="saveCrewStep()">Continue to Checklist</button>
       <button class="btn btn-secondary" onclick="goToStep(1)">Back</button>
     </div>
 
   </div><!-- /step-confirm -->
+
+  <!-- GENERIC CONFIRM DIALOG (crew removal, already-entered guard, soft time warning) -->
+  <div class="mwc-dialog-overlay" id="mwc-dialog-overlay">
+    <div class="mwc-dialog" role="dialog" aria-modal="true">
+      <h3 id="mwc-dialog-title"></h3>
+      <div class="mwc-dialog-body" id="mwc-dialog-body"></div>
+      <div class="actions" id="mwc-dialog-actions"></div>
+    </div>
+  </div>
 
   <!-- WIDE JOB PICKER OVERLAY -->
   <div class="wide-picker-overlay" id="wide-picker-overlay">
@@ -405,15 +432,16 @@
       <span class="job-type-tag" id="banner-job-type"></span>
     </div>
 
-    <p class="section-label">Your Hours</p>
+    <p class="section-label">Crew Hours</p>
+    <p class="crew-note">One set of times for the whole crew. Times run from 6:00 AM to 8:00 PM.</p>
     <div class="card">
       <div class="form-row">
         <span class="row-label">Commission Start</span>
-        <input type="text" id="comm-start" class="fp-time" placeholder="Set time…" readonly data-default="08:00">
+        <input type="text" id="comm-start" class="fp-time" placeholder="Set time…" readonly data-default="08:00" data-tp-list="true" data-tp-title="Commission Start">
       </div>
       <div class="form-row">
         <span class="row-label">Commission End</span>
-        <input type="text" id="comm-end" class="fp-time" placeholder="Set time…" readonly data-default="17:00">
+        <input type="text" id="comm-end" class="fp-time" placeholder="Set time…" readonly data-default="17:00" data-tp-list="true" data-tp-title="Commission End">
       </div>
       <div class="form-row">
         <span class="row-label">Hourly Start <small>optional</small></span>
@@ -552,6 +580,7 @@
 </div><!-- /container -->
 
 <script src="/job-types.js"></script>
+<script src="/employees.js"></script>
 <script>
 // ============================================================
 // CONFIGURATION
@@ -587,6 +616,7 @@ let oshaRequired = false;
 let currentMode = 'job'; // 'job' or 'non-commission'
 let ncSelectedEmployee = null;
 let employeesList = []; // [{ id, name }] loaded once for multi-select + log names
+let editingExisting = false; // true when the tech chose "Edit this entry" in the already-entered guard
 let widePickerJobs = []; // flat list of { clientName, dateStr, jobs } for the current search session
 
 // ── CHECKLIST DATA ──────────────────────────────────────────
@@ -842,20 +872,16 @@ function updateDateDisplay() {
 }
 
 // ── LOAD EMPLOYEES ───────────────────────────────────────────
-// Only techs/field supervisors who are still active show up in the time-entry
-// picker — Admin/Manager roles and deactivated employees are excluded.
-const TIME_ENTRY_ROLES = ['Field Supervisor', 'Tech 1', 'Tech 2', 'Tech 3', 'Tech 4'];
+// The name picker and the crew picker both use the shared filter in
+// employees.js (active, Role = Field Supervisor or Tech 1-4) — Admin/Manager
+// roles and deactivated employees are excluded from both.
+let employeeDirectory = null; // { id: { id, name, crewRole } }, fetched lazily by getDirectory()
 
 async function loadEmployees() {
   try {
-    const roleFormula = TIME_ENTRY_ROLES.map(r => `{Role}='${r}'`).join(',');
-    const formula = encodeURIComponent(`AND({Active Employee}=TRUE(), OR(${roleFormula}))`);
-    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${EMPLOYEES_TABLE}?filterByFormula=${formula}&sort[0][field]=Name&sort[0][direction]=asc`;
-    const res = await fetchWithTimeout(url, { headers });
-    const data = await res.json();
+    employeesList = await MWCEmployees.loadFieldEmployees(AIRTABLE_BASE_ID, headers, fetchWithTimeout);
     const select = document.getElementById('employee-select');
     select.innerHTML = '<option value="">— Select your name —</option>';
-    employeesList = data.records.map(r => ({ id: r.id, name: r.fields.Name }));
     employeesList.forEach(emp => {
       const opt = document.createElement('option');
       opt.value = emp.id;
@@ -865,6 +891,16 @@ async function loadEmployees() {
   } catch(e) {
     showError('Could not load employees. Check your connection.');
   }
+}
+
+// Everyone, unfiltered — used ONLY to name people already on a job's Employee
+// field who are not in the picker list (an Admin, a since-deactivated tech), so
+// they are shown and never silently dropped.
+async function getDirectory() {
+  if (!employeeDirectory) {
+    employeeDirectory = await MWCEmployees.loadEmployeeDirectory(AIRTABLE_BASE_ID, headers, fetchWithTimeout);
+  }
+  return employeeDirectory;
 }
 
 // ── LOAD JOBS ────────────────────────────────────────────────
@@ -989,9 +1025,7 @@ function updateContinueButtonState() {
   const date = document.getElementById('job-date').value;
   btn.disabled = !(selectedEmployee && date && selectedClient);
 
-  const needsConfirm = selectedEmployee && date && selectedClient &&
-    jobsMismatch(selectedClient.jobs, selectedEmployee.id, date);
-  btn.textContent = needsConfirm ? 'Continue' : 'Continue to Checklist';
+  btn.textContent = 'Continue';
 }
 
 // ── WIDE JOB PICKER (± 1 week from today) ────────────────────
@@ -1498,11 +1532,22 @@ async function submitNonCommission() {
 }
 
 // ── NAVIGATION ───────────────────────────────────────────────
-function jobsMismatch(jobs, empId, dateStr) {
-  return jobs.some(j => {
-    const emps = j.fields['Employee'] || [];
-    const jobDate = (j.fields['Job Date'] || '').slice(0, 10);
-    return !emps.includes(empId) || jobDate !== dateStr;
+// ── DIALOG (promise-based; used for the crew, guard and time confirms) ──
+function showDialog({ title, bodyHtml, buttons }) {
+  return new Promise(resolve => {
+    document.getElementById('mwc-dialog-title').textContent = title;
+    document.getElementById('mwc-dialog-body').innerHTML = bodyHtml;
+    const actions = document.getElementById('mwc-dialog-actions');
+    actions.innerHTML = '';
+    const overlay = document.getElementById('mwc-dialog-overlay');
+    buttons.forEach(b => {
+      const el = document.createElement('button');
+      el.className = 'btn ' + (b.kind === 'secondary' ? 'btn-secondary' : 'btn-primary');
+      el.textContent = b.label;
+      el.onclick = () => { overlay.classList.remove('visible'); resolve(b.value); };
+      actions.appendChild(el);
+    });
+    overlay.classList.add('visible');
   });
 }
 
@@ -1512,59 +1557,6 @@ function proceedToChecklist() {
   oshaRequired = isOshaRequired(selectedClient.jobs);
   updateProgressBar();
   goToStep(2);
-}
-
-function goToStep2() {
-  if (!selectedClient) { showError('Please select a client first.'); return; }
-  hideError();
-
-  const date = document.getElementById('job-date').value;
-  if (jobsMismatch(selectedClient.jobs, selectedEmployee.id, date)) {
-    populateConfirmStep(date);
-    goToStep('step-confirm');
-    return;
-  }
-
-  proceedToChecklist();
-}
-
-// ── CONFIRM CHANGES (tech/date correction) ───────────────────
-function populateConfirmStep(pickedDate) {
-  const jobTypes = jobTypesLabel(selectedClient.jobs);
-  document.getElementById('confirm-job-info').textContent =
-    jobTypes ? `${selectedClient.name} · ${jobTypes}` : selectedClient.name;
-
-  // Default-check the tech currently using the app, not whoever the job
-  // (or the Recurring Jobs row's Default Tech(s)) happens to be assigned to.
-  const currentIds = new Set([selectedEmployee.id]);
-
-  const list = document.getElementById('confirm-tech-list');
-  list.innerHTML = '';
-  employeesList.forEach(emp => {
-    const field = document.createElement('div');
-    field.className = 'toggle-field';
-    const id = `confirm-tech-${emp.id}`;
-    field.innerHTML = `
-      <div class="toggle-label">${esc(emp.name)}</div>
-      <label class="toggle">
-        <input type="checkbox" id="${id}" data-emp-id="${escAttr(emp.id)}" ${currentIds.has(emp.id) ? 'checked' : ''}>
-        <span class="toggle-slider"></span>
-      </label>
-    `;
-    list.appendChild(field);
-  });
-  list.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.addEventListener('change', updateConfirmButtonState));
-  updateConfirmButtonState();
-
-  const jobDate = (selectedClient.jobs[0].fields['Job Date'] || '').slice(0, 10) || pickedDate;
-  const dateInput = document.getElementById('confirm-date');
-  dateInput.value = jobDate;
-  if (dateInput._flatpickr) dateInput._flatpickr.setDate(jobDate, true);
-}
-
-function updateConfirmButtonState() {
-  const anyChecked = document.querySelectorAll('#confirm-tech-list input[type="checkbox"]:checked').length > 0;
-  document.querySelector('#step-confirm .btn-primary').disabled = !anyChecked;
 }
 
 function sameIdSet(a, b) {
@@ -1578,71 +1570,196 @@ function formatLogTimestamp(d) {
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-async function saveConfirmChanges() {
-  const btn = document.querySelector('#step-confirm .btn-primary');
-  const checkedBoxes = document.querySelectorAll('#confirm-tech-list input[type="checkbox"]:checked');
-  const newEmpIds = Array.from(checkedBoxes).map(cb => cb.dataset.empId);
-  const newDate = document.getElementById('confirm-date').value;
+// Crew + date confirmed on the crew step. Held in memory and written to Airtable
+// together with the hours at submit time, so abandoning the form never leaves a
+// half-applied crew change behind.
+let pendingCrew = null;   // { ids: [...], date: 'YYYY-MM-DD', originalIds: [...] }
+let crewPeople = [];      // [{ id, name, crewRole, offList? }] shown on the crew step
 
-  if (newEmpIds.length === 0) {
-    showError('Select at least one tech.');
+function crewNameById(id) {
+  const p = crewPeople.find(x => x.id === id)
+    || employeesList.find(x => x.id === id)
+    || (employeeDirectory && employeeDirectory[id]);
+  return p ? p.name : 'Unknown employee';
+}
+
+// ── ALREADY-ENTERED GUARD ────────────────────────────────────
+// Time of day of an Airtable dateTime (the field is UTC-zoned, and the form
+// writes the picked wall-clock time straight into it), as "HH:MM".
+function timeOfDay(iso) { return String(iso || '').slice(11, 16); }
+
+function setTimeInput(id, h24) {
+  const input = document.getElementById(id);
+  input.dataset.h24 = h24 || '';
+  input.value = h24 ? window.mwcTimeLabel(h24) : '';
+}
+
+// Newest "Entered by" line across the visit's Correction Logs, or null (the log
+// only started recording this with the crew-picker release, so older entries
+// have none).
+function lastEnteredBy(jobs) {
+  let best = null;
+  jobs.forEach(j => {
+    String(j.fields['Correction Log'] || '').split('\n').forEach(line => {
+      const m = line.match(/^\[(.+?)\] Entered by (.+?):/);
+      if (m && (!best || m[1] > best.when)) best = { when: m[1], who: m[2] };
+    });
+  });
+  return best;
+}
+
+// Returns true to continue into the crew step, false to stay on step 1.
+async function runAlreadyEnteredGuard() {
+  editingExisting = false;
+  const rows = selectedClient.jobs.filter(j => !j.isDraft && j.fields['Comm Start']);
+  if (!rows.length) return true;
+  const f = rows[0].fields;
+  const by = lastEnteredBy(selectedClient.jobs);
+  const missing = f['Checklist Missing'] ? `, missing: ${esc(f['Checklist Missing'])}` : '';
+  const body = `
+    <p>Hours were already entered for this job${by ? ` by <strong>${esc(by.who)}</strong> on ${esc(by.when)}` : ' (who entered them was not recorded)'}.</p>
+    <p><strong>${esc(window.mwcTimeLabel(timeOfDay(f['Comm Start'])))} – ${esc(window.mwcTimeLabel(timeOfDay(f['Comm End'])))}</strong>
+       · Lunch: ${f['Lunch'] > 0 ? 'yes' : 'no'}
+       · Checklist: ${esc(f['Checklist Completed'] || 'not recorded')}${missing}</p>
+    <p>Edit keeps these times and lunch to start from. Replace starts a blank entry and overwrites them.</p>`;
+  for (;;) {
+    const choice = await showDialog({
+      title: 'Already entered',
+      bodyHtml: body,
+      buttons: [
+        { label: 'Edit this entry', value: 'edit' },
+        { label: 'Replace with a new entry', value: 'replace', kind: 'secondary' },
+        { label: 'Cancel', value: 'cancel', kind: 'secondary' }
+      ]
+    });
+    if (choice === 'cancel') return false;
+    if (choice === 'edit') {
+      editingExisting = true;
+      setTimeInput('comm-start', timeOfDay(f['Comm Start']));
+      setTimeInput('comm-end', timeOfDay(f['Comm End']));
+      document.getElementById('lunch').checked = f['Lunch'] > 0;
+      updateStep4ButtonState();
+      return true;
+    }
+    const sure = await showDialog({
+      title: 'Overwrite this entry?',
+      bodyHtml: '<p>This will overwrite the times, lunch and checklist already saved for this job.</p>',
+      buttons: [
+        { label: 'Yes, overwrite it', value: 'yes' },
+        { label: 'Go back', value: 'back', kind: 'secondary' }
+      ]
+    });
+    if (sure === 'yes') return true;
+  }
+}
+
+// ── CREW STEP ────────────────────────────────────────────────
+async function goToStep2() {
+  if (!selectedClient) { showError('Please select a client first.'); return; }
+  hideError();
+  const btn = document.getElementById('continue-btn');
+  btn.disabled = true;
+  try {
+    if (!(await runAlreadyEnteredGuard())) return;
+    await populateCrewStep();
+    goToStep('step-confirm');
+  } finally {
+    updateContinueButtonState();
+  }
+}
+
+async function populateCrewStep() {
+  const jobs = selectedClient.jobs;
+  const submitterId = selectedEmployee.id;
+  const rowSets = jobs.map(j => j.fields['Employee'] || []);
+  const onJob = [];                                     // union of every row's crew
+  rowSets.forEach(set => set.forEach(id => { if (!onJob.includes(id)) onJob.push(id); }));
+  const rowsDiffer = rowSets.some(set => !sameIdSet(set, rowSets[0]));
+  const submitterAdded = !onJob.includes(submitterId);
+  const preselected = new Set(onJob);
+  preselected.add(submitterId);
+
+  // Anyone already on the job but outside the active-field-tech list (an Admin,
+  // a since-deactivated tech) is still shown, ticked, so they can't vanish.
+  const inList = new Set(employeesList.map(e => e.id));
+  const offList = onJob.filter(id => !inList.has(id));
+  let dir = {};
+  if (offList.length) { try { dir = await getDirectory(); } catch (e) { dir = {}; } }
+  crewPeople = employeesList.concat(offList.map(id =>
+    Object.assign({ id, name: 'Unknown employee', crewRole: '' }, dir[id] || {}, { offList: true })));
+
+  const jobTypes = jobTypesLabel(jobs);
+  document.getElementById('confirm-job-info').textContent =
+    jobTypes ? `${selectedClient.name} · ${jobTypes}` : selectedClient.name;
+
+  const notes = ['Switch on everyone who worked this job. Each person is paid for the jobs they are on.'];
+  if (rowsDiffer) notes.push('The lines of this job currently list different crews, so everyone listed on any line is switched on.');
+  if (submitterAdded) notes.push('You were added because you are entering this job.');
+  document.getElementById('crew-note').textContent = notes.join(' ');
+
+  const list = document.getElementById('confirm-tech-list');
+  list.innerHTML = '';
+  crewPeople.forEach(emp => {
+    const field = document.createElement('div');
+    field.className = 'toggle-field';
+    field.innerHTML = `
+      <div class="crew-name">
+        <div class="toggle-label">${esc(emp.name)}</div>
+        <div class="crew-role${emp.crewRole ? '' : ' crew-role-unset'}">${esc(emp.crewRole || 'No role set')}</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="confirm-tech-${emp.id}" data-emp-id="${escAttr(emp.id)}" ${preselected.has(emp.id) ? 'checked' : ''}>
+        <span class="toggle-slider"></span>
+      </label>
+    `;
+    list.appendChild(field);
+  });
+  list.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.addEventListener('change', updateCrewState));
+  pendingCrew = { ids: [], date: '', originalIds: onJob };
+  updateCrewState();
+
+  const jobDate = (jobs[0].fields['Job Date'] || '').slice(0, 10) || document.getElementById('job-date').value;
+  const dateInput = document.getElementById('confirm-date');
+  dateInput.value = jobDate;
+  if (dateInput._flatpickr) dateInput._flatpickr.setDate(jobDate, true);
+}
+
+function selectedCrewIds() {
+  return Array.from(document.querySelectorAll('#confirm-tech-list input[type="checkbox"]:checked')).map(cb => cb.dataset.empId);
+}
+
+// Enables Continue only with at least one person, and shows the removal warning
+// live for anyone who was on the job and is now switched off.
+function updateCrewState() {
+  const ids = selectedCrewIds();
+  document.getElementById('crew-continue-btn').disabled = ids.length === 0;
+  const removed = pendingCrew.originalIds.filter(id => !ids.includes(id));
+  const warn = document.getElementById('crew-removal-warning');
+  warn.innerHTML = removed.map(id => `${esc(crewNameById(id))} will be removed from this job and will not be paid for it.`).join('<br>');
+  warn.classList.toggle('visible', removed.length > 0);
+}
+
+async function saveCrewStep() {
+  const ids = selectedCrewIds();
+  if (ids.length === 0) {
+    showError('Select at least one person.');
     return;
   }
   hideError();
-
-  btn.disabled = true;
-  btn.textContent = 'Saving...';
-
-  const empNameById = id => (employeesList.find(e => e.id === id) || {}).name || id;
-  const timestamp = formatLogTimestamp(new Date());
-
-  try {
-    for (const job of selectedClient.jobs) {
-      const oldEmpIds = job.fields['Employee'] || [];
-      const oldDate = (job.fields['Job Date'] || '').slice(0, 10);
-
-      const empChanged = !sameIdSet(oldEmpIds, newEmpIds);
-      const dateChanged = oldDate !== newDate;
-      if (!empChanged && !dateChanged) continue;
-
-      if (job.isDraft) {
-        // Not created in Airtable yet — just update the in-memory draft.
-        // It'll be written with these final values when submitForm() creates it.
-        if (empChanged) job.fields['Employee'] = newEmpIds;
-        if (dateChanged) job.fields['Job Date'] = newDate;
-        continue;
-      }
-
-      const fields = {};
-      const logLines = [];
-      if (empChanged) {
-        fields['Employee'] = newEmpIds;
-        logLines.push(`[${timestamp}] Employee: ${oldEmpIds.map(empNameById).join(', ') || '(none)'} → ${newEmpIds.map(empNameById).join(', ')}`);
-      }
-      if (dateChanged) {
-        fields['Job Date'] = newDate;
-        logLines.push(`[${timestamp}] Job Date: ${oldDate || '(none)'} → ${newDate}`);
-      }
-      const existingLog = job.fields['Correction Log'] || '';
-      fields['Correction Log'] = existingLog ? existingLog + '\n' + logLines.join('\n') : logLines.join('\n');
-
-      const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}/${job.id}`;
-      const res = await fetchWithTimeout(url, { method: 'PATCH', headers, body: JSON.stringify({ fields }) });
-      if (!res.ok) throw new Error('Correction save failed');
-
-      job.fields['Employee'] = fields['Employee'] || job.fields['Employee'];
-      job.fields['Job Date'] = fields['Job Date'] || job.fields['Job Date'];
-      job.fields['Correction Log'] = fields['Correction Log'];
-    }
-  } catch (e) {
-    showError('Could not save the correction. Please try again.');
-    btn.disabled = false;
-    btn.textContent = 'Save & Continue';
-    return;
+  const removed = pendingCrew.originalIds.filter(id => !ids.includes(id));
+  if (removed.length) {
+    const choice = await showDialog({
+      title: 'Remove from this job?',
+      bodyHtml: removed.map(id => `<p><strong>${esc(crewNameById(id))}</strong> will be removed from this job and will not be paid for it.</p>`).join(''),
+      buttons: [
+        { label: 'Remove and continue', value: 'ok' },
+        { label: 'Go back', value: 'back', kind: 'secondary' }
+      ]
+    });
+    if (choice !== 'ok') return;
   }
-
-  btn.disabled = false;
-  btn.textContent = 'Save & Continue';
+  const date = document.getElementById('confirm-date').value || (selectedClient.jobs[0].fields['Job Date'] || '').slice(0, 10);
+  pendingCrew = { ids, date, originalIds: pendingCrew.originalIds };
   proceedToChecklist();
 }
 
@@ -1675,10 +1792,40 @@ function updateStep4ButtonState() {
   document.getElementById('step4-continue-btn').disabled = !hasValidHours();
 }
 
-function goToStep5() {
+// Commission-time rules. Bounds come from timepicker.js (MWC_TIME_BOUNDS), the
+// single place they are defined. Hard rules block; the soft rule only asks.
+function validateCommTimes() {
+  const B = window.MWC_TIME_BOUNDS;
+  const start = document.getElementById('comm-start').dataset.h24 || '';
+  const end   = document.getElementById('comm-end').dataset.h24 || '';
+  if (!start && !end) return { ok: true, soft: false };
+  if (!start || !end) return { ok: false, message: 'Please set both Commission Start and Commission End.' };
+  const mins = t => { const p = t.split(':'); return parseInt(p[0], 10) * 60 + parseInt(p[1], 10); };
+  const s = mins(start), e = mins(end);
+  if (s < B.MIN_HOUR * 60 || e > B.MAX_HOUR * 60 || s > B.MAX_HOUR * 60 || e < B.MIN_HOUR * 60) {
+    return { ok: false, message: `Commission times must be between ${window.mwcTimeLabel(B.MIN_HOUR + ':00')} and ${window.mwcTimeLabel(B.MAX_HOUR + ':00')}. Please pick the times again.` };
+  }
+  if (e <= s) return { ok: false, message: 'Commission End must be after Commission Start.' };
+  return { ok: true, soft: s < B.SOFT_START_HOUR * 60 || e > B.SOFT_END_HOUR * 60 };
+}
+
+async function goToStep5() {
   if (!hasValidHours()) {
     showError('Please enter Commission Start/End or Hourly Start/End.');
     return;
+  }
+  const v = validateCommTimes();
+  if (!v.ok) { showError(v.message); return; }
+  if (v.soft) {
+    const choice = await showDialog({
+      title: 'Check your times',
+      bodyHtml: `<p>This is outside normal hours, is the time correct?</p><p><strong>${esc(document.getElementById('comm-start').value)} – ${esc(document.getElementById('comm-end').value)}</strong></p>`,
+      buttons: [
+        { label: 'Yes, the times are correct', value: 'yes' },
+        { label: 'Change the times', value: 'no', kind: 'secondary' }
+      ]
+    });
+    if (choice !== 'yes') return;
   }
   hideError();
   buildDeparture();
@@ -1749,11 +1896,26 @@ async function submitForm() {
     document.getElementById('osha-precautions-error').style.display = 'none';
   }
 
+  // Defence in depth: the same hard time rules as the Safety Check step.
+  const timeCheck = validateCommTimes();
+  if (!timeCheck.ok) {
+    goToStep(4);
+    showError(timeCheck.message);
+    return;
+  }
+  if (!pendingCrew || pendingCrew.ids.length === 0) {
+    goToStep(1);
+    showError('Please confirm who was on this job.');
+    return;
+  }
+
   const btn = document.getElementById('submit-btn');
   btn.textContent = 'Submitting...';
   btn.disabled = true;
 
-  const date = document.getElementById('job-date').value;
+  // Times belong to the JOB's date, not the day they are entered: a Tuesday job
+  // keyed in on Friday is stored on Tuesday. (Falls back to the picked date.)
+  const date = pendingCrew.date || document.getElementById('job-date').value;
   const commStart = document.getElementById('comm-start').dataset.h24 || '';
   const commEnd   = document.getElementById('comm-end').dataset.h24 || '';
   const hrlyStart = document.getElementById('hrly-start').dataset.h24 || '';
@@ -1812,11 +1974,36 @@ async function submitForm() {
 
   // Write all records — fatal if this fails. Draft jobs (picked from the
   // Recurring Jobs list, no existing Jobs row) get created here; everything
-  // else gets patched as before.
+  // else gets patched. Every row of the visit gets the SAME crew (Employee), so
+  // all lines of a visit always agree; the crew and date were confirmed on the
+  // crew step and are applied here, with a Correction Log line for the audit
+  // trail (and for the "already entered" guard to read back).
+  const crewIds = pendingCrew.ids;
+  const timestamp = formatLogTimestamp(new Date());
+  const empName = id => crewNameById(id);
+  const commLabel = commStart && commEnd
+    ? `${window.mwcTimeLabel(commStart)}-${window.mwcTimeLabel(commEnd)}`
+    : 'hourly only';
   try {
     for (const job of selectedClient.jobs) {
+      const oldIds = job.fields['Employee'] || [];
+      const oldDate = (job.fields['Job Date'] || '').slice(0, 10);
+      const logLines = [];
+      const rowFields = { ...fields };
+      if (!sameIdSet(oldIds, crewIds)) {
+        rowFields['Employee'] = crewIds;
+        logLines.push(`[${timestamp}] Employee: ${oldIds.map(empName).join(', ') || '(none)'} → ${crewIds.map(empName).join(', ')}`);
+      }
+      if (oldDate !== date) {
+        rowFields['Job Date'] = date;
+        logLines.push(`[${timestamp}] Job Date: ${oldDate || '(none)'} → ${date}`);
+      }
+      logLines.push(`[${timestamp}] Entered by ${selectedEmployee.name}: ${commLabel}, crew: ${crewIds.map(empName).join(', ')}`);
+      const existingLog = job.fields['Correction Log'] || '';
+      rowFields['Correction Log'] = existingLog ? existingLog + '\n' + logLines.join('\n') : logLines.join('\n');
+
       if (job.isDraft) {
-        const createFields = { ...job.fields, ...fields };
+        const createFields = { ...job.fields, ...rowFields };
         Object.keys(createFields).forEach(k => (createFields[k] === null || createFields[k] === undefined) && delete createFields[k]);
         const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${JOBS_TABLE}`;
         const res = await fetchWithTimeout(url, {
@@ -1830,7 +2017,7 @@ async function submitForm() {
         const res = await fetchWithTimeout(url, {
           method: 'PATCH',
           headers,
-          body: JSON.stringify({ fields })
+          body: JSON.stringify({ fields: rowFields })
         });
         if (!res.ok) throw new Error('Submit failed');
       }
@@ -1858,6 +2045,8 @@ function resetForm() {
   oshaRequired = false;
   ncSelectedEmployee = null;
   currentMode = 'job';
+  pendingCrew = null;
+  editingExisting = false;
 
   const empSelect = document.getElementById('employee-select');
   empSelect.value = keepEmpId;
@@ -1868,7 +2057,7 @@ function resetForm() {
   if (dateInput._flatpickr) dateInput._flatpickr.setDate(todayStr, true);
   updateDateDisplay();
   document.getElementById('continue-btn').disabled = true;
-  document.getElementById('continue-btn').textContent = 'Continue to Checklist';
+  document.getElementById('continue-btn').textContent = 'Continue';
   document.getElementById('submit-btn').disabled = false;
   document.getElementById('submit-btn').textContent = 'Submit Job';
   closeWidePicker();
