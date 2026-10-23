@@ -437,19 +437,19 @@
     <div class="card">
       <div class="form-row">
         <span class="row-label">Commission Start</span>
-        <input type="text" id="comm-start" class="fp-time" placeholder="Set time…" readonly data-default="08:00" data-tp-list="true" data-tp-title="Commission Start">
+        <input type="text" id="comm-start" class="fp-time" placeholder="Set time…" readonly data-default="08:00" data-tp-title="Commission Start">
       </div>
       <div class="form-row">
         <span class="row-label">Commission End</span>
-        <input type="text" id="comm-end" class="fp-time" placeholder="Set time…" readonly data-default="17:00" data-tp-list="true" data-tp-title="Commission End">
+        <input type="text" id="comm-end" class="fp-time" placeholder="Set time…" readonly data-default="17:00" data-tp-title="Commission End">
       </div>
       <div class="form-row">
         <span class="row-label">Hourly Start <small>optional</small></span>
-        <input type="text" id="hrly-start" class="fp-time" placeholder="Set time…" readonly>
+        <input type="text" id="hrly-start" class="fp-time" placeholder="Set time…" readonly data-tp-title="Hourly Start" data-tp-anchor="07:00" data-tp-clear="hrly-start hrly-end">
       </div>
       <div class="form-row">
         <span class="row-label">Hourly End <small>optional</small></span>
-        <input type="text" id="hrly-end" class="fp-time" placeholder="Set time…" readonly>
+        <input type="text" id="hrly-end" class="fp-time" placeholder="Set time…" readonly data-tp-title="Hourly End" data-tp-anchor="07:00" data-tp-clear="hrly-start hrly-end">
       </div>
       <div class="toggle-field">
         <div>
@@ -545,12 +545,12 @@
 
       <div class="form-row">
         <span class="row-label">Hourly Start</span>
-        <input type="text" id="nc-hrly-start" class="fp-time" placeholder="Set time…" readonly data-default="08:00">
+        <input type="text" id="nc-hrly-start" class="fp-time" placeholder="Set time…" readonly data-default="07:00" data-tp-title="Hourly Start">
       </div>
 
       <div class="form-row">
         <span class="row-label">Hourly End</span>
-        <input type="text" id="nc-hrly-end" class="fp-time" placeholder="Set time…" readonly data-default="17:00">
+        <input type="text" id="nc-hrly-end" class="fp-time" placeholder="Set time…" readonly data-default="17:00" data-tp-title="Hourly End">
       </div>
     </div>
 
@@ -1497,6 +1497,9 @@ async function submitNonCommission() {
   const hrlyStart = document.getElementById('nc-hrly-start').dataset.h24 || '';
   const hrlyEnd = document.getElementById('nc-hrly-end').dataset.h24 || '';
 
+  const check = validateHourlyTimes('nc-hrly-start', 'nc-hrly-end');
+  if (!check.ok) { showError(check.message); return; }
+
   const btn = document.getElementById('nc-submit-btn');
   btn.textContent = 'Submitting...';
   btn.disabled = true;
@@ -1809,6 +1812,23 @@ function validateCommTimes() {
   return { ok: true, soft: s < B.SOFT_START_HOUR * 60 || e > B.SOFT_END_HOUR * 60 };
 }
 
+// Hourly-time rules (job form pair and Non-Commission screen pair): hard rules
+// only, same 6:00 AM-8:00 PM bounds, no "is this correct?" prompt.
+function validateHourlyTimes(startId, endId) {
+  const B = window.MWC_TIME_BOUNDS;
+  const start = document.getElementById(startId).dataset.h24 || '';
+  const end   = document.getElementById(endId).dataset.h24 || '';
+  if (!start && !end) return { ok: true };
+  if (!start || !end) return { ok: false, message: 'Please set both Hourly Start and Hourly End.' };
+  const mins = t => { const p = t.split(':'); return parseInt(p[0], 10) * 60 + parseInt(p[1], 10); };
+  const s = mins(start), e = mins(end);
+  if (s < B.MIN_HOUR * 60 || e > B.MAX_HOUR * 60 || s > B.MAX_HOUR * 60 || e < B.MIN_HOUR * 60) {
+    return { ok: false, message: `Hourly times must be between ${window.mwcTimeLabel(B.MIN_HOUR + ':00')} and ${window.mwcTimeLabel(B.MAX_HOUR + ':00')}. Please pick the times again.` };
+  }
+  if (e <= s) return { ok: false, message: 'Hourly End must be after Hourly Start.' };
+  return { ok: true };
+}
+
 async function goToStep5() {
   if (!hasValidHours()) {
     showError('Please enter Commission Start/End or Hourly Start/End.');
@@ -1816,6 +1836,8 @@ async function goToStep5() {
   }
   const v = validateCommTimes();
   if (!v.ok) { showError(v.message); return; }
+  const hv = validateHourlyTimes('hrly-start', 'hrly-end');
+  if (!hv.ok) { showError(hv.message); return; }
   if (v.soft) {
     const choice = await showDialog({
       title: 'Check your times',
@@ -1901,6 +1923,12 @@ async function submitForm() {
   if (!timeCheck.ok) {
     goToStep(4);
     showError(timeCheck.message);
+    return;
+  }
+  const hourlyCheck = validateHourlyTimes('hrly-start', 'hrly-end');
+  if (!hourlyCheck.ok) {
+    goToStep(4);
+    showError(hourlyCheck.message);
     return;
   }
   if (!pendingCrew || pendingCrew.ids.length === 0) {
