@@ -27,6 +27,7 @@ let employees = [];
 let employeeHourlyRates = {};
 let employeeCrewRole = {}; // id -> raw Crew Role ('Driver'/'Helper'/'' if unset)
 let crewRoleWarnings = new Set(); // names seen with no Crew Role during a calculation
+let hourlyOverlapWarnings = []; // hourly entries overlapping that day's commission span, from the latest calculation
 let payPeriods = [];
 let payrollRecords = [];
 let ptoRecords = [];
@@ -453,8 +454,12 @@ function filterJobs(jobs, empId, ppId) {
     // If Pay Period is filled, it must match. If empty, trust the date range.
     const ppMatch = ppIds.length === 0 || ppIds.includes(ppId);
 
-    // Include job if: employee matches AND (comm start OR hrly start is filled) AND job type is not 'Non-Commission'
-    return empIds.includes(empId) && ppMatch && (commStart || hrlyStart) && jobType !== 'Non-Commission';
+    // Include job if: employee matches AND (comm start OR hrly start is filled).
+    // 'Non-Commission' rows (shop time, drive before the first job) carry only
+    // Hrly Start/End and are paid as hourly, so they are kept only when Hrly
+    // Start is set; computePayroll keeps them out of revenue and the commission span.
+    const hasTime = jobType === 'Non-Commission' ? hrlyStart : (commStart || hrlyStart);
+    return empIds.includes(empId) && ppMatch && hasTime;
   });
 }
 
@@ -498,6 +503,7 @@ async function doCalculate() {
     const payrollFields = computePayroll(jobs, employeeHourlyRate, selectedEmpId);
     console.log('Payroll fields to write:', payrollFields);
     renderCrewRoleWarning();
+    renderHourlyOverlapWarning();
 
     // Check fresh for existing record before write
     const existingPayroll = payrollRecords.find(pr => {
@@ -598,11 +604,13 @@ function visitKey(job) {
 // valid Comm Start (UTC time-of-day, same reading as before). Rows are skipped
 // and reported via onExclude(job, reason) if End is not after Start, or the
 // times fall outside 05:00-21:00 (likely an AM/PM typo). Overlaps and
-// duplicate line items collapse naturally. Returns { grossHours, used }.
+// duplicate line items collapse naturally. 'Non-Commission' rows are hourly
+// only and never extend the span. Returns { grossHours, used, minStart, maxEnd }.
 function commSpanForDay(dayJobs, onExclude) {
   const tod = iso => { const d = new Date(iso); return d.getUTCHours() + d.getUTCMinutes() / 60; };
   let minStart = Infinity, maxEnd = -Infinity, used = 0;
   dayJobs.forEach(j => {
+    if (j.fields['Job Type'] === 'Non-Commission') return;
     const s = j.fields['Comm Start'], e = j.fields['Comm End'];
     if (!s || !e) return;
     const start = tod(s), end = tod(e);
@@ -614,7 +622,14 @@ function commSpanForDay(dayJobs, onExclude) {
     if (end > maxEnd) maxEnd = end;
     used++;
   });
-  return { grossHours: used > 0 ? maxEnd - minStart : 0, used };
+  return { grossHours: used > 0 ? maxEnd - minStart : 0, used, minStart, maxEnd };
+}
+
+// "7:05 AM" from decimal hours (UTC time-of-day, same reading as the hours math).
+function fmtClock(h) {
+  const total = Math.round(h * 60);
+  const hh = Math.floor(total / 60), mm = total % 60;
+  return `${((hh + 11) % 12) + 1}:${String(mm).padStart(2, '0')} ${hh < 12 ? 'AM' : 'PM'}`;
 }
 
 function computePayroll(jobs, employeeHourlyRate, employeeId) {
@@ -624,6 +639,8 @@ function computePayroll(jobs, employeeHourlyRate, employeeId) {
     const date = new Date(isoStr);
     return date.getUTCHours() + date.getUTCMinutes() / 60;
   }
+
+  hourlyOverlapWarnings = [];
 
   // STEP 1: Group jobs by date and calculate daily metrics
   const jobsByDate = {};
@@ -685,6 +702,12 @@ function computePayroll(jobs, employeeHourlyRate, employeeId) {
         const start = timeFromISO(j.fields['Hrly Start']);
         const end = timeFromISO(j.fields['Hrly End']);
         dayHrlyHours += Math.max(0, end - start);
+
+        // Warn only, never trim: hourly time inside the commission span is paid twice.
+        if (span.used > 0 && end > start && start < span.maxEnd && end > span.minStart) {
+          const warning = `${empName}, ${date}: hourly ${fmtClock(start)}-${fmtClock(end)} overlaps commission ${fmtClock(span.minStart)}-${fmtClock(span.maxEnd)}`;
+          if (!hourlyOverlapWarnings.includes(warning)) hourlyOverlapWarnings.push(warning);
+        }
       }
     });
 
@@ -874,6 +897,20 @@ function renderCrewRoleWarning() {
   }
   const names = Array.from(crewRoleWarnings).sort().join(', ');
   el.textContent = `No Crew Role set for: ${names}. Treated as Helper in the revenue split — fix in the Employees table.`;
+  el.classList.add('visible');
+}
+
+// Data-quality warning for the latest calculation: hourly time that falls inside
+// the same day's commission span (possible double pay). Nothing is excluded.
+function renderHourlyOverlapWarning() {
+  const el = document.getElementById('hourly-overlap-warning');
+  if (!el) return;
+  if (hourlyOverlapWarnings.length === 0) {
+    el.classList.remove('visible');
+    el.textContent = '';
+    return;
+  }
+  el.textContent = `Hourly time overlaps commission time (paid in both): ${hourlyOverlapWarnings.join('; ')}. Check the entries.`;
   el.classList.add('visible');
 }
 
