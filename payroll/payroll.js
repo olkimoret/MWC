@@ -341,7 +341,7 @@ function showEmployee() {
   hideError();
 }
 
-async function showCalculate() {
+function showCalculate() {
   document.getElementById('calc-emp-label').textContent = selectedEmpName;
 
   const today = todayLocal();
@@ -359,32 +359,14 @@ async function showCalculate() {
     return !exists;
   });
 
-  // For each candidate period, check if employee has jobs in that period
-  for (const pp of completedWithoutPayroll) {
-    try {
-      const jobsInPeriod = await fetchJobsForPeriod(pp.startDate, pp.endDate);
-      const hasJobForEmp = jobsInPeriod.some(j => {
-        const empIds = j.fields.Employee || [];
-        const ppIds = j.fields['Pay Period'] || [];
-        const commStart = j.fields['Comm Start'];
-        const jobType = j.fields['Job Type'];
-        return empIds.includes(selectedEmpId) && ppIds.includes(pp.id) && commStart && jobType !== 'Non-Commission';
-      });
-
-      if (hasJobForEmp) {
-        const option = document.createElement('option');
-        option.value = pp.id;
-        option.textContent = pp.name;
-        select.appendChild(option);
-      }
-    } catch (e) {
-      // If fetch fails, include the period anyway (fail open)
-      const option = document.createElement('option');
-      option.value = pp.id;
-      option.textContent = pp.name;
-      select.appendChild(option);
-    }
-  }
+  // List every candidate period immediately (no network). A period with no jobs for this
+  // employee is handled by doCalculate ("No jobs found"), so no per-period prefetch is needed.
+  completedWithoutPayroll.forEach(pp => {
+    const option = document.createElement('option');
+    option.value = pp.id;
+    option.textContent = pp.name;
+    select.appendChild(option);
+  });
 
   document.getElementById('team-view').style.display = 'none';
   document.getElementById('employee-view').style.display = 'none';
