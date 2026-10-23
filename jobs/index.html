@@ -927,7 +927,8 @@ async function tryLoadJobs() {
     const res = await fetchWithTimeout(url, { headers });
     const data = await res.json();
 
-    allJobs = data.records;
+    // Non-Commission rows (shop time, customer "MWC") are hourly only, not a client job to pick.
+    allJobs = data.records.filter(j => j.fields['Job Type'] !== 'Non-Commission');
 
     if (allJobs.length === 0) {
       list.innerHTML = '<div class="no-jobs">No jobs found for this date.</div>';
@@ -1059,7 +1060,7 @@ async function loadWidePickerJobs() {
 
     // Group by client name + date so recurring visits stay distinguishable
     const groups = {};
-    data.records.forEach(job => {
+    data.records.filter(j => j.fields['Job Type'] !== 'Non-Commission').forEach(job => {
       const customer = job.fields['Customer Name'] || 'Unknown Customer';
       const dateStr = (job.fields['Job Date'] || '').slice(0, 10);
       const key = customer + '|' + dateStr;
@@ -1507,6 +1508,7 @@ async function submitNonCommission() {
   const fields = {
     'Employee': [empId],
     'Job Date': date,
+    'Customer Name': 'MWC',
     'Hrly Start': `${date}T${hrlyStart}:00`,
     'Hrly End': `${date}T${hrlyEnd}:00`,
     'Job Type': 'Non-Commission'
