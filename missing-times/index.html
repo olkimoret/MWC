@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Master's Window Cleaning — Missing Times</title>
+<link rel="stylesheet" href="/mwc-new.css">
+<style>
+.mt-wrap { margin: 0 auto; padding: 24px 16px 72px; max-width: 920px; }
+@media (min-width: 641px) { .mt-wrap { padding: 36px 32px 80px; } }
+
+.mt-summary { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; color: var(--text); margin-bottom: 4px; }
+.mt-summary.clear { color: var(--success); }
+.mt-range { font-size: 14px; color: var(--text-3); font-weight: 500; margin-bottom: 20px; }
+@media (min-width: 641px) { .mt-summary { font-size: 30px; } }
+
+.mt-seg { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.mt-seg button {
+  font: inherit; font-size: 13px; font-weight: 600; color: var(--text-2);
+  background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
+  padding: 9px 14px; cursor: pointer; transition: background 0.15s, color 0.15s;
+}
+.mt-seg button:hover { background: #FAFAFA; }
+.mt-seg button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.mt-seg button:disabled { opacity: 0.45; cursor: default; }
+.mt-seg.tight button { flex: 1; border-radius: var(--radius-sm); }
+
+.mt-custom { display: none; align-items: flex-end; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+.mt-custom.open { display: flex; }
+.mt-custom label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; font-weight: 700; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.6px; }
+.mt-custom input { font: inherit; font-size: 15px; font-weight: 500; color: var(--text); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 10px; background: var(--surface); }
+.mt-custom .btn { width: auto; padding: 10px 18px; font-size: 14px; }
+
+.mt-group-label { display: flex; justify-content: space-between; align-items: baseline; }
+.mt-count { color: var(--text-2); }
+.mt-block-title { font-size: 15px; font-weight: 800; color: var(--text); margin: 32px 2px 0; letter-spacing: -0.2px; }
+.mt-block-title.partial { color: var(--amber); }
+.mt-block-note { font-size: 12px; color: var(--text-3); font-weight: 500; margin: 2px 2px 0; }
+
+.mt-visit { cursor: default; align-items: flex-start; }
+.mt-visit:hover { background: var(--surface); box-shadow: var(--shadow-sm); }
+.mt-visit .dash-title { font-size: 16px; }
+.mt-visit .dash-sub { font-size: 13px; }
+.mt-techs { color: var(--text); font-weight: 700; }
+.mt-detail { font-size: 12px; color: var(--text-3); font-weight: 500; margin-top: 4px; line-height: 1.4; }
+.mt-badge { flex-shrink: 0; align-self: center; font-size: 11px; font-weight: 700; color: var(--amber); background: var(--amber-bg);
+  border-radius: 999px; padding: 4px 10px; text-transform: uppercase; letter-spacing: 0.4px; }
+.mt-badge.muted { color: var(--text-2); background: var(--bg); }
+@media (min-width: 1024px) {
+  .mt-visit .dash-title { font-size: 18px; }
+  .mt-visit .dash-sub { font-size: 15px; }
+}
+
+.mt-clear { padding: 20px; background: rgba(22,163,74,0.08); border: 1px solid rgba(22,163,74,0.2);
+  border-radius: var(--radius-sm); color: var(--success); font-weight: 600; font-size: 14px; text-align: center; margin-top: 16px; }
+.mt-foot { font-size: 12px; color: var(--text-3); font-weight: 500; margin-top: 28px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<script>
+  (function() {
+    const PASSWORD = 'mwc2026';
+    const AUTH_KEY = 'mwc_manager_auth';
+    if (localStorage.getItem(AUTH_KEY) !== PASSWORD) {
+      const entered = prompt('Manager access — enter password:');
+      if (entered === PASSWORD) {
+        localStorage.setItem(AUTH_KEY, PASSWORD);
+      } else {
+        window.location.replace('/jobs/index.html');
+      }
+    }
+  })();
+</script>
+<header>
+  <img class="header-lion" src="/assets/lion.png" alt="Lion">
+  <div class="header-text">
+    <h1>Master's Window Cleaning</h1>
+    <p>Missing Times</p>
+  </div>
+  <a class="header-back" href="/index.html" title="Back to dashboard">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
+    Dashboard
+  </a>
+</header>
+
+<div class="mt-wrap">
+  <div class="error-msg" id="error-msg"></div>
+
+  <div class="mt-seg" id="tf-seg">
+    <button type="button" data-tf="last3" class="active">Last 3 days</button>
+    <button type="button" data-tf="current">This pay period</button>
+    <button type="button" data-tf="previous">Previous pay period</button>
+    <button type="button" data-tf="custom">Custom</button>
+  </div>
+
+  <div class="mt-custom" id="custom-box">
+    <label>From <input type="date" id="cust-from"></label>
+    <label>To <input type="date" id="cust-to"></label>
+    <button type="button" class="btn btn-primary" id="cust-go">Show</button>
+  </div>
+
+  <div class="mt-seg tight" id="group-seg" style="margin-top: 4px;">
+    <button type="button" data-group="date" class="active">By date</button>
+    <button type="button" data-group="employee">By employee</button>
+    <button type="button" data-group="customer">By customer</button>
+  </div>
+
+  <div id="loading" class="loading"><div class="spinner"></div>Loading visits…</div>
+
+  <div id="content" style="display:none">
+    <div class="mt-summary" id="summary"></div>
+    <div class="mt-range" id="range-label"></div>
+    <div id="list"></div>
+    <p class="mt-foot">A visit with no times can also mean the job was moved or cancelled in Customer Factor and Airtable was not updated.
+      Visits with two or more techs appear under each tech when grouped by employee. Today is never included.</p>
+  </div>
+</div>
+
+<script>
+const AIRTABLE_BASE_ID = 'appVXuyAYj47nZwyz';
+const AIRTABLE_PAT = 'pat51Bpz1DmsTICb1.4cc6011c585d7167d45c6214905f55c09fe042e18742b3fdd53f09646cfb00a0';
+const headers = { 'Authorization': `Bearer ${AIRTABLE_PAT}`, 'Content-Type': 'application/json' };
+
+// <logic>
+// Pure functions (no DOM, no network) so they can be tested offline against a CSV export.
+const NON_COMM = 'Non-Commission';
+
+function addDays(s, n) {
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
+}
+function dayOfWeek(s) { // 0 = Sunday
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+}
+
+// The last 3 days before today, skipping Sundays (no one works them). Never includes today.
+function lastThreeDays(today) {
+  const out = [];
+  let d = addDays(today, -1);
+  while (out.length < 3) {
+    if (dayOfWeek(d) !== 0) out.push(d);
+    d = addDays(d, -1);
+  }
+  return out.sort();
+}
+
+// periods: [{ name, start, end }] as 'YYYY-MM-DD'. Current = the period containing today,
+// cut off at yesterday; Previous = the one before it. Today is never included.
+function periodRanges(periods, today) {
+  const yesterday = addDays(today, -1);
+  const cur = periods.find(p => p.start <= today && today <= p.end) || null;
+  const before = periods.filter(p => p.end < (cur ? cur.start : today)).sort((a, b) => (a.end < b.end ? 1 : -1));
+  const prev = before[0] || null;
+  return {
+    current: cur ? { name: cur.name, start: cur.start, end: cur.end < yesterday ? cur.end : yesterday, empty: yesterday < cur.start } : null,
+    previous: prev ? { name: prev.name, start: prev.start, end: prev.end, empty: false } : null
+  };
+}
+
+// Same rule payroll.js uses (commSpanForDay): both times, End after Start, 05:00-21:00 (UTC time-of-day).
+function hasValidTimes(f) {
+  if (!f['Comm Start'] || !f['Comm End']) return false;
+  const tod = iso => { const d = new Date(iso); return d.getUTCHours() + d.getUTCMinutes() / 60; };
+  const s = tod(f['Comm Start']), e = tod(f['Comm End']);
+  return e > s && s >= 5 && e <= 21;
+}
+
+// rows: Airtable Job records. nameOf: employee record id -> name.
+// Returns visits (same Job Date + same Customer Name, Non-Commission rows ignored) that are
+// 'none' (no row has valid times) or 'partial' (some rows do, some don't).
+function buildVisits(rows, nameOf) {
+  const map = new Map();
+  rows.forEach(r => {
+    const f = r.fields;
+    if (!f['Job Date'] || f['Job Type'] === NON_COMM) return;
+    const date = String(f['Job Date']).slice(0, 10);
+    const customer = String(f['Customer Name'] || '').trim() || '(no customer)';
+    const key = date + '||' + customer;
+    if (!map.has(key)) map.set(key, { date, customer, rows: [] });
+    map.get(key).rows.push(r);
+  });
+  const names = r => (r.fields['Employee'] || []).map(nameOf);
+  const visits = [];
+  map.forEach(v => {
+    const good = v.rows.filter(r => hasValidTimes(r.fields));
+    if (good.length === v.rows.length) return;
+    const bad = v.rows.filter(r => !hasValidTimes(r.fields));
+    const crew = [...new Set(v.rows.flatMap(names))].sort();
+    visits.push({
+      date: v.date,
+      customer: v.customer,
+      status: good.length === 0 ? 'none' : 'partial',
+      crew,
+      lines: v.rows.length,
+      linesMissing: bad.length,
+      missingTypes: [...new Set(bad.map(r => r.fields['Job Type'] || '(no type)'))],
+      missingCrew: [...new Set(bad.flatMap(names))].sort(),
+      badTimes: good.length === 0 && bad.some(r => r.fields['Comm Start'] || r.fields['Comm End']),
+      crewDiffers: new Set(v.rows.map(r => (r.fields['Employee'] || []).slice().sort().join(','))).size > 1
+    });
+  });
+  return visits;
+}
+
+// mode: 'date' | 'employee' | 'customer'. Returns [{ key, visits }] in display order.
+function groupVisits(visits, mode) {
+  const groups = new Map();
+  const add = (key, v) => { if (!groups.has(key)) groups.set(key, []); groups.get(key).push(v); };
+  visits.forEach(v => {
+    if (mode === 'date') add(v.date, v);
+    else if (mode === 'customer') add(v.customer, v);
+    else if (v.crew.length === 0) add('Unassigned', v);
+    else v.crew.forEach(n => add(n, v));
+  });
+  const inGroup = (a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.customer.localeCompare(b.customer));
+  const out = [...groups.entries()].map(([key, vs]) => ({ key, visits: vs.slice().sort(inGroup) }));
+  if (mode === 'date') out.sort((a, b) => (a.key < b.key ? 1 : -1));
+  else if (mode === 'employee') out.sort((a, b) => (a.key === 'Unassigned') - (b.key === 'Unassigned') || b.visits.length - a.visits.length || a.key.localeCompare(b.key));
+  else out.sort((a, b) => a.key.localeCompare(b.key));
+  return out;
+}
+// </logic>
+
+function esc(str) {
+  const d = document.createElement('div');
+  d.textContent = str == null ? '' : String(str);
+  return d.innerHTML;
+}
+
+function todayLocal() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function fmtDate(s, withWeekday) {
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', withWeekday === false
+    ? { month: 'short', day: 'numeric' }
+    : { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+function hideError() { document.getElementById('error-msg').classList.remove('visible'); }
+
+async function fetchAll(baseUrl) {
+  let all = [], offset = null;
+  do {
+    const res = await fetch(baseUrl + (offset ? `&offset=${offset}` : ''), { headers });
+    if (!res.ok) throw new Error('Airtable ' + res.status);
+    const data = await res.json();
+    all = all.concat(data.records || []);
+    offset = data.offset || null;
+  } while (offset);
+  return all;
+}
+
+let payPeriods = [];
+let empNames = {};
+let state = { tf: 'last3', group: 'date' };
+let result = null; // { label, visits }
+let loadSeq = 0;
+
+async function loadLookups() {
+  const [pp, emps] = await Promise.all([
+    fetchAll(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Pay%20Periods?pageSize=100&fields[]=Pay%20Period%20Name&fields[]=Start%20Date&fields[]=End%20Date`),
+    fetchAll(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Employees?pageSize=100&fields[]=Name`)
+  ]);
+  payPeriods = pp.filter(r => r.fields['Start Date'] && r.fields['End Date'])
+    .map(r => ({ name: r.fields['Pay Period Name'] || '', start: r.fields['Start Date'], end: r.fields['End Date'] }));
+  emps.forEach(r => { empNames[r.id] = r.fields.Name || 'Unknown'; });
+}
+
+// Resolve the selected timeframe to { start, end, dates?, label }, or { empty, label } when there is nothing to show.
+function resolveRange() {
+  const today = todayLocal();
+  const yesterday = addDays(today, -1);
+  if (state.tf === 'last3') {
+    const dates = lastThreeDays(today);
+    return { start: dates[0], end: dates[2], dates, label: `${fmtDate(dates[0])} – ${fmtDate(dates[2])} (Sundays skipped)` };
+  }
+  if (state.tf === 'custom') {
+    let from = document.getElementById('cust-from').value;
+    let to = document.getElementById('cust-to').value;
+    if (!from || !to) return { empty: true, label: 'Pick a start and end date.' };
+    if (to > yesterday) to = yesterday;
+    if (from > to) return { empty: true, label: 'The start date must be on or before the end date (today is never included).' };
+    return { start: from, end: to, label: `${fmtDate(from)} – ${fmtDate(to)}` };
+  }
+  const ranges = periodRanges(payPeriods, today);
+  const r = ranges[state.tf];
+  if (!r) return { empty: true, label: 'No pay period found.' };
+  if (r.empty) return { empty: true, label: `${r.name} started today, so there is nothing to show yet. Try Previous pay period.` };
+  return { start: r.start, end: r.end, label: `${r.name} · ${fmtDate(r.start, false)} – ${fmtDate(r.end, false)}${state.tf === 'current' ? ' (up to yesterday)' : ''}` };
+}
+
+async function load() {
+  const seq = ++loadSeq;
+  hideError();
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('content').style.display = 'none';
+  try {
+    const range = resolveRange();
+    if (range.empty) {
+      result = { label: range.label, visits: [], note: true };
+    } else {
+      const formula = encodeURIComponent(`AND(DATESTR({Job Date})>='${range.start}',DATESTR({Job Date})<='${range.end}')`);
+      const fields = ['Job Date', 'Customer Name', 'Job Type', 'Employee', 'Comm Start', 'Comm End']
+        .map(f => 'fields[]=' + encodeURIComponent(f)).join('&');
+      const rows = await fetchAll(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Jobs?filterByFormula=${formula}&${fields}&pageSize=100`);
+      if (seq !== loadSeq) return; // a newer selection superseded this one
+      let visits = buildVisits(rows, id => empNames[id] || 'Unknown');
+      if (range.dates) visits = visits.filter(v => range.dates.includes(v.date));
+      result = { label: range.label, visits };
+    }
+    render();
+  } catch (e) {
+    console.error(e);
+    if (seq === loadSeq) {
+      document.getElementById('loading').style.display = 'none';
+      showError('Could not load visits. Check your connection and try again.');
+    }
+  }
+}
+
+function visitCard(v, mode) {
+  const techs = v.crew.length ? v.crew.map(esc).join(', ') : 'No tech assigned';
+  const details = [];
+  if (v.status === 'partial') {
+    details.push(`${v.linesMissing} of ${v.lines} line${v.lines === 1 ? '' : 's'} ha${v.linesMissing === 1 ? 's' : 've'} no times: ${v.missingTypes.map(esc).join(', ')}`
+      + (v.missingCrew.length ? ` (on those lines: ${v.missingCrew.map(esc).join(', ')})` : ''));
+  }
+  if (v.badTimes) details.push('Times were entered but are not valid (end before start, or outside 5 AM–9 PM)');
+  if (v.crewDiffers && v.status === 'none') details.push('Crew differs between lines');
+  const badge = v.status === 'partial' ? '<span class="mt-badge">Partly entered</span>' : '';
+  return `<div class="dash-card mt-visit">
+    <div class="dash-info">
+      <div class="dash-title">${esc(v.customer)}</div>
+      <div class="dash-sub">${esc(fmtDate(v.date))} · <span class="mt-techs">${techs}</span></div>
+      ${details.map(d => `<div class="mt-detail">${d}</div>`).join('')}
+    </div>${badge}
+  </div>`;
+}
+
+function renderBlock(title, subtitle, visits, cls) {
+  if (!visits.length) return '';
+  let html = `<div class="mt-block-title ${cls || ''}">${esc(title)} · ${visits.length}</div>`;
+  if (subtitle) html += `<div class="mt-block-note">${esc(subtitle)}</div>`;
+  groupVisits(visits, state.group).forEach(g => {
+    const label = state.group === 'date' ? fmtDate(g.key) : g.key;
+    html += `<p class="section-label mt-group-label"><span>${esc(label)}</span><span class="mt-count">${g.visits.length}</span></p>
+      <div class="cards">${g.visits.map(v => visitCard(v, state.group)).join('')}</div>`;
+  });
+  return html;
+}
+
+function render() {
+  const none = result.visits.filter(v => v.status === 'none');
+  const partial = result.visits.filter(v => v.status === 'partial');
+  const summary = document.getElementById('summary');
+  const total = none.length + partial.length;
+  if (result.note) {
+    summary.textContent = '';
+    summary.classList.remove('clear');
+  } else if (total === 0) {
+    summary.textContent = 'All visits have times';
+    summary.classList.add('clear');
+  } else {
+    summary.classList.remove('clear');
+    summary.textContent = `${none.length} visit${none.length === 1 ? '' : 's'} with no times`
+      + (partial.length ? ` · ${partial.length} partly entered` : '');
+  }
+  document.getElementById('range-label').textContent = result.label;
+
+  let html = '';
+  if (!result.note && total === 0) html = '<div class="mt-clear">✅ Nothing missing for this timeframe</div>';
+  html += renderBlock('No times entered', 'Past visits where no line has valid commission start and end times.', none);
+  html += renderBlock('Partly entered', 'Some lines have times and some do not. Payroll skips the lines without times.', partial, 'partial');
+  document.getElementById('list').innerHTML = html;
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+}
+
+function setActive(containerId, attr, value) {
+  document.querySelectorAll(`#${containerId} button`).forEach(b => b.classList.toggle('active', b.dataset[attr] === value));
+}
+
+function initControls() {
+  const yesterday = addDays(todayLocal(), -1);
+  const from = document.getElementById('cust-from'), to = document.getElementById('cust-to');
+  from.max = to.max = yesterday;
+  from.value = addDays(yesterday, -6);
+  to.value = yesterday;
+
+  // A period with no data yet (e.g. first day of a new period) stays clickable and explains itself.
+  const ranges = periodRanges(payPeriods, todayLocal());
+  document.querySelector('#tf-seg [data-tf="current"]').disabled = !ranges.current;
+  document.querySelector('#tf-seg [data-tf="previous"]').disabled = !ranges.previous;
+
+  document.getElementById('tf-seg').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || b.disabled) return;
+    state.tf = b.dataset.tf;
+    setActive('tf-seg', 'tf', state.tf);
+    document.getElementById('custom-box').classList.toggle('open', state.tf === 'custom');
+    load();
+  });
+  document.getElementById('cust-go').addEventListener('click', load);
+  document.getElementById('group-seg').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    state.group = b.dataset.group;
+    setActive('group-seg', 'group', state.group);
+    if (result) render();
+  });
+}
+
+(async function init() {
+  try {
+    await loadLookups();
+    initControls();
+    await load();
+  } catch (e) {
+    console.error(e);
+    document.getElementById('loading').style.display = 'none';
+    showError('Could not load data. Check your connection and try again.');
+  }
+})();
+</script>
+</body>
+</html>
